@@ -180,7 +180,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <h2 id="sec-launch">🚀 Founder's Launchpad <span class="tag" style="margin-left:6px;font-weight:400">if you were launching a brand here — where to enter & how to win</span></h2>
 <div class="note" style="border-left-color:var(--grn)">
   <b>Reading this section as a founder:</b> <b>Opportunity</b> blends <b>Demand</b> (total sales of the type),
-  <b>White space</b> = √(<b>under-served</b> × <b>beatable-leader</b>) — high only when demand is spread over few SKUs (under-served) <b>and</b> no single brand dominates (beatable #1); high = room to enter) and
+  <b>White space</b> = √(<b>under-served</b> × <b>beatable-leader</b>) — high when demand is spread over few SKUs (under-served) <b>and</b> the strongest incumbent is beatable. The "beatable" part counts only each brand's <b>organically-earned</b> share — ad-propped share is discounted, since rented visibility fades when budgets drop. High = room to enter.) and
   <b>Availability gap</b> (how badly incumbents are out of stock — sales-weighted). Tune the weights to match your thesis,
   pick a scope, read the <b>opportunity map</b>, then click any type to load its <b>price ladder</b> and <b>competitors</b>. Enter ₹ sales (below) to size each prize in rupees.
 </div>
@@ -725,17 +725,20 @@ function lpTypeAgg(){
   const rows=lpFilter().filter(s=>s.pt&&s.pt!=='Other'); const map={};
   rows.forEach(s=>{const t=s.pt;if(!map[t])map[t]={t,skus:0,brands:{},csp:0,val:0,osaW:0,osaWN:0,spSum:0,spN:0,discSum:0,discN:0};
     const a=map[t],w=(s.csp||0);a.skus++;a.csp+=w;a.val+=skuVal(s);
-    const bk=s.b.toLowerCase();a.brands[bk]=(a.brands[bk]||0)+w;
+    const bk=s.b.toLowerCase();if(!a.brands[bk])a.brands[bk]={csp:0,osov:0,asov:0};
+    a.brands[bk].csp+=w;a.brands[bk].osov+=(s.osov||0);a.brands[bk].asov+=(s.asov||0);
     if(s.osa!=null){const ww=w||1e-4;a.osaW+=s.osa*ww;a.osaWN+=ww;}
     if(s.sp){a.spSum+=s.sp;a.spN++;}if(s.disc!=null){a.discSum+=s.disc;a.discN++;}});
   const W=lpWeights();
   let arr=Object.values(map).map(a=>{
-    const tot=Object.values(a.brands).reduce((x,y)=>x+y,0)||1;
-    const hhi=Object.values(a.brands).reduce((x,y)=>x+(y/tot)*(y/tot),0); // 0..1: low=fragmented, high=top-heavy
-    const cr1=Math.max(...Object.values(a.brands),0)/tot;                 // top brand's share of the type
+    const v=Object.values(a.brands), tot=v.reduce((x,y)=>x+y.csp,0)||1;
+    const hhi=v.reduce((x,y)=>x+(y.csp/tot)*(y.csp/tot),0);               // 0..1: low=fragmented, high=top-heavy
+    const cr1=Math.max(...v.map(y=>y.csp),0)/tot;                         // top brand's raw share
+    // organic moat = strongest organically-EARNED share; ad-propped share is discounted (rented visibility fades)
+    const moat=Math.max(0,...v.map(y=>{const ad=(y.asov+y.osov)>0?y.asov/(y.asov+y.osov):0;return (y.csp/tot)*(1-ad);}));
     const wOSA=a.osaWN?a.osaW/a.osaWN:0;
     return {t:a.t,skus:a.skus,brands:Object.keys(a.brands).length,csp:a.csp,val:a.val,
-      openness:1-hhi,hhi,cr1,beat:1-cr1,gap:Math.max(0,1-wOSA/100),wOSA,
+      openness:1-hhi,hhi,cr1,moat,beat:1-moat,gap:Math.max(0,1-wOSA/100),wOSA,
       avgSP:a.spN?a.spSum/a.spN:0,avgDisc:a.discN?a.discSum/a.discN:0,
       sizeRaw:sales?a.val:a.csp};});
   arr=arr.filter(x=>x.sizeRaw>0);
