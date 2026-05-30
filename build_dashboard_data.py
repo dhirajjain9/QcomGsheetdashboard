@@ -174,9 +174,16 @@ g = (cur.groupby(['Product Name', 'Sub Category'])
             ppu=('Wt. PPU (x100)', 'mean'),
             gram=('Grammage', 'first'))
        .reset_index())
+def ppu_clean(sp, ppu):
+    # per-unit price can't exceed the pack price; source PPU is corrupt for ~4% of rows
+    if ppu and ppu > 0 and sp and sp > 0 and ppu > sp:
+        return sp
+    return ppu
 def pack_of(sp, ppu):
+    ppu = ppu_clean(sp, ppu)
     if ppu and ppu > 0 and sp and sp > 0:
-        return round(sp / ppu, 1)
+        p = round(sp / ppu, 1)
+        return p if p >= 1 else 1.0
     return 1.0
 sku_level = [{
     'n': row['Product Name'][:60], 'b': row['brand'], 's': row['Sub Category'],
@@ -185,7 +192,7 @@ sku_level = [{
     'sp': r(row['sp'], 0), 'mrp': r(row['mrp'], 0), 'osa': r(row['osa'], 0),
     'disc': r(row['disc'], 0), 'sov': r(row['sov'], 3),
     'osov': r(row['osov'], 3), 'asov': r(row['asov'], 3),
-    'ppu': r(row['ppu'], 0), 'pack': pack_of(row['sp'], row['ppu']),
+    'ppu': r(ppu_clean(row['sp'], row['ppu']), 0), 'pack': pack_of(row['sp'], row['ppu']),
     'gram': (str(row['gram']).strip()[:14] if pd.notna(row['gram']) else '')
 } for _, row in g.iterrows()]
 
