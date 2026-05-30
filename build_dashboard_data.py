@@ -181,9 +181,31 @@ sku_level = [{
     'osov': r(row['osov'], 3), 'asov': r(row['asov'], 3)
 } for _, row in g.iterrows()]
 
+# ---------- SKU-level month-over-month (entrants / exits / risers / fallers) ----------
+def sku_month(frame):
+    return frame.groupby('Product ID').agg(
+        n=('Product Name', 'first'), b=('Brand', 'first'), s=('Sub Category', 'first'),
+        csp=('Est. Category Share SP', 'sum'),
+        osa=('Wt. OSA %', 'mean'), disc=('Wt. Discount %', 'mean'), sp=('SP', 'mean'))
+ma, mp = sku_month(cur), sku_month(prv)
+sku_mom = []
+for pid in (set(ma.index) | set(mp.index)):
+    inA, inP = pid in ma.index, pid in mp.index
+    a = ma.loc[pid] if inA else None
+    p = mp.loc[pid] if inP else None
+    ref = a if inA else p
+    sku_mom.append({
+        'n': str(ref['n'])[:60], 'b': str(ref['b']), 's': str(ref['s']),
+        'st': 'both' if (inA and inP) else ('new' if inA else 'exit'),
+        'ac': r(a['csp'], 4) if inA else None, 'pc': r(p['csp'], 4) if inP else None,
+        'ao': r(a['osa'], 0) if inA else None, 'po': r(p['osa'], 0) if inP else None,
+        'ad': r(a['disc'], 0) if inA else None, 'pd': r(p['disc'], 0) if inP else None,
+        'asp': r(a['sp'], 0) if inA else None, 'psp': r(p['sp'], 0) if inP else None,
+    })
+
 out = {
     'meta': {'latest': LATEST, 'prev': PREV, 'generated': str(pd.Timestamp.now())[:16]},
-    'sku_level': sku_level,
+    'sku_level': sku_level, 'sku_mom': sku_mom,
     'kpis': kpis, 'subcat': subcat, 'top_skus': top_skus, 'top_brands': top_brands,
     'sov_scatter': sov_scatter, 'gainers': gainers, 'losers': losers,
     'white_space_skus': white_space_skus, 'quad_pts': quad_pts, 'cat_ws': cat_ws,
