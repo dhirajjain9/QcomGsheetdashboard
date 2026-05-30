@@ -66,7 +66,8 @@ types** (top-40 bar+donut, detail table w/ Rev/SKU, By-SKU/By-Brand drill-down) 
 Founder's Launchpad** (opportunity map + ranking with remarks, price ladder, competitor
 teardown w/ ad-reliance flags, launch shortlist) · **White spaces** (white-space map, bucket
 breakdown, leaderboard w/ Rev/SKU) · **Availability & stockout loss** (est. ₹ lost, demand-
-vs-availability map, biggest losses).
+vs-availability map, biggest losses) · **Month-over-month** (SKU risers/fallers + entry/exit;
+brand and product-type entry/exit per category; brand churn within a product type).
 
 Scope selector (All categories default) drives SKUs/Brands/Product types. Interactivity:
 drill-down modals, sortable tables with frozen headers, section nav, persisted MRP inputs,
@@ -76,18 +77,6 @@ neutral cream theme.
 
 ## 4. Open backlog (derivable from existing columns, no new data)
 
-### P7 — Promo-dependency / pricing power · low effort
-SKUs/brands holding share at **low** discount (pricing power) vs those whose share rides on
-**deep** discounts (margin-fragile). Surface: discount-vs-share scatter + flagged tables.
-
-### P5 — Pack-size / PPU architecture · medium effort
-Use Grammage + Wt. PPU (both unused): which pack sizes own demand; true value-for-money per
-unit; flag SKUs expensive per unit despite a low headline price.
-
-### P6 — SKU-level momentum & entrants/exits · medium effort
-Needs March re-introduced into views. SKU risers/fallers, new vs exited SKUs (Product ID diff),
-OSA/discount/price MoM. (Brand-level momentum section was removed by decision.)
-
 ### P-Time — Time basis · low effort
 Views use **April only**; opportunity scores are point-in-time. Options: average Mar+Apr,
 a month toggle, or a trailing average once ≥3 months exist. Parked by decision.
@@ -96,7 +85,7 @@ a month toggle, or a trailing average once ≥3 months exist. Parked by decision
 Type-level price ladder is built (Launchpad). Remaining: per-sub-category entry/mid/premium
 bands showing where demand & ₹ concentrate.
 
-**Suggested order:** P7 → P5 → P-Time → P6.
+_Dropped by decision: P7 (promo-dependency / pricing power) and P5 (pack-size / PPU)._
 
 ---
 
@@ -105,6 +94,8 @@ bands showing where demand & ₹ concentrate.
 - **Ad-dependency (organic vs paid)** → baked into white space (organic-beatable) + competitor
   "renting visibility" flags. *Optional remainder:* a standalone brand ad-dependency scatter.
 - **Competitive / white-space definition** → finalised as √(under-served × organic-beatable) with remark buckets.
+- **P6 — month-over-month** → built: SKU risers/fallers + entry/exit, brand & product-type entry/exit per
+  category, and brand churn within a product type. (Uses March; everything else stays April-only.)
 - **Conversion efficiency (share ÷ SOV)** → dropped: already shown by the visibility-vs-conversion
   scatter (above/below the diagonal) and sharpened by the organic-vs-paid logic. If ever needed, add a
   sortable `share/SOV` column to the brand leaderboard (~10 min).
