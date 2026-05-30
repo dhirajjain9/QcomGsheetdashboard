@@ -48,6 +48,28 @@ tr:hover td{background:rgba(255,255,255,.02)}
 .legend{display:flex;gap:16px;flex-wrap:wrap;color:var(--mut);font-size:11.5px;margin-top:8px}
 .legend b{color:var(--txt)}
 footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
+h2{scroll-margin-top:64px}
+nav.snav{position:sticky;top:0;z-index:30;display:flex;gap:6px;flex-wrap:wrap;background:rgba(12,16,24,.93);backdrop-filter:blur(6px);padding:10px 0;margin-bottom:14px;border-bottom:1px solid var(--line)}
+nav.snav a{color:var(--mut);text-decoration:none;font-size:12px;padding:5px 11px;border-radius:7px;border:1px solid transparent;white-space:nowrap}
+nav.snav a:hover{color:var(--txt);background:var(--panel2)}
+nav.snav a.active{color:#0c1018;background:var(--acc);font-weight:600}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--txt)}
+th .ind{opacity:.45;font-size:9px;margin-left:2px}
+#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWs tbody tr{cursor:pointer}
+.modal-bg{position:fixed;inset:0;background:rgba(5,8,13,.74);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:48px 16px;overflow:auto}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:22px 24px;box-shadow:0 24px 70px rgba(0,0,0,.55)}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.modal-head h3{font-size:19px;font-weight:700}
+.modal-head .x{cursor:pointer;color:var(--mut);font-size:24px;line-height:1;background:none;border:none}
+.modal-head .x:hover{color:var(--txt)}
+#modalSub{color:var(--mut);font-size:12.5px;margin:2px 0 16px}
+.mstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:10px;margin-bottom:16px}
+.mstat{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.mstat .v{font-size:17px;font-weight:700}
+.mstat .l{color:var(--mut);font-size:11px;margin-top:2px}
+.hint{font-size:11.5px;font-style:italic;margin-top:8px}
 @media(max-width:900px){.g2,.g3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -61,17 +83,29 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
   <select id="globalCat"></select>
 </header>
 
+<nav class="snav" id="snav">
+  <a href="#sec-sales">₹ Sales</a>
+  <a href="#sec-overall">Overall</a>
+  <a href="#sec-market">Market</a>
+  <a href="#sec-skus">Top SKUs</a>
+  <a href="#sec-brands">Brands</a>
+  <a href="#sec-types">Product types</a>
+  <a href="#sec-momentum">Momentum</a>
+  <a href="#sec-ws">White space</a>
+</nav>
+
 <div class="note">
   <b>Reading the numbers:</b> the source exports carry no absolute units/revenue (those columns are blank).
   <b>Market share</b> here = <b>Est. Category Share</b> (each SKU's % of its sub-category's sales — sums to 100% per sub-category), the dataset's sales proxy.
   <b>SOV</b> = Share of Voice (visibility on the app). <b>OSA</b> = On-Shelf Availability. <b>Disc</b> = weighted discount depth.
+  <br><span style="color:var(--acc2)">✦ Interactive — click any chart bar, scatter point, or table row to drill into a brand, product type, or SKU. Click table headers to sort; use the nav bar to jump between sections.</span>
 </div>
 
 <!-- KPIs -->
 <div class="kpis" id="kpis"></div>
 
 <!-- SALES INPUT -->
-<h2>Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
+<h2 id="sec-sales">Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
 <div class="card" id="salesPanel">
   <div class="h3sub">Enter each sub-category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. Leave blank to keep the share-% view.</div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
@@ -97,7 +131,7 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 </div>
 
 <!-- OVERALL VIEW -->
-<h2>Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all 5 sub-categories</span></h2>
+<h2 id="sec-overall">Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all 5 sub-categories</span></h2>
 <div class="kpis" id="overallKpis"></div>
 <div class="grid g2" style="margin-top:16px">
   <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per sub-category — enter totals to see ₹</div><div class="cwrap"><canvas id="cOvSub"></canvas></div></div>
@@ -105,14 +139,14 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 </div>
 
 <!-- OVERVIEW -->
-<h2>Market structure by sub-category</h2>
+<h2 id="sec-market">Market structure by sub-category</h2>
 <div class="grid g2">
   <div class="card"><h3>SKUs tracked per sub-category</h3><div class="h3sub">Breadth of assortment monitored</div><div class="cwrap"><canvas id="cSkus"></canvas></div></div>
   <div class="card"><h3>Brand concentration vs availability</h3><div class="h3sub">Top-5 brand share (bars) &amp; avg on-shelf availability (line)</div><div class="cwrap"><canvas id="cConc"></canvas></div></div>
 </div>
 
 <!-- TOP SKUS -->
-<h2>Top SKUs — product-wise leaders <span class="tag" style="margin-left:6px" id="skuCatLbl"></span></h2>
+<h2 id="sec-skus">Top SKUs — product-wise leaders <span class="tag" style="margin-left:6px" id="skuCatLbl"></span></h2>
 <div class="grid g2">
   <div class="card"><h3>Top 12 products by category share</h3><div class="h3sub">Latest month, selected sub-category</div><div class="cwrap tall"><canvas id="cTopSku"></canvas></div></div>
   <div class="card"><h3>Detail</h3><div class="h3sub">Share · price · availability · discount</div>
@@ -121,7 +155,7 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 </div>
 
 <!-- TOP BRANDS -->
-<h2>Top brands &amp; market share</h2>
+<h2 id="sec-brands">Top brands &amp; market share</h2>
 <div class="grid g2">
   <div class="card"><h3>Top 15 brands by share of tracked market</h3><div class="h3sub">% of all category-share points across the 5 sub-categories</div><div class="cwrap tall"><canvas id="cBrand"></canvas></div></div>
   <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap tall"><canvas id="cSov"></canvas></div></div>
@@ -131,7 +165,7 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 </div>
 
 <!-- PRODUCT TYPES -->
-<h2>Product types <span class="tag" style="margin-left:6px;font-weight:400">classified from product names · ~96% of SKUs</span></h2>
+<h2 id="sec-types">Product types <span class="tag" style="margin-left:6px;font-weight:400">classified from product names · ~96% of SKUs</span></h2>
 <div class="grid g2">
   <div class="card"><h3>Top product types across all categories</h3><div class="h3sub" id="ptSub">Top types by SKU count — enter totals to switch to ₹</div><div class="cwrap tall"><canvas id="cPtBar"></canvas></div></div>
   <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div class="cwrap tall"><canvas id="cPtDonut"></canvas></div></div>
@@ -141,14 +175,14 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 </div>
 
 <!-- MOMENTUM -->
-<h2>Market-share momentum (MoM)</h2>
+<h2 id="sec-momentum">Market-share momentum (MoM)</h2>
 <div class="grid g2">
   <div class="card"><h3 class="up">▲ Top gainers</h3><div class="h3sub">Biggest share gains, month over month</div><div class="cwrap"><canvas id="cGain"></canvas></div></div>
   <div class="card"><h3 class="down">▼ Top decliners</h3><div class="h3sub">Biggest share losses, month over month</div><div class="cwrap"><canvas id="cLoss"></canvas></div></div>
 </div>
 
 <!-- WHITE SPACES -->
-<h2>White spaces — where demand isn't being met</h2>
+<h2 id="sec-ws">White spaces — where demand isn't being met</h2>
 <div class="card" style="margin-bottom:16px"><h3>Demand vs availability map <span class="tag" id="wsCatLbl"></span></h3>
   <div class="h3sub">Each bubble = a product. <b>x</b> = Share of Voice (demand/visibility), <b>y</b> = On-Shelf Availability. Bubble size = market share.</div>
   <div class="cwrap tall"><canvas id="cQuad"></canvas></div>
@@ -167,6 +201,14 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 </div>
 
 <footer id="ft"></footer>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modalTitle"></h3><button class="x" id="modalX" title="Close (Esc)">×</button></div>
+    <div id="modalSub"></div>
+    <div id="modalBody"></div>
+  </div>
 </div>
 
 <script>
@@ -372,7 +414,7 @@ function renderOverall(){
 }
 
 // ---- Product types (classified from names) ----
-let ptBarChart, ptDonutChart;
+let ptBarChart, ptDonutChart, ptTopLabels=[], ptDonutLabels=[];
 function renderProductTypes(){
   const sales=salesActive();
   const agg={};
@@ -392,6 +434,7 @@ function renderProductTypes(){
   // donut: top 8 + Others
   const d8=charted.slice(0,8); const rest=charted.slice(8).reduce((a,x)=>a+x[key],0);
   const dl=d8.map(x=>x.t).concat(['Other types']); const dv=d8.map(x=>x[key]).concat([rest]);
+  ptTopLabels=top.map(x=>x.t); ptDonutLabels=dl;
   if(ptDonutChart)ptDonutChart.destroy();
   ptDonutChart=new Chart($('#cPtDonut'),{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:PAL.concat(['#5a6b8c','#3a4866'])}]},
     options:{plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.label}: ${sales?valFmt(c.raw):c.raw+' SKUs'}`}}}}});
@@ -435,6 +478,106 @@ $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotal
 $('#metricSel').addEventListener('change',e=>{metric=e.target.value; renderAll();});
 $('#clearBtn').addEventListener('click',()=>{$$('#salesInputs input').forEach(i=>i.value=''); DATA.subcats.forEach(s=>totals[s]=0); applySales();});
 sel.addEventListener('change',()=>renderSku(sel.value));
+
+// ===== Interactivity: drill-down modal, clickable charts/rows, sortable tables, section nav =====
+function openModal(title,sub,body){$('#modalTitle').textContent=title;$('#modalSub').innerHTML=sub||'';$('#modalBody').innerHTML=body;$('#modalBg').classList.add('open');}
+function closeModal(){$('#modalBg').classList.remove('open');}
+$('#modalX').addEventListener('click',closeModal);
+$('#modalBg').addEventListener('click',e=>{if(e.target===$('#modalBg'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+const statBox=arr=>`<div class="mstats">${arr.map(s=>`<div class="mstat"><div class="v">${s[1]}</div><div class="l">${s[0]}</div></div>`).join('')}</div>`;
+const avgOf=(rows,f)=>{const v=rows.map(f).filter(x=>x!=null&&!isNaN(x));return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;};
+
+function showBrand(key){
+  key=String(key).toLowerCase();
+  const rows=DATA.sku_level.filter(s=>s.b.toLowerCase()===key);
+  if(!rows.length)return;
+  const sales=salesActive(), subs=[...new Set(rows.map(s=>s.s))];
+  const stats=[['SKUs',rows.length],['Sub-categories',subs.length],['Avg SP','₹'+fmt(avgOf(rows,s=>s.sp),0)],
+    ['Avg OSA',fmt(avgOf(rows,s=>s.osa),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
+  if(sales)stats.push([metricShort(),valFmt(rows.reduce((a,s)=>a+skuVal(s),0))]);
+  const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp));
+  const body=statBox(stats)+`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">OSA</th><th class="num">Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num">${fmt(s.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  openModal(rows[0].b,subs.join(' · '),body);
+}
+function showType(pt){
+  const rows=DATA.sku_level.filter(s=>s.pt===pt);
+  if(!rows.length)return;
+  const sales=salesActive(), brands=new Set(rows.map(s=>s.b.toLowerCase()));
+  const stats=[['SKUs',rows.length],['Brands',brands.size],['Avg SP','₹'+fmt(avgOf(rows,s=>s.sp),0)],
+    ['Avg OSA',fmt(avgOf(rows,s=>s.osa),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
+  if(sales)stats.push([metricShort(),valFmt(rows.reduce((a,s)=>a+skuVal(s),0))]);
+  const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,40);
+  const body=statBox(stats)+`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">OSA</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  openModal(pt,brands.size+' brands · '+rows.length+' SKUs',body);
+}
+function showSku(name,sub){
+  const s=DATA.sku_level.find(x=>x.n===name&&(!sub||x.s===sub))||DATA.sku_level.find(x=>x.n===name);
+  if(!s)return;
+  const sales=salesActive();
+  const stats=[['Brand',s.b],['Product type',s.pt],['Value share',fmt(s.csp,2)+'%'],['SP','₹'+fmt(s.sp,0)],
+    ['MRP','₹'+fmt(s.mrp,0)],['Discount',fmt(s.disc,0)+'%'],['OSA',fmt(s.osa,0)+'%'],['SOV',s.sov!=null?fmt(s.sov,2)+'%':'–']];
+  if(sales)stats.push(['Net ₹',money(s._net||0)],['Gross ₹',money(s._gross||0)],['Units',fmt(s._units||0,0)]);
+  let body=statBox(stats);
+  if(s.osa<40)body+=`<div class="hint" style="color:var(--red)">Low on-shelf availability (${fmt(s.osa,0)}%) — likely losing sales to stockouts.</div>`;
+  openModal(s.n,`${s.b} · ${s.s}`,body);
+}
+
+// generic canvas click/hover (works across chart re-renders via Chart.getChart)
+function onChartClick(selr,handler){
+  const cv=$(selr); if(!cv)return;
+  const pick=ev=>{const ch=Chart.getChart(cv);if(!ch)return null;const els=ch.getElementsAtEventForMode(ev,'nearest',{intersect:true},false);return els.length?els[0].index:null;};
+  cv.addEventListener('mousemove',ev=>{cv.style.cursor=pick(ev)!=null?'pointer':'default';});
+  cv.addEventListener('click',ev=>{const i=pick(ev);if(i!=null)handler(i);});
+}
+function brandKeyAt(i){const {list}=brandOrdered();const tb=list.slice(0,15);return tb[i]&&tb[i].brand;}
+function ovBrandKeyAt(i){const sales=salesActive();let tb;if(sales){const {m}=brandAgg();tb=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,15);}else{const cnt={};DATA.sku_level.forEach(s=>{const k=s.b.toLowerCase();cnt[k]=(cnt[k]||0)+1;});tb=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,15);}return tb[i]&&tb[i][0];}
+function topSkuAt(i){const cat=sel.value,sales=salesActive();const rows=DATA.sku_level.filter(s=>s.s===cat).map(s=>({...s,v:skuVal(s)})).sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp)).slice(0,12);return rows[i];}
+function setCategory(cat){if(!cat)return;sel.value=cat;renderSku(cat);const el=document.getElementById('sec-skus');el&&el.scrollIntoView({behavior:'smooth'});}
+
+onChartClick('#cSov',i=>{const d=DATA.sov_scatter[i];d&&showBrand(d.brand);});
+onChartClick('#cBrand',i=>{const b=brandKeyAt(i);b&&showBrand(b);});
+onChartClick('#cOvBrand',i=>{const b=ovBrandKeyAt(i);b&&showBrand(b);});
+onChartClick('#cTopSku',i=>{const r=topSkuAt(i);r&&showSku(r.n,sel.value);});
+onChartClick('#cPtBar',i=>{const t=ptTopLabels[i];t&&showType(t);});
+onChartClick('#cPtDonut',i=>{const t=ptDonutLabels[i];t&&t!=='Other types'&&showType(t);});
+onChartClick('#cSkus',i=>setCategory(scNames[i]));
+onChartClick('#cOvSub',i=>setCategory(DATA.subcats[i]));
+
+// clickable table rows -> drill-down
+function rowClick(tableSel,fn){const t=$(tableSel);t&&t.addEventListener('click',e=>{const tr=e.target.closest('tbody tr');if(tr)fn(tr);});}
+rowClick('#tSku',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n,sel.value);});
+rowClick('#tBrand',tr=>{const n=tr.children[1]?.textContent;n&&showBrand(n);});
+rowClick('#tPt',tr=>{const t=tr.children[0]?.textContent;t&&showType(t);});
+rowClick('#tWs',tr=>{const n=tr.querySelector('td')?.getAttribute('title');const sub=tr.children[1]?.textContent;n&&showSku(n,sub);});
+
+// sortable tables (sorts currently rendered rows)
+function makeSortable(tableSel){
+  const t=$(tableSel); if(!t)return;
+  t.querySelectorAll('thead th').forEach((th,i)=>{
+    th.classList.add('sortable'); th.insertAdjacentHTML('beforeend',' <span class="ind">⇅</span>');
+    th.addEventListener('click',()=>{
+      const tb=t.querySelector('tbody'); const rows=[...tb.querySelectorAll('tr')];
+      const asc=th.getAttribute('data-asc')!=='1';
+      t.querySelectorAll('thead th').forEach(o=>{o.setAttribute('data-asc','');const s=o.querySelector('.ind');if(s)s.textContent='⇅';});
+      th.setAttribute('data-asc',asc?'1':'0'); const ind=th.querySelector('.ind'); if(ind)ind.textContent=asc?'▲':'▼';
+      const num=v=>{const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isNaN(n)?null:n;};
+      rows.sort((a,b)=>{const x=(a.children[i]?.textContent||'').trim(),y=(b.children[i]?.textContent||'').trim();const nx=num(x),ny=num(y);let c=(nx!=null&&ny!=null)?nx-ny:x.localeCompare(y);return asc?c:-c;});
+      rows.forEach(r=>tb.appendChild(r));
+    });
+  });
+}
+['#tSku','#tBrand','#tPt','#tWs'].forEach(makeSortable);
+
+// section nav: smooth scroll + active highlight
+(function(){
+  const links=[...$$('#snav a')];
+  links.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const el=document.querySelector(a.getAttribute('href'));el&&el.scrollIntoView({behavior:'smooth'});}));
+  const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
+  const obs=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[en.target.id]&&map[en.target.id].classList.add('active');}});},{rootMargin:'-20% 0px -70% 0px'});
+  Object.keys(map).forEach(id=>{const el=document.getElementById(id);el&&obs.observe(el);});
+})();
 
 buildInputs();
 computeSales();
