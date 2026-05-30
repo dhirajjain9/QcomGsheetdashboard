@@ -94,6 +94,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <a href="#sec-ws">White space</a>
   <a href="#sec-avail">Availability</a>
   <a href="#sec-mom">MoM</a>
+  <a href="#sec-price">Price</a>
 </nav>
 
 <div class="note">
@@ -299,6 +300,20 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
     <div style="max-height:300px;overflow:auto"><table id="tMomBTypeNew"><thead><tr><th>Brand</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
   <div class="card"><h3 style="color:var(--red)">－ Brands that left this type</h3><div class="h3sub">In this type in March, gone in April — by March value-share</div>
     <div style="max-height:300px;overflow:auto"><table id="tMomBTypeExit"><thead><tr><th>Brand</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+
+<!-- PRICE ARCHITECTURE (VALUE PER UNIT) -->
+<h2 id="sec-price">Price architecture — value per unit <span class="tag" id="priceScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
+<div class="note">
+  <b>PPU = selling price per single unit</b>, so multipacks compare fairly (a ₹114 pack of 25 candles = ₹5/unit, not ₹114). Tiers are ₹/unit bands. The tier with lots of demand but <b>few SKUs</b> is the value white space to attack. Pick a product type; scope follows the Top-SKUs selector.
+</div>
+<div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">Product type:</span><select id="priceTypeSel"></select></div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3>Demand &amp; supply by value tier <span class="tag" id="priceTypeLbl"></span></h3><div class="h3sub">Bars = demand (₹ when entered, else value-share) per ₹/unit tier · line = competing SKUs</div><div class="cwrap"><canvas id="cPriceBands"></canvas></div><div class="legend" id="priceNote"></div></div>
+  <div class="card"><h3>Pack-size mix</h3><div class="h3sub">How this type is sold — single vs multipack (by SKU count)</div><div class="cwrap"><canvas id="cPackMix"></canvas></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Value-tier detail</h3><div class="h3sub">Per ₹/unit tier — supply, demand, sales, discount, typical pack</div>
+  <div style="max-height:300px;overflow:auto"><table id="tPriceBands"><thead><tr><th>Value tier (₹/unit)</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Demand</th><th class="num priceSalesCol" style="display:none">Sales</th><th class="num">Avg disc</th><th class="num">Avg pack</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <footer id="ft"></footer>
@@ -630,7 +645,7 @@ function renderAll(){
   $('#totalSales').textContent=total>0?money(total):'–';
   renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderSovChart();
   renderOverall(); renderProductTypes(); renderLaunchpad();
-  renderSkusChart(); renderConcChart(); renderAvailability(); renderMomentum();
+  renderSkusChart(); renderConcChart(); renderAvailability(); renderMomentum(); renderPrice();
 }
 function applySales(){ computeSales(); renderAll(); }
 $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); saveSales(); applySales();});
@@ -729,7 +744,46 @@ function renderMomBrandType(){
   tn.innerHTML=ne.map(o=>`<tr data-brand="${o.b}"><td>${o.b}</td><td class="num">${o.aprSkus}</td><td class="num" style="color:var(--grn)">${fmt(o.aprShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No new brands in this type</td></tr>';
   tx.innerHTML=ex.map(o=>`<tr data-brand="${o.b}"><td>${o.b}</td><td class="num">${o.marSkus}</td><td class="num" style="color:var(--red)">${fmt(o.marShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No brands left this type</td></tr>';
 }
-function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();renderAvailability();renderMomentum();}
+
+// ---- Price architecture (value per unit, product-type wise) ----
+let priceTypeVal=null, priceBandChart, packMixChart;
+const PPU_TIERS=[[0,100,'<₹100'],[100,300,'₹100–300'],[300,700,'₹300–700'],[700,1500,'₹700–1.5k'],[1500,Infinity,'>₹1.5k']];
+function renderPrice(){
+  const allrows=scopeRows().filter(s=>s.pt&&s.pt!=='Other'&&s.ppu>0);
+  $('#priceScopeLbl').textContent='· '+scopeLabel();
+  const cnt={}; allrows.forEach(s=>cnt[s.pt]=(cnt[s.pt]||0)+1);
+  const tsel=$('#priceTypeSel');
+  if(tsel){ const byCount=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
+    if(!priceTypeVal||!cnt[priceTypeVal])priceTypeVal=byCount[0]||null;
+    tsel.innerHTML=Object.keys(cnt).sort().map(t=>`<option${t===priceTypeVal?' selected':''}>${t}</option>`).join(''); }
+  renderPriceBands();
+}
+function renderPriceBands(){
+  if(!priceTypeVal)return; const sales=salesActive();
+  $('#priceTypeLbl').textContent='· '+priceTypeVal;
+  const rows=scopeRows().filter(s=>s.pt===priceTypeVal&&s.ppu>0);
+  const bands=PPU_TIERS.map(([lo,hi,lbl])=>({lo,hi,lbl,skus:0,brands:new Set(),demand:0,val:0,disc:0,discN:0,pack:0,packN:0}));
+  rows.forEach(s=>{const b=bands.find(b=>s.ppu>=b.lo&&s.ppu<b.hi);if(!b)return;b.skus++;b.brands.add(s.b.toLowerCase());b.demand+=(s.csp||0);b.val+=skuVal(s);if(s.disc!=null){b.disc+=s.disc;b.discN++;}if(s.pack){b.pack+=s.pack;b.packN++;}});
+  let best=null,bv=-1;bands.forEach(b=>{if(b.skus>0){const v=(sales?b.val:b.demand)/b.skus;if(v>bv){bv=v;best=b;}}});
+  if(priceBandChart)priceBandChart.destroy();
+  priceBandChart=new Chart($('#cPriceBands'),{data:{labels:bands.map(b=>b.lbl),datasets:[
+    {type:'bar',label:sales?metricShort():'Demand',data:bands.map(b=>sales?b.val:b.demand),backgroundColor:bands.map(b=>best&&b===best?C.grn:C.acc2),borderRadius:5,yAxisID:'y'},
+    {type:'line',label:'Competing SKUs',data:bands.map(b=>b.skus),borderColor:C.org,backgroundColor:C.org,tension:.3,yAxisID:'y1'}]},
+    options:{plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>c.dataset.type==='line'?c.raw+' SKUs':(sales?valFmt(c.raw):'Demand '+fmt(c.raw,1))}}},
+    scales:{y:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'Demand'},ticks:{callback:v=>sales?axisFmt(v):v}},y1:{position:'right',grid:{display:false},title:{display:true,text:'# SKUs'}},x:{grid:{display:false}}}}});
+  $('#priceNote').innerHTML=best?`<span><b style="color:var(--grn)">Most demand per SKU at ${best.lbl}/unit</b> — ${sales?valFmt(best.val):fmt(best.demand,1)+' demand'} across only <b>${best.skus}</b> SKU(s).</span>`:'<span class="tag">No PPU data for this type.</span>';
+  // pack-size mix
+  const PB=[[1,2,'Single'],[2,4,'2–3'],[4,7,'4–6'],[7,13,'7–12'],[13,1e9,'12+']];
+  const pm=PB.map(([lo,hi,lbl])=>({lbl,n:0}));
+  rows.forEach(s=>{const p=s.pack||1;const i=PB.findIndex(([lo,hi])=>p>=lo&&p<hi);if(i>=0)pm[i].n++;});
+  if(packMixChart)packMixChart.destroy();
+  packMixChart=new Chart($('#cPackMix'),{type:'bar',data:{labels:pm.map(x=>x.lbl),datasets:[{data:pm.map(x=>x.n),backgroundColor:C.pur,borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' SKUs'}}},scales:{x:{grid:{color:C.line},title:{display:true,text:'# SKUs'}},y:{grid:{display:false}}}}});
+  // detail table
+  $$('.priceSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
+  $('#tPriceBands tbody').innerHTML=bands.map(b=>`<tr><td>${b.lbl}</td><td class="num">${b.skus}</td><td class="num">${b.brands.size}</td><td class="num">${fmt(b.demand,1)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.val)}</td>`:''}<td class="num">${b.discN?fmt(b.disc/b.discN,0):'–'}</td><td class="num">${b.packN?fmt(b.pack/b.packN,1):'–'}</td></tr>`).join('');
+}
+function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();renderAvailability();renderMomentum();renderPrice();}
 sel.addEventListener('change',renderScope);
 
 // ===== Interactivity: drill-down modal, clickable charts/rows, sortable tables, section nav =====
@@ -829,6 +883,7 @@ rowClick('#tAvail',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&
 ['#tMomTypeNew','#tMomTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const t=tr.getAttribute('data-type');t&&showType(t);}));
 ['#tMomBTypeNew','#tMomBTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
 $('#momTypeSel')&&$('#momTypeSel').addEventListener('change',e=>{momTypeVal=e.target.value;renderMomBrandType();});
+$('#priceTypeSel')&&$('#priceTypeSel').addEventListener('change',e=>{priceTypeVal=e.target.value;renderPriceBands();});
 
 // sortable tables (sorts currently rendered rows)
 function makeSortable(tableSel){
@@ -846,7 +901,7 @@ function makeSortable(tableSel){
     });
   });
 }
-['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail','#tMomUp','#tMomDn','#tMomNew','#tMomExit','#tMomBrandNew','#tMomBrandExit','#tMomTypeNew','#tMomTypeExit','#tMomBTypeNew','#tMomBTypeExit'].forEach(makeSortable);
+['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail','#tMomUp','#tMomDn','#tMomNew','#tMomExit','#tMomBrandNew','#tMomBrandExit','#tMomTypeNew','#tMomTypeExit','#tMomBTypeNew','#tMomBTypeExit','#tPriceBands'].forEach(makeSortable);
 
 // section nav: smooth scroll + active highlight
 (function(){
