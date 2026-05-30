@@ -69,3 +69,5 @@ methodological notes.
 - A 6th category file was mentioned but never provided — re-run the pipeline if it
   arrives.
 - MoM ₹ growth now that real sales exist; export per-SKU units/revenue to Excel.
+
+<!-- redeploy 20260530T205549Z -->
