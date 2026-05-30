@@ -71,3 +71,5 @@ methodological notes.
 - MoM ₹ growth now that real sales exist; export per-SKU units/revenue to Excel.
 
 <!-- redeploy 20260530T205549Z -->
+
+<!-- redeploy 20260530T210341Z -->
