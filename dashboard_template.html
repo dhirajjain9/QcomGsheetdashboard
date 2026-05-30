@@ -34,11 +34,12 @@ h2::before{content:'';width:4px;height:18px;background:var(--acc);border-radius:
 .card .h3sub{color:var(--mut);font-size:11.5px;margin-bottom:12px}
 .cwrap{position:relative;height:300px}
 .cwrap.tall{height:360px}
+.cwrap.xtall{height:520px}
 select{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:13px;cursor:pointer}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line)}
 th{color:var(--mut);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
-td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 tr:hover td{background:rgba(0,0,0,.025)}
 .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
 .up{color:var(--grn)} .down{color:var(--red)}
@@ -80,17 +81,16 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
     <h1>Blinkit RCA <span>Dashboard</span></h1>
     <div class="sub" id="subt"></div>
   </div>
-  <select id="globalCat"></select>
 </header>
 
 <nav class="snav" id="snav">
-  <a href="#sec-launch">🚀 Launchpad</a>
   <a href="#sec-sales">₹ Sales</a>
   <a href="#sec-overall">Overall</a>
   <a href="#sec-market">Market</a>
   <a href="#sec-skus">Top SKUs</a>
   <a href="#sec-brands">Brands</a>
   <a href="#sec-types">Product types</a>
+  <a href="#sec-launch">🚀 Launchpad</a>
   <a href="#sec-momentum">Momentum</a>
   <a href="#sec-ws">White space</a>
 </nav>
@@ -104,6 +104,77 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 
 <!-- KPIs -->
 <div class="kpis" id="kpis"></div>
+
+<!-- SALES INPUT -->
+<h2 id="sec-sales">Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
+<div class="card" id="salesPanel">
+  <div class="h3sub">Enter each sub-category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. <b>Pre-filled with the agreed split and saved on this device</b> — enter once and reloads keep it (edit anytime, or Clear all to reset to the share-% view).</div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+    <span class="tag">Enter in:</span>
+    <select id="unitSel">
+      <option value="1">₹ (absolute)</option>
+      <option value="100000">₹ Lakh</option>
+      <option value="10000000" selected>₹ Crore</option>
+    </select>
+    <span class="tag" style="margin-left:8px">Show:</span>
+    <select id="metricSel">
+      <option value="net" selected>Net sales (SP ₹)</option>
+      <option value="gross">Gross sales (MRP ₹)</option>
+      <option value="units">Units sold</option>
+    </select>
+    <button id="clearBtn" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer">Clear all</button>
+    <span class="tag" id="salesSaved" style="color:var(--grn);margin-left:auto"></span>
+  </div>
+  <div id="salesInputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px"></div>
+  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <span class="tag">Total MRP sales entered (gross)</span>
+    <span id="totalSales" style="font-size:22px;font-weight:700;color:var(--acc)">–</span>
+  </div>
+</div>
+
+<!-- OVERALL VIEW -->
+<h2 id="sec-overall">Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all 5 sub-categories</span></h2>
+<div class="kpis" id="overallKpis"></div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per sub-category — enter totals to see ₹</div><div class="cwrap"><canvas id="cOvSub"></canvas></div></div>
+  <div class="card"><h3>Top brands overall</h3><div class="h3sub">Every brand's total, ₹-weighted across all categories (full brand universe)</div><div class="cwrap xtall"><canvas id="cOvBrand"></canvas></div></div>
+</div>
+
+<!-- OVERVIEW -->
+<h2 id="sec-market">Market structure by sub-category</h2>
+<div class="grid g2">
+  <div class="card"><h3>SKUs tracked per sub-category</h3><div class="h3sub">Breadth of assortment monitored</div><div class="cwrap"><canvas id="cSkus"></canvas></div></div>
+  <div class="card"><h3>Brand concentration vs availability</h3><div class="h3sub">Top-5 brand share (bars) &amp; avg on-shelf availability (line)</div><div class="cwrap"><canvas id="cConc"></canvas></div></div>
+</div>
+
+<!-- TOP SKUS -->
+<h2 id="sec-skus">Top SKUs — product-wise leaders <span class="tag" style="font-weight:400;margin-left:6px">· sub-category:</span> <select id="globalCat" style="font-weight:400"></select></h2>
+<div class="grid g2">
+  <div class="card"><h3>Top 12 products by category share</h3><div class="h3sub">Latest month, selected sub-category</div><div class="cwrap tall"><canvas id="cTopSku"></canvas></div></div>
+  <div class="card"><h3>Detail</h3><div class="h3sub">Share · price · availability · discount</div>
+    <div style="max-height:340px;overflow:auto"><table id="tSku"><thead><tr><th>Product</th><th>Brand</th><th class="num">Share%</th><th class="num skuSalesCol" style="display:none">Sales</th><th class="num">SP</th><th class="num">OSA</th><th class="num">Disc</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- TOP BRANDS -->
+<h2 id="sec-brands">Top brands &amp; market share</h2>
+<div class="grid g2">
+  <div class="card"><h3>Top 15 brands by share of tracked market</h3><div class="h3sub">% of all category-share points across the 5 sub-categories</div><div class="cwrap xtall"><canvas id="cBrand"></canvas></div></div>
+  <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap tall"><canvas id="cSov"></canvas></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Brand leaderboard</h3><div class="h3sub">Share, voice, footprint &amp; month-over-month momentum</div>
+  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">OSA</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
+</div>
+
+<!-- PRODUCT TYPES -->
+<h2 id="sec-types">Product types <span class="tag" style="margin-left:6px;font-weight:400">classified from product names · ~96% of SKUs</span></h2>
+<div class="grid g2">
+  <div class="card"><h3>Top product types across all categories</h3><div class="h3sub" id="ptSub">Top types by SKU count — enter totals to switch to ₹</div><div class="cwrap tall"><canvas id="cPtBar"></canvas></div></div>
+  <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div class="cwrap tall"><canvas id="cPtDonut"></canvas></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Product-type detail</h3><div class="h3sub">Top 25 types — footprint, pricing, availability &amp; sales</div>
+  <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
+</div>
 
 <!-- ===== FOUNDER'S LAUNCHPAD ===== -->
 <h2 id="sec-launch">🚀 Founder's Launchpad <span class="tag" style="margin-left:6px;font-weight:400">if you were launching a brand here — where to enter & how to win</span></h2>
@@ -157,77 +228,6 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <div class="card" style="margin-top:16px"><h3>4 · What to launch first — shortlist</h3>
   <div class="h3sub">The top opportunities, each with the benchmark SKU to beat, the price band to hit, and the incumbent to displace.</div>
   <div style="max-height:340px;overflow:auto"><table id="tLpShort"><thead><tr><th>#</th><th>Product type</th><th class="num">Opportunity</th><th>Target price band</th><th>Benchmark SKU to beat</th><th>Main incumbent</th><th class="num">Their OSA</th></tr></thead><tbody></tbody></table></div>
-</div>
-
-<!-- SALES INPUT -->
-<h2 id="sec-sales">Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
-<div class="card" id="salesPanel">
-  <div class="h3sub">Enter each sub-category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. <b>Pre-filled with the agreed split and saved on this device</b> — enter once and reloads keep it (edit anytime, or Clear all to reset to the share-% view).</div>
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-    <span class="tag">Enter in:</span>
-    <select id="unitSel">
-      <option value="1">₹ (absolute)</option>
-      <option value="100000">₹ Lakh</option>
-      <option value="10000000" selected>₹ Crore</option>
-    </select>
-    <span class="tag" style="margin-left:8px">Show:</span>
-    <select id="metricSel">
-      <option value="net" selected>Net sales (SP ₹)</option>
-      <option value="gross">Gross sales (MRP ₹)</option>
-      <option value="units">Units sold</option>
-    </select>
-    <button id="clearBtn" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer">Clear all</button>
-    <span class="tag" id="salesSaved" style="color:var(--grn);margin-left:auto"></span>
-  </div>
-  <div id="salesInputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px"></div>
-  <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-    <span class="tag">Total MRP sales entered (gross)</span>
-    <span id="totalSales" style="font-size:22px;font-weight:700;color:var(--acc)">–</span>
-  </div>
-</div>
-
-<!-- OVERALL VIEW -->
-<h2 id="sec-overall">Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all 5 sub-categories</span></h2>
-<div class="kpis" id="overallKpis"></div>
-<div class="grid g2" style="margin-top:16px">
-  <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per sub-category — enter totals to see ₹</div><div class="cwrap"><canvas id="cOvSub"></canvas></div></div>
-  <div class="card"><h3>Top brands overall</h3><div class="h3sub">Every brand's total, ₹-weighted across all categories (full brand universe)</div><div class="cwrap tall"><canvas id="cOvBrand"></canvas></div></div>
-</div>
-
-<!-- OVERVIEW -->
-<h2 id="sec-market">Market structure by sub-category</h2>
-<div class="grid g2">
-  <div class="card"><h3>SKUs tracked per sub-category</h3><div class="h3sub">Breadth of assortment monitored</div><div class="cwrap"><canvas id="cSkus"></canvas></div></div>
-  <div class="card"><h3>Brand concentration vs availability</h3><div class="h3sub">Top-5 brand share (bars) &amp; avg on-shelf availability (line)</div><div class="cwrap"><canvas id="cConc"></canvas></div></div>
-</div>
-
-<!-- TOP SKUS -->
-<h2 id="sec-skus">Top SKUs — product-wise leaders <span class="tag" style="margin-left:6px" id="skuCatLbl"></span></h2>
-<div class="grid g2">
-  <div class="card"><h3>Top 12 products by category share</h3><div class="h3sub">Latest month, selected sub-category</div><div class="cwrap tall"><canvas id="cTopSku"></canvas></div></div>
-  <div class="card"><h3>Detail</h3><div class="h3sub">Share · price · availability · discount</div>
-    <div style="max-height:340px;overflow:auto"><table id="tSku"><thead><tr><th>Product</th><th>Brand</th><th class="num">Share%</th><th class="num skuSalesCol" style="display:none">Sales</th><th class="num">SP</th><th class="num">OSA</th><th class="num">Disc</th></tr></thead><tbody></tbody></table></div>
-  </div>
-</div>
-
-<!-- TOP BRANDS -->
-<h2 id="sec-brands">Top brands &amp; market share</h2>
-<div class="grid g2">
-  <div class="card"><h3>Top 15 brands by share of tracked market</h3><div class="h3sub">% of all category-share points across the 5 sub-categories</div><div class="cwrap tall"><canvas id="cBrand"></canvas></div></div>
-  <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap tall"><canvas id="cSov"></canvas></div></div>
-</div>
-<div class="card" style="margin-top:16px"><h3>Brand leaderboard</h3><div class="h3sub">Share, voice, footprint &amp; month-over-month momentum</div>
-  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">OSA</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
-</div>
-
-<!-- PRODUCT TYPES -->
-<h2 id="sec-types">Product types <span class="tag" style="margin-left:6px;font-weight:400">classified from product names · ~96% of SKUs</span></h2>
-<div class="grid g2">
-  <div class="card"><h3>Top product types across all categories</h3><div class="h3sub" id="ptSub">Top types by SKU count — enter totals to switch to ₹</div><div class="cwrap tall"><canvas id="cPtBar"></canvas></div></div>
-  <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div class="cwrap tall"><canvas id="cPtDonut"></canvas></div></div>
-</div>
-<div class="card" style="margin-top:16px"><h3>Product-type detail</h3><div class="h3sub">Top 25 types — footprint, pricing, availability &amp; sales</div>
-  <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- MOMENTUM -->
@@ -336,13 +336,27 @@ DATA.subcats.forEach((s,i)=>sel.add(new Option(s,s,i===0,i===0)));
 
 // ---- Sub-cat charts ----
 const sc=DATA.subcat, scNames=sc.map(x=>x.name);
-new Chart($('#cSkus'),{type:'bar',data:{labels:scNames,datasets:[{data:sc.map(x=>x.skus),backgroundColor:PAL,borderRadius:6}]},
-  options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:C.line}},y:{grid:{display:false}}}}});
-
-new Chart($('#cConc'),{data:{labels:scNames,datasets:[
-  {type:'bar',label:'Top-5 brand share %',data:sc.map(x=>x.top5_conc),backgroundColor:C.acc2,borderRadius:6,yAxisID:'y'},
-  {type:'line',label:'Avg availability %',data:sc.map(x=>x.avg_osa),borderColor:C.grn,backgroundColor:C.grn,tension:.3,yAxisID:'y'}]},
-  options:{scales:{y:{grid:{color:C.line},max:100,title:{display:true,text:'%'}},x:{grid:{display:false},ticks:{maxRotation:20}}}}});
+// canonical sub-category order: by sales (desc) when totals entered, else by SKU count
+function subcatOrder(){
+  const sales=salesActive();
+  return [...DATA.subcats].map(name=>({name,v:DATA.sku_level.filter(s=>s.s===name).reduce((a,s)=>a+(sales?skuVal(s):1),0)}))
+    .sort((a,b)=>b.v-a.v).map(x=>x.name);
+}
+let skusChart, concChart;
+function renderSkusChart(){
+  const order=subcatOrder(), data=order.map(n=>(sc.find(x=>x.name===n)||{}).skus||0);
+  if(skusChart)skusChart.destroy();
+  skusChart=new Chart($('#cSkus'),{type:'bar',data:{labels:order,datasets:[{data,backgroundColor:PAL,borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:C.line}},y:{grid:{display:false}}}}});
+}
+function renderConcChart(){
+  const order=subcatOrder(), rows=order.map(n=>sc.find(x=>x.name===n)||{});
+  if(concChart)concChart.destroy();
+  concChart=new Chart($('#cConc'),{data:{labels:order,datasets:[
+    {type:'bar',label:'Top-5 brand share %',data:rows.map(x=>x.top5_conc),backgroundColor:C.acc2,borderRadius:6,order:2,yAxisID:'y'},
+    {type:'line',label:'Avg availability %',data:rows.map(x=>x.avg_osa),borderColor:C.grn,backgroundColor:C.grn,borderWidth:3,pointRadius:4,pointBackgroundColor:C.grn,tension:.3,order:0,yAxisID:'y'}]},
+    options:{plugins:{legend:{position:'top'}},scales:{y:{grid:{color:C.line},min:0,max:100,title:{display:true,text:'%'}},x:{grid:{display:false},ticks:{maxRotation:20}}}}});
+}
 
 // ---- Top SKUs (reactive: by value-share, or by units/₹ once totals entered) ----
 let topSkuChart;
@@ -384,15 +398,18 @@ function renderBrandChart(){
       label:c=>sales?valFmt(c.raw):fmt(c.raw,2)+'%',
       afterLabel:c=>`SOV ${tb[c.dataIndex].sov_pct}% · ${tb[c.dataIndex].skus} SKUs`}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'% of tracked market'},
-      ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
+      ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
 }
 function renderBrandTable(){
   const {sales,list}=brandOrdered();
+  const totalV=sales?DATA.sku_level.reduce((a,s)=>a+skuVal(s),0):0;
   $$('.brandSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
+  $$('.brandTotalCol').forEach(e=>{e.style.display=sales?'':'none';});
   $('#tBrand tbody').innerHTML=list.map((b,i)=>{
     const d=b.delta||0, cls=d>0?'up':d<0?'down':'', arrow=d>0?'▲':d<0?'▼':'–';
     return `<tr><td>${i+1}</td><td>${b.brand}</td><td class="num">${fmt(b.share_pct,2)}</td>
     ${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}
+    ${sales?`<td class="num" style="color:var(--acc2)">${totalV?fmt(b.v/totalV*100,2):'0'}%</td>`:''}
     <td class="num">${fmt(b.sov_pct,2)}</td>
     <td class="num ${cls}">${arrow} ${fmt(Math.abs(d),2)}</td><td class="num">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>
     <td class="num">${b.skus}</td><td class="num">${b.subcats}</td></tr>`}).join('');
@@ -449,11 +466,12 @@ function renderOverall(){
     ['Total units',sales?fmt(units,0):'–',C.acc2],
     ['Realisation (Net÷Gross)',sales&&gross?fmt(net/gross*100,1)+'%':'–',C.pur]];
   $('#overallKpis').innerHTML=cards.map(c=>`<div class="kpi"><div class="v" style="color:${c[2]}">${c[1]}</div><div class="l">${c[0]}</div></div>`).join('');
-  // sales by sub-category (or SKU count if no totals)
-  const bySub=DATA.subcats.map(sub=>{const r=DATA.sku_level.filter(s=>s.s===sub);
+  // sales by sub-category (or SKU count if no totals) — ordered by sales desc
+  const ovOrder=subcatOrder();
+  const bySub=ovOrder.map(sub=>{const r=DATA.sku_level.filter(s=>s.s===sub);
     return sales?r.reduce((a,s)=>a+skuVal(s),0):r.length;});
   if(ovSubChart)ovSubChart.destroy();
-  ovSubChart=new Chart($('#cOvSub'),{type:'bar',data:{labels:DATA.subcats,datasets:[{data:bySub,backgroundColor:PAL,borderRadius:6}]},
+  ovSubChart=new Chart($('#cOvSub'),{type:'bar',data:{labels:ovOrder,datasets:[{data:bySub,backgroundColor:PAL,borderRadius:6}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
   $('#ovSubSub').textContent=sales?metricLabel()+' per sub-category':'SKUs per sub-category — enter totals to see ₹';
@@ -466,7 +484,7 @@ function renderOverall(){
   if(ovBrandChart)ovBrandChart.destroy();
   ovBrandChart=new Chart($('#cOvBrand'),{type:'bar',data:{labels:tb.map(e=>disp[e[0]]||e[0]),datasets:[{data:tb.map(e=>e[1]),backgroundColor:C.acc2,borderRadius:5}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
-    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
+    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
 }
 
 // ---- Product types (classified from names) ----
@@ -543,6 +561,7 @@ function renderAll(){
   $('#totalSales').textContent=total>0?money(total):'–';
   renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderWsTable();
   renderOverall(); renderProductTypes(); renderLaunchpad();
+  renderSkusChart(); renderConcChart();
 }
 function applySales(){ computeSales(); renderAll(); }
 $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); saveSales(); applySales();});
@@ -613,8 +632,8 @@ onChartClick('#cOvBrand',i=>{const b=ovBrandKeyAt(i);b&&showBrand(b);});
 onChartClick('#cTopSku',i=>{const r=topSkuAt(i);r&&showSku(r.n,sel.value);});
 onChartClick('#cPtBar',i=>{const t=ptTopLabels[i];t&&showType(t);});
 onChartClick('#cPtDonut',i=>{const t=ptDonutLabels[i];t&&t!=='Other types'&&showType(t);});
-onChartClick('#cSkus',i=>setCategory(scNames[i]));
-onChartClick('#cOvSub',i=>setCategory(DATA.subcats[i]));
+onChartClick('#cSkus',i=>{const o=subcatOrder();setCategory(o[i]);});
+onChartClick('#cOvSub',i=>{const o=subcatOrder();setCategory(o[i]);});
 
 // clickable table rows -> drill-down
 function rowClick(tableSel,fn){const t=$(tableSel);t&&t.addEventListener('click',e=>{const tr=e.target.closest('tbody tr');if(tr)fn(tr);});}
