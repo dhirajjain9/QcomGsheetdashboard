@@ -180,7 +180,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <h2 id="sec-launch">🚀 Founder's Launchpad <span class="tag" style="margin-left:6px;font-weight:400">if you were launching a brand here — where to enter & how to win</span></h2>
 <div class="note" style="border-left-color:var(--grn)">
   <b>Reading this section as a founder:</b> <b>Opportunity</b> blends <b>Demand</b> (total sales of the type),
-  <b>White space</b> (blends an <b>un-dominated</b> brand field — low concentration via HHI — with <b>under-served</b> demand — lots of demand spread over few SKUs; high = room to enter) and
+  <b>White space</b> = √(<b>under-served</b> × <b>beatable-leader</b>) — high only when demand is spread over few SKUs (under-served) <b>and</b> no single brand dominates (beatable #1); high = room to enter) and
   <b>Availability gap</b> (how badly incumbents are out of stock — sales-weighted). Tune the weights to match your thesis,
   pick a scope, read the <b>opportunity map</b>, then click any type to load its <b>price ladder</b> and <b>competitors</b>. Enter ₹ sales (below) to size each prize in rupees.
 </div>
@@ -732,9 +732,10 @@ function lpTypeAgg(){
   let arr=Object.values(map).map(a=>{
     const tot=Object.values(a.brands).reduce((x,y)=>x+y,0)||1;
     const hhi=Object.values(a.brands).reduce((x,y)=>x+(y/tot)*(y/tot),0); // 0..1: low=fragmented, high=top-heavy
+    const cr1=Math.max(...Object.values(a.brands),0)/tot;                 // top brand's share of the type
     const wOSA=a.osaWN?a.osaW/a.osaWN:0;
     return {t:a.t,skus:a.skus,brands:Object.keys(a.brands).length,csp:a.csp,val:a.val,
-      openness:1-hhi,hhi,gap:Math.max(0,1-wOSA/100),wOSA,
+      openness:1-hhi,hhi,cr1,beat:1-cr1,gap:Math.max(0,1-wOSA/100),wOSA,
       avgSP:a.spN?a.spSum/a.spN:0,avgDisc:a.discN?a.discSum/a.discN:0,
       sizeRaw:sales?a.val:a.csp};});
   arr=arr.filter(x=>x.sizeRaw>0);
@@ -744,7 +745,8 @@ function lpTypeAgg(){
   const us=arr.map(x=>x.under).sort((p,q)=>p-q), cap=us[Math.floor(0.9*(us.length-1))]||1e-9;
   arr.forEach(x=>{x.demandN=x.sizeRaw/maxSize;
     x.underN=Math.min(1,x.under/cap);
-    x.ws=0.6*x.openness+0.4*x.underN;        // White space = un-dominated (1-HHI) + under-served (demand per SKU)
+    // White space = √(under-served × beatable-leader): needs BOTH a thin assortment AND no dominant #1
+    x.ws=Math.sqrt(x.underN*x.beat);
     const gate=Math.min(1,x.demandN/0.03);                 // zero/near-zero sales => no opportunity
     x.score=100*(W.d*x.demandN+W.o*x.ws+W.a*x.gap)*gate;});
   arr.sort((a,b)=>b.score-a.score); return arr;
