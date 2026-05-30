@@ -77,15 +77,15 @@ neutral cream theme.
 
 ## 4. Open backlog (derivable from existing columns, no new data)
 
-### P-Time — Time basis · low effort
-Views use **April only**; opportunity scores are point-in-time. Options: average Mar+Apr,
-a month toggle, or a trailing average once ≥3 months exist. Parked by decision.
-
 ### Price-band tiering (partial) · medium effort
-Type-level price ladder is built (Launchpad). Remaining: per-sub-category entry/mid/premium
-bands showing where demand & ₹ concentrate.
+Type-level price ladder is built (Launchpad). Remaining: a **per-sub-category** price-architecture
+view — bucket SKUs into entry/mid/premium/luxury bands and show, per band, the **demand** (share),
+**₹**, **supply** (SKU & brand count) and **typical discount** → reveals under-served price bands
+and the price points to attack. (MoM by SKU/brand/type uses both months; uses SP, so it's a
+headline-price view — pack-size/PPU nuance is out of scope since P5 was dropped.)
 
-_Dropped by decision: P7 (promo-dependency / pricing power) and P5 (pack-size / PPU)._
+_Decided / not pursuing: P7 (promo-dependency), P5 (pack-size / PPU), and time-basis
+(**April-only is permanent**)._
 
 ---
 
@@ -105,4 +105,4 @@ _Dropped by decision: P7 (promo-dependency / pricing power) and P5 (pack-size / 
 - All ₹/units are **estimates** from the entered-MRP model; default basis is **Gross (MRP)**.
 - Stockout lost-₹ uses a **75% target OSA** assumption (could be exposed as a slider).
 - A **6th category** was mentioned but never provided — re-run the pipeline if it arrives.
-- More monthly snapshots strengthen P6 (momentum) and the time-basis options.
+- **Time basis is April-only by decision** (permanent); MoM is the only view that uses March.
