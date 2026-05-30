@@ -168,14 +168,17 @@ g = (cur.groupby(['Product Name', 'Sub Category'])
             mrp=('MRP', 'mean'),
             osa=('Wt. OSA %', 'mean'),
             disc=('Wt. Discount %', 'mean'),
-            sov=('Overall SOV', 'mean'))
+            sov=('Overall SOV', 'mean'),
+            osov=('Organic SOV', 'mean'),
+            asov=('Ad SOV', 'mean'))
        .reset_index())
 sku_level = [{
     'n': row['Product Name'][:60], 'b': row['brand'], 's': row['Sub Category'],
     'pt': classify(row['Product Name']),
     'cs': r(row['cs'], 4), 'csp': r(row['csp'], 4),
     'sp': r(row['sp'], 0), 'mrp': r(row['mrp'], 0), 'osa': r(row['osa'], 0),
-    'disc': r(row['disc'], 0), 'sov': r(row['sov'], 3)
+    'disc': r(row['disc'], 0), 'sov': r(row['sov'], 3),
+    'osov': r(row['osov'], 3), 'asov': r(row['asov'], 3)
 } for _, row in g.iterrows()]
 
 out = {
