@@ -94,7 +94,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <a href="#sec-ws">White space</a>
   <a href="#sec-avail">Availability</a>
   <a href="#sec-mom">MoM</a>
-  <a href="#sec-price">Price</a>
+  <a href="#sec-price">Price Bands</a>
 </nav>
 
 <div class="note">
@@ -302,10 +302,10 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
     <div style="max-height:300px;overflow:auto"><table id="tMomBTypeExit"><thead><tr><th>Brand</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
-<!-- PRICE ARCHITECTURE (VALUE PER UNIT) -->
-<h2 id="sec-price">Price architecture — value per unit <span class="tag" id="priceScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
+<!-- PRICE BAND ANALYSIS (VALUE PER UNIT) -->
+<h2 id="sec-price">Price Band Analysis <span class="tag" id="priceScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
 <div class="note">
-  <b>PPU = selling price per single unit</b>, so multipacks compare fairly (a ₹114 pack of 25 candles = ₹5/unit, not ₹114). Tiers are ₹/unit bands. The tier with lots of demand but <b>few SKUs</b> is the value white space to attack. Pick a product type; scope follows the Top-SKUs selector.
+  <b>PPU = selling price per single unit</b>, so multipacks compare fairly (a ₹114 pack of 25 candles = ₹5/unit, not ₹114). <b>Bands are derived from the selected product type's own ₹/unit range</b> (not generic), so a tier means "premium <i>for this type</i>". The band with lots of demand but <b>few SKUs</b> is the value white space to attack. Pick a product type; scope follows the Top-SKUs selector.
 </div>
 <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">Product type:</span><select id="priceTypeSel"></select></div>
 <div class="grid g2" style="margin-top:16px">
@@ -747,7 +747,17 @@ function renderMomBrandType(){
 
 // ---- Price architecture (value per unit, product-type wise) ----
 let priceTypeVal=null, priceBandChart, packMixChart;
-const PPU_TIERS=[[0,100,'<₹100'],[100,300,'₹100–300'],[300,700,'₹300–700'],[700,1500,'₹700–1.5k'],[1500,Infinity,'>₹1.5k']];
+// type-adaptive ₹/unit bands: 5 equal-width bands across the type's own PPU range (trimmed at p95; top band open-ended)
+function ppuBands(rows){
+  const v=rows.map(s=>s.ppu).filter(x=>x>0).sort((a,b)=>a-b);
+  if(!v.length)return [];
+  const lo=v[0], hi=v[Math.floor(0.95*(v.length-1))], max=v[v.length-1];
+  if(hi<=lo)return [{lo:lo-1,hi:max+1,lbl:`₹${fmt(lo,0)}/unit`}];
+  const n=5, w=(hi-lo)/n, out=[];
+  for(let i=0;i<n;i++){const blo=lo+w*i, bhi=(i===n-1)?max+1:lo+w*(i+1);
+    out.push({lo:blo,hi:bhi,lbl:i===n-1?`₹${fmt(blo,0)}+`:`₹${fmt(blo,0)}–${fmt(bhi,0)}`});}
+  return out;
+}
 function renderPrice(){
   const allrows=scopeRows().filter(s=>s.pt&&s.pt!=='Other'&&s.ppu>0);
   $('#priceScopeLbl').textContent='· '+scopeLabel();
@@ -762,7 +772,7 @@ function renderPriceBands(){
   if(!priceTypeVal)return; const sales=salesActive();
   $('#priceTypeLbl').textContent='· '+priceTypeVal;
   const rows=scopeRows().filter(s=>s.pt===priceTypeVal&&s.ppu>0);
-  const bands=PPU_TIERS.map(([lo,hi,lbl])=>({lo,hi,lbl,skus:0,brands:new Set(),demand:0,val:0,disc:0,discN:0,pack:0,packN:0}));
+  const bands=ppuBands(rows).map(t=>({lo:t.lo,hi:t.hi,lbl:t.lbl,skus:0,brands:new Set(),demand:0,val:0,disc:0,discN:0,pack:0,packN:0}));
   rows.forEach(s=>{const b=bands.find(b=>s.ppu>=b.lo&&s.ppu<b.hi);if(!b)return;b.skus++;b.brands.add(s.b.toLowerCase());b.demand+=(s.csp||0);b.val+=skuVal(s);if(s.disc!=null){b.disc+=s.disc;b.discN++;}if(s.pack){b.pack+=s.pack;b.packN++;}});
   let best=null,bv=-1;bands.forEach(b=>{if(b.skus>0){const v=(sales?b.val:b.demand)/b.skus;if(v>bv){bv=v;best=b;}}});
   if(priceBandChart)priceBandChart.destroy();

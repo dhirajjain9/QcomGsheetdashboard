@@ -90,7 +90,7 @@ _Decided / not pursuing: P7 (promo-dependency) and time-basis (**April-only is p
 - **Competitive / white-space definition** → finalised as √(under-served × organic-beatable) with remark buckets.
 - **P6 — month-over-month** → built: SKU risers/fallers + entry/exit, brand & product-type entry/exit per
   category, and brand churn within a product type. (Uses March; everything else stays April-only.)
-- **P5 — pack-size / PPU** → built: `ppu`/`pack`/`gram` in `sku_level`, plus the **Price architecture**
+- **P5 — pack-size / PPU** → built: `ppu`/`pack`/`gram` in `sku_level`, plus the **Price Band Analysis**
   section (product-type-wise value-per-unit tiers, demand-vs-supply, pack-mix, tier detail).
 - **Conversion efficiency (share ÷ SOV)** → dropped: already shown by the visibility-vs-conversion
   scatter (above/below the diagonal) and sharpened by the organic-vs-paid logic. If ever needed, add a
