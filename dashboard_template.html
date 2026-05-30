@@ -173,7 +173,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div style="height:520px;overflow-y:auto"><div id="ptDonutWrap" style="position:relative;height:520px"><canvas id="cPtDonut"></canvas></div></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>Product-type detail</h3><div class="h3sub">Top 25 types — footprint, pricing, availability &amp; sales</div>
-  <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Rev/SKU</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- ===== FOUNDER'S LAUNCHPAD ===== -->
@@ -243,7 +243,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="card"><h3>How the field breaks down</h3><div class="h3sub">Product types per competitive bucket</div><div class="cwrap xtall"><canvas id="cWsBuckets"></canvas></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>White-space leaderboard</h3><div class="h3sub">Product types ranked by white space, with the reason. Hover the remark for detail; click a row to drill in.</div>
-  <div style="max-height:380px;overflow:auto"><table id="tWsTypes"><thead><tr><th>Product type</th><th class="num">White space</th><th>Remark (why)</th><th class="num">Under-served</th><th class="num">Beatable</th><th>Leader</th><th class="num">Demand</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:380px;overflow:auto"><table id="tWsTypes"><thead><tr><th>Product type</th><th class="num">White space</th><th>Remark (why)</th><th class="num">Under-served</th><th class="num">Beatable</th><th class="num">Rev/SKU</th><th>Leader</th><th class="num">Demand</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- AVAILABILITY / STOCKOUTS -->
@@ -472,11 +472,13 @@ function renderWhiteSpace(){
     options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' product types'}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:'# product types'}},y:{grid:{display:false}}}}});
   // leaderboard ranked by white space
+  const wsAvgPerSku=lpArr.reduce((s,x)=>s+(sales?x.val:x.csp),0)/Math.max(1,lpArr.reduce((s,x)=>s+x.skus,0));
   const byWs=[...lpArr].sort((a,b)=>b.ws-a.ws).slice(0,30);
   $('#tWsTypes tbody').innerHTML=byWs.map(x=>`<tr data-type="${x.t}"><td>${x.t}</td>
     <td class="num"><b style="color:${lpRemarkColor(x.remark)}">${Math.round(x.ws*100)}</b></td>
     <td title="${x.remarkWhy}" style="color:${lpRemarkColor(x.remark)};font-size:11.5px;white-space:nowrap">${x.remark}</td>
     <td class="num">${Math.round(x.underN*100)}</td><td class="num">${Math.round(x.beat*100)}</td>
+    ${revSkuCell((sales?x.val:x.csp)/Math.max(1,x.skus),wsAvgPerSku)}
     <td class="tag">${x.leaderName}</td><td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.csp,1)}</td></tr>`).join('');
 }
 
@@ -518,13 +520,14 @@ let ptBarChart, ptDonutChart, ptTopLabels=[], ptDonutLabels=[];
 function renderProductTypes(){
   const sales=salesActive();
   const agg={};
-  scopeRows().forEach(s=>{const t=s.pt; if(!agg[t])agg[t]={skus:0,brands:new Set(),sp:0,spn:0,osa:0,osan:0,val:0};
+  scopeRows().forEach(s=>{const t=s.pt; if(!agg[t])agg[t]={skus:0,brands:new Set(),sp:0,spn:0,osa:0,osan:0,val:0,csp:0};
     const a=agg[t]; a.skus++; a.brands.add(s.b.toLowerCase());
-    if(s.sp){a.sp+=s.sp;a.spn++;} if(s.osa!=null){a.osa+=s.osa;a.osan++;} a.val+=skuVal(s);});
-  let arr=Object.entries(agg).map(([t,a])=>({t,skus:a.skus,brands:a.brands.size,sp:a.spn?a.sp/a.spn:0,osa:a.osan?a.osa/a.osan:0,val:a.val}));
+    if(s.sp){a.sp+=s.sp;a.spn++;} if(s.osa!=null){a.osa+=s.osa;a.osan++;} a.val+=skuVal(s); a.csp+=(s.csp||0);});
+  let arr=Object.entries(agg).map(([t,a])=>({t,skus:a.skus,brands:a.brands.size,sp:a.spn?a.sp/a.spn:0,osa:a.osan?a.osa/a.osan:0,val:a.val,csp:a.csp}));
   const key=sales?'val':'skus';
   arr.sort((a,b)=>b[key]-a[key]);
   const totalVal=arr.reduce((s,x)=>s+x.val,0);
+  const ptAvgPerSku=arr.reduce((s,x)=>s+(sales?x.val:x.csp),0)/Math.max(1,arr.reduce((s,x)=>s+x.skus,0));
   const charted=arr.filter(x=>x.t!=='Other');
   const top=charted.slice(0,40);
   const _bw=$('#ptBarWrap'); if(_bw)_bw.style.height=Math.max(500,top.length*22)+'px';
@@ -545,6 +548,7 @@ function renderProductTypes(){
   $('#ptSub').textContent=(sales?('Top types by '+metricLabel()):'Top types by SKU count — enter totals to switch to ₹')+' · '+scopeLabel();
   $$('.ptSalesCol,.ptShareCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.classList.contains('ptSalesCol')&&e.tagName==='TH')e.textContent=metricShort();});
   $('#tPt tbody').innerHTML=arr.slice(0,25).map(x=>`<tr><td>${x.t}</td><td class="num">${x.skus}</td><td class="num">${x.brands}</td>
+    ${revSkuCell((sales?x.val:x.csp)/Math.max(1,x.skus),ptAvgPerSku)}
     <td class="num">₹${fmt(x.sp,0)}</td><td class="num" style="color:${x.osa<40?C.red:C.grn}">${fmt(x.osa,0)}</td>
     ${sales?`<td class="num" style="color:var(--acc)">${valFmt(x.val)}</td><td class="num">${totalVal?fmt(x.val/totalVal*100,1):0}%</td>`:''}</tr>`).join('');
 }
@@ -666,8 +670,9 @@ function showType(pt,mode){
     rows.forEach(s=>{const k=s.b.toLowerCase(); if(!bm[k])bm[k]={brand:s.b,skus:0,sov:0,csp:0,osa:0,osaN:0,disc:0,discN:0,sp:0,spN:0,v:0};
       const a=bm[k]; a.skus++; a.sov+=(s.sov||0); a.csp+=(s.csp||0); if(s.osa!=null){a.osa+=s.osa;a.osaN++;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} if(s.sp){a.sp+=s.sp;a.spN++;} a.v+=skuVal(s);});
     let barr=Object.values(bm).map(a=>({brand:a.brand,skus:a.skus,sov:a.sov,csp:a.csp,osa:a.osaN?a.osa/a.osaN:0,disc:a.discN?a.disc/a.discN:0,sp:a.spN?a.sp/a.spN:0,v:a.v}));
+    const brAvgPerSku=typeTotal/Math.max(1,rows.length);
     barr.sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp));
-    tableHtml=`<div class="hint">${barr.length} brands in this product type · % of type = brand's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Brand</th><th class="num">SKUs</th><th class="num">Demand(SOV)</th><th class="num">% of type</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num">Avg Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${barr.map(b=>`<tr><td>${b.brand}</td><td class="num">${b.skus}</td><td class="num">${fmt(b.sov,1)}</td><td class="num">${pctOf(sales?b.v:b.csp)}</td><td class="num">₹${fmt(b.sp,0)}</td><td class="num" style="color:${b.osa<40?C.red:C.grn}">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+    tableHtml=`<div class="hint">${barr.length} brands in this product type · % of type = brand's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Brand</th><th class="num">SKUs</th><th class="num">Demand(SOV)</th><th class="num">% of type</th><th class="num">Rev/SKU</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num">Avg Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${barr.map(b=>`<tr><td>${b.brand}</td><td class="num">${b.skus}</td><td class="num">${fmt(b.sov,1)}</td><td class="num">${pctOf(sales?b.v:b.csp)}</td>${revSkuCell((sales?b.v:b.csp)/Math.max(1,b.skus),brAvgPerSku)}<td class="num">₹${fmt(b.sp,0)}</td><td class="num" style="color:${b.osa<40?C.red:C.grn}">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   } else {
     const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,40);
     tableHtml=`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs · % of type = SKU's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">% of type</th><th class="num">SP</th><th class="num">OSA</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.s}</td><td class="num">${pctOf(sales?skuVal(s):s.csp)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
@@ -750,6 +755,12 @@ function lpWeights(){
   const s=d+o+a||1; return {d:d/s,o:o/s,a:a/s};
 }
 function lpRemarkColor(r){return r==='Prime white space'?C.grn:r==='Rented crown'?C.acc2:r==='Organic fortress'?C.red:r==='Crowded shelf'?C.org:C.mut;}
+// Revenue/SKU benchmark cell: × overall average, ▲ higher (green) / ▼ lower (orange)
+function revSkuCell(perSku,avg){
+  if(!avg||!isFinite(perSku)||perSku<=0)return '<td class="num tag">–</td>';
+  const m=perSku/avg, up=m>=1;
+  return `<td class="num" style="color:${up?C.grn:C.org}" title="Revenue per SKU vs the overall average (share/SKU if no totals entered)">${up?'▲':'▼'} ${m.toFixed(1)}×</td>`;
+}
 function lpTypeAgg(){
   const sales=salesActive();
   const rows=lpFilter().filter(s=>s.pt&&s.pt!=='Other'); const map={};
