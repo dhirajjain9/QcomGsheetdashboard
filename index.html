@@ -118,8 +118,8 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
     </select>
     <span class="tag" style="margin-left:8px">Show:</span>
     <select id="metricSel">
-      <option value="net" selected>Net sales (SP ₹)</option>
-      <option value="gross">Gross sales (MRP ₹)</option>
+      <option value="net">Net sales (SP ₹)</option>
+      <option value="gross" selected>Gross sales (MRP ₹)</option>
       <option value="units">Units sold</option>
     </select>
     <button id="clearBtn" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer">Clear all</button>
@@ -283,7 +283,7 @@ const fmt=(n,d=1)=>n==null?'–':Number(n).toLocaleString(undefined,{maximumFrac
 const totals={};            // sub-category -> entered MRP sales (₹, absolute)
 const subAgg={};            // sub-category -> {shareSum, Tsp}
 let unit=10000000;          // unit multiplier (default ₹ Crore)
-let metric='net';           // 'net' (SP ₹) | 'gross' (MRP ₹) | 'units'
+let metric='gross';         // 'net' (SP ₹) | 'gross' (MRP ₹) | 'units'
 const salesActive=()=>Object.values(totals).some(v=>v>0);
 
 function computeSales(){
