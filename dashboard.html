@@ -148,7 +148,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </div>
 
 <!-- TOP SKUS -->
-<h2 id="sec-skus">Top SKUs — product-wise leaders <span class="tag" style="font-weight:400;margin-left:6px">· sub-category:</span> <select id="globalCat" style="font-weight:400"></select></h2>
+<h2 id="sec-skus">Top SKUs — product-wise leaders <span class="tag" style="font-weight:400;margin-left:6px">Scope (drives SKUs · Brands · Product types):</span> <select id="globalCat" style="font-weight:400"></select></h2>
 <div class="grid g2">
   <div class="card"><h3>Top 12 products by category share</h3><div class="h3sub">Latest month, selected sub-category</div><div class="cwrap tall"><canvas id="cTopSku"></canvas></div></div>
   <div class="card"><h3>Detail</h3><div class="h3sub">Share · price · availability · discount</div>
@@ -157,7 +157,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </div>
 
 <!-- TOP BRANDS -->
-<h2 id="sec-brands">Top brands &amp; market share</h2>
+<h2 id="sec-brands">Top brands &amp; market share <span class="tag" id="brandScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
 <div class="grid g2">
   <div class="card"><h3>Top 15 brands by share of tracked market</h3><div class="h3sub">% of all category-share points across the 5 sub-categories</div><div class="cwrap xtall"><canvas id="cBrand"></canvas></div></div>
   <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap tall"><canvas id="cSov"></canvas></div></div>
@@ -332,7 +332,11 @@ $('#kpis').innerHTML=kdefs.map(d=>`<div class="kpi"><div class="v" style="color:
 
 // dropdowns
 const sel=$('#globalCat');
-DATA.subcats.forEach((s,i)=>sel.add(new Option(s,s,i===0,i===0)));
+sel.add(new Option('All categories','ALL',true,true));
+DATA.subcats.forEach(s=>sel.add(new Option(s,s)));
+// scope = the dropdown above Top SKUs; drives SKUs, Brands & Product types
+function scopeRows(){return sel.value==='ALL'?DATA.sku_level:DATA.sku_level.filter(s=>s.s===sel.value);}
+function scopeLabel(){return sel.value==='ALL'?'All categories':sel.value;}
 
 // ---- Sub-cat charts ----
 const sc=DATA.subcat, scNames=sc.map(x=>x.name);
@@ -361,9 +365,9 @@ function renderConcChart(){
 // ---- Top SKUs (reactive: by value-share, or by units/₹ once totals entered) ----
 let topSkuChart;
 function renderSku(cat){
-  const _scl=$('#skuCatLbl'); if(_scl)_scl.textContent='· '+cat; const _wcl=$('#wsCatLbl'); if(_wcl)_wcl.textContent='· '+cat;
+  const _scl=$('#skuCatLbl'); if(_scl)_scl.textContent='· '+scopeLabel(); const _wcl=$('#wsCatLbl'); if(_wcl)_wcl.textContent='· '+scopeLabel();
   const sales=salesActive();
-  const rows=DATA.sku_level.filter(s=>s.s===cat).map(s=>({...s,v:skuVal(s)}))
+  const rows=scopeRows().map(s=>({...s,v:skuVal(s)}))
               .sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp)).slice(0,12);
   $$('.skuSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
   if(topSkuChart)topSkuChart.destroy();
@@ -384,10 +388,22 @@ function renderSku(cat){
 
 // ---- Top brands (reactive: bar + leaderboard switch to ₹ when totals entered) ----
 let brandChart;
+const _deltaMap={}; DATA.top_brands.forEach(b=>_deltaMap[b.brand.toLowerCase()]=b.delta);
+function scopedBrands(){
+  const rows=scopeRows(), m={}; let totCsp=0,totSov=0;
+  rows.forEach(s=>{const k=s.b.toLowerCase(); if(!m[k])m[k]={brand:s.b,csp:0,sov:0,osa:0,osaN:0,disc:0,discN:0,skus:0,subs:new Set(),v:0};
+    const a=m[k]; a.csp+=(s.csp||0); a.sov+=(s.sov||0); if(s.osa!=null){a.osa+=s.osa;a.osaN++;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} a.skus++; a.subs.add(s.s); a.v+=skuVal(s);
+    totCsp+=(s.csp||0); totSov+=(s.sov||0);});
+  const all=sel.value==='ALL';
+  return Object.values(m).map(a=>({brand:a.brand,
+    share_pct: totCsp?a.csp/totCsp*100:0, sov_pct: totSov?a.sov/totSov*100:0,
+    osa:a.osaN?a.osa/a.osaN:0, disc:a.discN?a.disc/a.discN:0, skus:a.skus, subcats:a.subs.size, v:a.v,
+    delta: all?(_deltaMap[a.brand.toLowerCase()]??null):null}));
+}
 function brandOrdered(){
-  const sales=salesActive(), sm=sales?brandAgg().m:{};
-  return {sales,list:DATA.top_brands.map(b=>({...b,v:sm[b.brand.toLowerCase()]||0}))
-    .sort((a,b)=>sales?(b.v-a.v):(b.share_pct-a.share_pct))};
+  const sales=salesActive(); const list=scopedBrands();
+  list.sort((a,b)=>sales?(b.v-a.v):(b.share_pct-a.share_pct));
+  return {sales,list};
 }
 function renderBrandChart(){
   const {sales,list}=brandOrdered(), tb=list.slice(0,15);
@@ -396,29 +412,36 @@ function renderBrandChart(){
       data:tb.map(b=>sales?b.v:b.share_pct),backgroundColor:C.acc,borderRadius:5}]},
     options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{
       label:c=>sales?valFmt(c.raw):fmt(c.raw,2)+'%',
-      afterLabel:c=>`SOV ${tb[c.dataIndex].sov_pct}% · ${tb[c.dataIndex].skus} SKUs`}}},
+      afterLabel:c=>`SOV ${fmt(tb[c.dataIndex].sov_pct,2)}% · ${tb[c.dataIndex].skus} SKUs`}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'% of tracked market'},
       ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
 }
 function renderBrandTable(){
   const {sales,list}=brandOrdered();
-  const totalV=sales?DATA.sku_level.reduce((a,s)=>a+skuVal(s),0):0;
+  const totalV=sales?scopeRows().reduce((a,s)=>a+skuVal(s),0):0;
+  const bsl=$('#brandScopeLbl'); if(bsl)bsl.textContent='· '+scopeLabel();
   $$('.brandSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
   $$('.brandTotalCol').forEach(e=>{e.style.display=sales?'':'none';});
   $('#tBrand tbody').innerHTML=list.map((b,i)=>{
-    const d=b.delta||0, cls=d>0?'up':d<0?'down':'', arrow=d>0?'▲':d<0?'▼':'–';
+    const hasD=b.delta!=null, d=b.delta||0, cls=d>0?'up':d<0?'down':'', arrow=d>0?'▲':d<0?'▼':'–';
     return `<tr><td>${i+1}</td><td>${b.brand}</td><td class="num">${fmt(b.share_pct,2)}</td>
     ${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}
     ${sales?`<td class="num" style="color:var(--acc2)">${totalV?fmt(b.v/totalV*100,2):'0'}%</td>`:''}
     <td class="num">${fmt(b.sov_pct,2)}</td>
-    <td class="num ${cls}">${arrow} ${fmt(Math.abs(d),2)}</td><td class="num">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>
+    <td class="num ${cls}">${hasD?`${arrow} ${fmt(Math.abs(d),2)}`:'–'}</td><td class="num">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>
     <td class="num">${b.skus}</td><td class="num">${b.subcats}</td></tr>`}).join('');
 }
 
-new Chart($('#cSov'),{type:'scatter',data:{datasets:[{data:DATA.sov_scatter.map(d=>({x:d.x,y:d.y,b:d.brand})),
-  backgroundColor:DATA.sov_scatter.map(d=>d.y>=d.x?C.grn:C.red),pointRadius:6,pointHoverRadius:9}]},
-  options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.b}: SOV ${c.raw.x}% · Share ${c.raw.y}%`}}},
-  scales:{x:{grid:{color:C.line},title:{display:true,text:'Share of Voice %'}},y:{grid:{color:C.line},title:{display:true,text:'Market share %'}}}}});
+let sovChart, sovList=[];
+function renderSovChart(){
+  const {list}=brandOrdered();
+  sovList=[...list].sort((a,b)=>b.share_pct-a.share_pct).slice(0,30);
+  if(sovChart)sovChart.destroy();
+  sovChart=new Chart($('#cSov'),{type:'scatter',data:{datasets:[{data:sovList.map(d=>({x:d.sov_pct,y:d.share_pct,b:d.brand})),
+    backgroundColor:sovList.map(d=>d.share_pct>=d.sov_pct?C.grn:C.red),pointRadius:6,pointHoverRadius:9}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.b}: SOV ${fmt(c.raw.x,2)}% · Share ${fmt(c.raw.y,2)}%`}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:'Share of Voice %'}},y:{grid:{color:C.line},title:{display:true,text:'Market share %'}}}}});
+}
 
 // ---- Momentum ----
 function momChart(el,arr,col){
@@ -432,7 +455,7 @@ momChart('#cLoss',DATA.losers,C.red);
 // ---- White space quadrant (reactive) ----
 let quadChart;
 function renderQuad(cat){
-  const pts=DATA.quad_pts[cat]||[];
+  const pts=cat==='ALL'?Object.values(DATA.quad_pts).reduce((a,b)=>a.concat(b),[]):(DATA.quad_pts[cat]||[]);
   if(quadChart)quadChart.destroy();
   const med=40;
   quadChart=new Chart($('#cQuad'),{type:'bubble',data:{datasets:[{
@@ -492,7 +515,7 @@ let ptBarChart, ptDonutChart, ptTopLabels=[], ptDonutLabels=[];
 function renderProductTypes(){
   const sales=salesActive();
   const agg={};
-  DATA.sku_level.forEach(s=>{const t=s.pt; if(!agg[t])agg[t]={skus:0,brands:new Set(),sp:0,spn:0,osa:0,osan:0,val:0};
+  scopeRows().forEach(s=>{const t=s.pt; if(!agg[t])agg[t]={skus:0,brands:new Set(),sp:0,spn:0,osa:0,osan:0,val:0};
     const a=agg[t]; a.skus++; a.brands.add(s.b.toLowerCase());
     if(s.sp){a.sp+=s.sp;a.spn++;} if(s.osa!=null){a.osa+=s.osa;a.osan++;} a.val+=skuVal(s);});
   let arr=Object.entries(agg).map(([t,a])=>({t,skus:a.skus,brands:a.brands.size,sp:a.spn?a.sp/a.spn:0,osa:a.osan?a.osa/a.osan:0,val:a.val}));
@@ -512,7 +535,7 @@ function renderProductTypes(){
   if(ptDonutChart)ptDonutChart.destroy();
   ptDonutChart=new Chart($('#cPtDonut'),{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:PAL.concat(['#5a6b8c','#3a4866'])}]},
     options:{plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.label}: ${sales?valFmt(c.raw):c.raw+' SKUs'}`}}}}});
-  $('#ptSub').textContent=sales?('Top types by '+metricLabel()):'Top types by SKU count — enter totals to switch to ₹';
+  $('#ptSub').textContent=(sales?('Top types by '+metricLabel()):'Top types by SKU count — enter totals to switch to ₹')+' · '+scopeLabel();
   $$('.ptSalesCol,.ptShareCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.classList.contains('ptSalesCol')&&e.tagName==='TH')e.textContent=metricShort();});
   $('#tPt tbody').innerHTML=arr.slice(0,25).map(x=>`<tr><td>${x.t}</td><td class="num">${x.skus}</td><td class="num">${x.brands}</td>
     <td class="num">₹${fmt(x.sp,0)}</td><td class="num" style="color:${x.osa<40?C.red:C.grn}">${fmt(x.osa,0)}</td>
@@ -559,7 +582,7 @@ function recomputeTotals(){   // re-apply unit multiplier to raw entries
 function renderAll(){
   const total=Object.values(totals).reduce((a,b)=>a+b,0);
   $('#totalSales').textContent=total>0?money(total):'–';
-  renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderWsTable();
+  renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderSovChart(); renderWsTable();
   renderOverall(); renderProductTypes(); renderLaunchpad();
   renderSkusChart(); renderConcChart();
 }
@@ -567,7 +590,8 @@ function applySales(){ computeSales(); renderAll(); }
 $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); saveSales(); applySales();});
 $('#metricSel').addEventListener('change',e=>{metric=e.target.value; renderAll();});
 $('#clearBtn').addEventListener('click',()=>{$$('#salesInputs input').forEach(i=>i.value=''); DATA.subcats.forEach(s=>totals[s]=0); saveSales(); applySales();});
-sel.addEventListener('change',()=>renderSku(sel.value));
+function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();}
+sel.addEventListener('change',renderScope);
 
 // ===== Interactivity: drill-down modal, clickable charts/rows, sortable tables, section nav =====
 function openModal(title,sub,body){$('#modalTitle').textContent=title;$('#modalSub').innerHTML=sub||'';$('#modalBody').innerHTML=body;$('#modalBg').classList.add('open');}
@@ -624,9 +648,9 @@ function onChartClick(selr,handler){
 function brandKeyAt(i){const {list}=brandOrdered();const tb=list.slice(0,15);return tb[i]&&tb[i].brand;}
 function ovBrandKeyAt(i){const sales=salesActive();let tb;if(sales){const {m}=brandAgg();tb=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,15);}else{const cnt={};DATA.sku_level.forEach(s=>{const k=s.b.toLowerCase();cnt[k]=(cnt[k]||0)+1;});tb=Object.entries(cnt).sort((a,b)=>b[1]-a[1]).slice(0,15);}return tb[i]&&tb[i][0];}
 function topSkuAt(i){const cat=sel.value,sales=salesActive();const rows=DATA.sku_level.filter(s=>s.s===cat).map(s=>({...s,v:skuVal(s)})).sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp)).slice(0,12);return rows[i];}
-function setCategory(cat){if(!cat)return;sel.value=cat;renderSku(cat);const el=document.getElementById('sec-skus');el&&el.scrollIntoView({behavior:'smooth'});}
+function setCategory(cat){if(!cat)return;sel.value=cat;renderScope();const el=document.getElementById('sec-skus');el&&el.scrollIntoView({behavior:'smooth'});}
 
-onChartClick('#cSov',i=>{const d=DATA.sov_scatter[i];d&&showBrand(d.brand);});
+onChartClick('#cSov',i=>{const d=sovList[i];d&&showBrand(d.brand);});
 onChartClick('#cBrand',i=>{const b=brandKeyAt(i);b&&showBrand(b);});
 onChartClick('#cOvBrand',i=>{const b=ovBrandKeyAt(i);b&&showBrand(b);});
 onChartClick('#cTopSku',i=>{const r=topSkuAt(i);r&&showSku(r.n,sel.value);});
