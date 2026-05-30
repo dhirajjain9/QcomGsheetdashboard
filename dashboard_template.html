@@ -57,7 +57,7 @@ nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--txt)}
 th .ind{opacity:.45;font-size:9px;margin-left:2px}
-#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr,#tMomUp tbody tr,#tMomDn tbody tr,#tMomNew tbody tr,#tMomExit tbody tr,#tMomBrandNew tbody tr,#tMomBrandExit tbody tr,#tMomTypeNew tbody tr,#tMomTypeExit tbody tr{cursor:pointer}
+#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr,#tMomUp tbody tr,#tMomDn tbody tr,#tMomNew tbody tr,#tMomExit tbody tr,#tMomBrandNew tbody tr,#tMomBrandExit tbody tr,#tMomTypeNew tbody tr,#tMomTypeExit tbody tr,#tMomBTypeNew tbody tr,#tMomBTypeExit tbody tr{cursor:pointer}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:48px 16px;overflow:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(16,24,40,.22)}
@@ -291,6 +291,14 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
     <div style="max-height:300px;overflow:auto"><table id="tMomTypeNew"><thead><tr><th>Product type</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
   <div class="card"><h3 style="color:var(--red)">－ Product types that exited</h3><div class="h3sub">Types present in March, gone in April (within scope) — by March value-share</div>
     <div style="max-height:300px;overflow:auto"><table id="tMomTypeExit"><thead><tr><th>Product type</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="h3sub" style="margin:18px 0 0">Brand churn within a product type <span class="tag">— which brands entered or left a specific type (within scope)</span></div>
+<div class="card" style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">Product type:</span><select id="momTypeSel"></select></div>
+<div class="grid g2" style="margin-top:10px">
+  <div class="card"><h3 style="color:var(--grn)">＋ Brands new to this type</h3><div class="h3sub">No SKU of this type in March, present in April — by April value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomBTypeNew"><thead><tr><th>Brand</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--red)">－ Brands that left this type</h3><div class="h3sub">In this type in March, gone in April — by March value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomBTypeExit"><thead><tr><th>Brand</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
 <footer id="ft"></footer>
@@ -659,6 +667,7 @@ function renderAvailability(){
     ${sales?`<td class="num" style="color:var(--org)">${valFmt(lostOf(s))}</td>`:''}</tr>`).join('');
 }
 // ---- Month-over-month SKU movement (scope follows the Top-SKUs selector) ----
+let momTypeVal=null;
 function momScope(){return sel.value==='ALL'?DATA.sku_mom:DATA.sku_mom.filter(x=>x.s===sel.value);}
 function renderMomentum(){
   if(!DATA.sku_mom)return;
@@ -701,6 +710,24 @@ function renderMomentum(){
   $('#tMomDn tbody').innerHTML=fallers.map(mvRow).join('');
   $('#tMomNew tbody').innerHTML=entrants.map(x=>`<tr><td title="${x.n}">${x.n.slice(0,30)}</td><td>${x.b}</td><td class="tag">${x.s}</td><td class="num">${fmt(x.ac,2)}</td><td class="num" style="color:${x.ao<40?C.red:C.grn}">${fmt(x.ao,0)}</td><td class="num">₹${fmt(x.asp,0)}</td></tr>`).join('');
   $('#tMomExit tbody').innerHTML=exits.map(x=>`<tr><td title="${x.n}">${x.n.slice(0,30)}</td><td>${x.b}</td><td class="tag">${x.s}</td><td class="num">${fmt(x.pc,2)}</td><td class="num">${fmt(x.po,0)}</td></tr>`).join('');
+  // brand churn within a selected product type
+  const types=[...new Set(rows.filter(x=>x.pt&&x.pt!=='Other').map(x=>x.pt))].sort();
+  const tsel=$('#momTypeSel');
+  if(tsel){ if(!momTypeVal||!types.includes(momTypeVal))momTypeVal=types[0]||null;
+    tsel.innerHTML=types.map(t=>`<option${t===momTypeVal?' selected':''}>${t}</option>`).join(''); }
+  renderMomBrandType();
+}
+function renderMomBrandType(){
+  const t=momTypeVal, tn=$('#tMomBTypeNew tbody'), tx=$('#tMomBTypeExit tbody'); if(!tn||!tx)return;
+  if(!t){tn.innerHTML='';tx.innerHTML='';return;}
+  const rows=momScope().filter(x=>x.pt===t), bp={};
+  rows.forEach(x=>{const k=x.b.toLowerCase();if(!bp[k])bp[k]={b:x.b,apr:false,mar:false,aprSkus:0,marSkus:0,aprShare:0,marShare:0};const o=bp[k];
+    if(x.st==='both'||x.st==='new'){o.apr=true;o.aprSkus++;o.aprShare+=(x.ac||0);}
+    if(x.st==='both'||x.st==='exit'){o.mar=true;o.marSkus++;o.marShare+=(x.pc||0);}});
+  const ne=Object.values(bp).filter(o=>o.apr&&!o.mar).sort((a,b)=>b.aprShare-a.aprShare);
+  const ex=Object.values(bp).filter(o=>!o.apr&&o.mar).sort((a,b)=>b.marShare-a.marShare);
+  tn.innerHTML=ne.map(o=>`<tr data-brand="${o.b}"><td>${o.b}</td><td class="num">${o.aprSkus}</td><td class="num" style="color:var(--grn)">${fmt(o.aprShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No new brands in this type</td></tr>';
+  tx.innerHTML=ex.map(o=>`<tr data-brand="${o.b}"><td>${o.b}</td><td class="num">${o.marSkus}</td><td class="num" style="color:var(--red)">${fmt(o.marShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No brands left this type</td></tr>';
 }
 function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();renderAvailability();renderMomentum();}
 sel.addEventListener('change',renderScope);
@@ -800,6 +827,8 @@ rowClick('#tAvail',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&
 ['#tMomUp','#tMomDn','#tMomNew','#tMomExit'].forEach(sel2=>rowClick(sel2,tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n);}));
 ['#tMomBrandNew','#tMomBrandExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
 ['#tMomTypeNew','#tMomTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const t=tr.getAttribute('data-type');t&&showType(t);}));
+['#tMomBTypeNew','#tMomBTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
+$('#momTypeSel')&&$('#momTypeSel').addEventListener('change',e=>{momTypeVal=e.target.value;renderMomBrandType();});
 
 // sortable tables (sorts currently rendered rows)
 function makeSortable(tableSel){
@@ -817,7 +846,7 @@ function makeSortable(tableSel){
     });
   });
 }
-['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail','#tMomUp','#tMomDn','#tMomNew','#tMomExit','#tMomBrandNew','#tMomBrandExit','#tMomTypeNew','#tMomTypeExit'].forEach(makeSortable);
+['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail','#tMomUp','#tMomDn','#tMomNew','#tMomExit','#tMomBrandNew','#tMomBrandExit','#tMomTypeNew','#tMomTypeExit','#tMomBTypeNew','#tMomBTypeExit'].forEach(makeSortable);
 
 // section nav: smooth scroll + active highlight
 (function(){
