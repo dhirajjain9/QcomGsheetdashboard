@@ -39,7 +39,7 @@ Gross (MRP)**; also Net (SP, ~56% realisation ≈ ₹68 Cr) and Units (~2.44M). 
 
 **Opportunity (Founder's Launchpad)** — per product type, scope-aware:
 ```
-Opportunity = 100 × (0.50·Demand + 0.30·WhiteSpace + 0.20·AvailabilityGap) × demand-gate
+Opportunity = 100 × (0.30·Demand + 0.50·WhiteSpace + 0.20·AvailabilityGap) × demand-gate
 ```
 weights tunable via sliders; demand-gate ≈ min(1, demandN/0.03) drops no-demand types.
 
