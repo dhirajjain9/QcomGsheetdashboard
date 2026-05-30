@@ -615,16 +615,31 @@ function showBrand(key){
   const body=statBox(stats)+`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">OSA</th><th class="num">Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num">${fmt(s.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   openModal(rows[0].b,subs.join(' · '),body);
 }
-function showType(pt){
+let _typeViewPt=null;
+function setTypeView(mode){ if(_typeViewPt!=null) showType(_typeViewPt,mode); }
+function showType(pt,mode){
+  mode=mode||'sku'; _typeViewPt=pt;
   const rows=DATA.sku_level.filter(s=>s.pt===pt);
   if(!rows.length)return;
   const sales=salesActive(), brands=new Set(rows.map(s=>s.b.toLowerCase()));
   const stats=[['SKUs',rows.length],['Brands',brands.size],['Avg SP','₹'+fmt(avgOf(rows,s=>s.sp),0)],
     ['Avg OSA',fmt(avgOf(rows,s=>s.osa),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
   if(sales)stats.push([metricShort(),valFmt(rows.reduce((a,s)=>a+skuVal(s),0))]);
-  const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,40);
-  const body=statBox(stats)+`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">OSA</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
-  openModal(pt,brands.size+' brands · '+rows.length+' SKUs',body);
+  const btn=(m,lbl)=>`<button onclick="setTypeView('${m}')" style="background:${mode===m?'var(--acc)':'var(--panel2)'};color:${mode===m?'#fff':'var(--mut)'};border:1px solid var(--line);border-radius:7px;padding:5px 13px;cursor:pointer;font-size:12px;font-weight:${mode===m?'600':'400'}">${lbl}</button>`;
+  const toggle=`<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px"><span class="tag">View:</span>${btn('sku','By SKU')}${btn('brand','By Brand')}</div>`;
+  let tableHtml;
+  if(mode==='brand'){
+    const bm={};
+    rows.forEach(s=>{const k=s.b.toLowerCase(); if(!bm[k])bm[k]={brand:s.b,skus:0,sov:0,csp:0,osa:0,osaN:0,disc:0,discN:0,sp:0,spN:0,v:0};
+      const a=bm[k]; a.skus++; a.sov+=(s.sov||0); a.csp+=(s.csp||0); if(s.osa!=null){a.osa+=s.osa;a.osaN++;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} if(s.sp){a.sp+=s.sp;a.spN++;} a.v+=skuVal(s);});
+    let barr=Object.values(bm).map(a=>({brand:a.brand,skus:a.skus,sov:a.sov,csp:a.csp,osa:a.osaN?a.osa/a.osaN:0,disc:a.discN?a.disc/a.discN:0,sp:a.spN?a.sp/a.spN:0,v:a.v}));
+    barr.sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp));
+    tableHtml=`<div class="hint">${barr.length} brands in this product type — aggregate per brand</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Brand</th><th class="num">SKUs</th><th class="num">Demand(SOV)</th><th class="num">Share%</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num">Avg Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${barr.map(b=>`<tr><td>${b.brand}</td><td class="num">${b.skus}</td><td class="num">${fmt(b.sov,1)}</td><td class="num">${fmt(b.csp,2)}</td><td class="num">₹${fmt(b.sp,0)}</td><td class="num" style="color:${b.osa<40?C.red:C.grn}">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  } else {
+    const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,40);
+    tableHtml=`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">OSA</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  }
+  openModal(pt,brands.size+' brands · '+rows.length+' SKUs',statBox(stats)+toggle+tableHtml);
 }
 function showSku(name,sub){
   const s=DATA.sku_level.find(x=>x.n===name&&(!sub||x.s===sub))||DATA.sku_level.find(x=>x.n===name);
