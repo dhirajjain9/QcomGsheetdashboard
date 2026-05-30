@@ -196,6 +196,7 @@ for pid in (set(ma.index) | set(mp.index)):
     ref = a if inA else p
     sku_mom.append({
         'n': str(ref['n'])[:60], 'b': str(ref['b']), 's': str(ref['s']),
+        'pt': classify(str(ref['n'])),
         'st': 'both' if (inA and inP) else ('new' if inA else 'exit'),
         'ac': r(a['csp'], 4) if inA else None, 'pc': r(p['csp'], 4) if inP else None,
         'ao': r(a['osa'], 0) if inA else None, 'po': r(p['osa'], 0) if inP else None,
