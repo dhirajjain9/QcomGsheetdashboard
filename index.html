@@ -835,6 +835,24 @@ function showBrand(key){
   const body=statBox(stats)+`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">OSA</th><th class="num">Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num">${fmt(s.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   openModal(rows[0].b,subs.join(' · '),body);
 }
+// churn drill-down: only the brand's SKUs within a product type (or scope), for the relevant month
+function showChurnSkus(brand, pt, dir){
+  const isExit = dir==='exit';
+  let rows=momScope().filter(x=>String(x.b).toLowerCase()===String(brand).toLowerCase());
+  if(pt) rows=rows.filter(x=>x.pt===pt);
+  rows=rows.filter(x=> isExit ? (x.pc!=null) : (x.ac!=null));   // March SKUs for exits, April SKUs for new
+  if(!rows.length)return;
+  rows.sort((a,b)=> isExit ? ((b.pc||0)-(a.pc||0)) : ((b.ac||0)-(a.ac||0)));
+  const m = isExit ? 'March' : 'April';
+  const stats=[['Brand',rows[0].b],['Scope',pt||scopeLabel()],[isExit?'SKUs in March':'SKUs in April',rows.length]];
+  const body=statBox(stats)
+    +`<div class="hint">${isExit?`Was in ${pt||scopeLabel()} in March, gone in April`:`New to ${pt||scopeLabel()} in April`} — only this brand's SKUs.</div>`
+    +`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th class="num">${m} share</th><th class="num">${m} OSA</th><th class="num">${m} SP</th></tr></thead><tbody>`
+    +rows.map(s=>{const sh=isExit?s.pc:s.ac, osa=isExit?s.po:s.ao, sp=isExit?s.psp:s.asp;
+      return `<tr><td title="${s.n}">${s.n}</td><td class="num">${fmt(sh,2)}</td><td class="num" style="color:${osa<40?C.red:C.grn}">${osa==null?'–':fmt(osa,0)}</td><td class="num">₹${fmt(sp,0)}</td></tr>`}).join('')
+    +`</tbody></table></div>`;
+  openModal(`${rows[0].b} — ${pt||scopeLabel()}`, `${isExit?'exited':'new to'} this ${pt?'product type':'scope'} · ${m} snapshot`, body);
+}
 let _typeViewPt=null;
 function setTypeView(mode){ if(_typeViewPt!=null) showType(_typeViewPt,mode); }
 function showType(pt,mode){
@@ -906,9 +924,11 @@ rowClick('#tPt',tr=>{const t=tr.children[0]?.textContent;t&&showType(t);});
 rowClick('#tWsTypes',tr=>{const t=tr.getAttribute('data-type');t&&showType(t);});
 rowClick('#tAvail',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n,sel.value==='ALL'?null:sel.value);});
 ['#tMomUp','#tMomDn','#tMomNew','#tMomExit'].forEach(sel2=>rowClick(sel2,tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n);}));
-['#tMomBrandNew','#tMomBrandExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
+rowClick('#tMomBrandNew',tr=>{const b=tr.getAttribute('data-brand');b&&showChurnSkus(b,null,'new');});
+rowClick('#tMomBrandExit',tr=>{const b=tr.getAttribute('data-brand');b&&showChurnSkus(b,null,'exit');});
 ['#tMomTypeNew','#tMomTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const t=tr.getAttribute('data-type');t&&showType(t);}));
-['#tMomBTypeNew','#tMomBTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
+rowClick('#tMomBTypeNew',tr=>{const b=tr.getAttribute('data-brand');b&&showChurnSkus(b,momTypeVal,'new');});
+rowClick('#tMomBTypeExit',tr=>{const b=tr.getAttribute('data-brand');b&&showChurnSkus(b,momTypeVal,'exit');});
 onChartClick('#cMomChurn',i=>{const x=momChurnList[i];if(x){momTypeVal=x.pt;renderMomBrandType();}});
 $('#priceTypeSel')&&$('#priceTypeSel').addEventListener('change',e=>{priceTypeVal=e.target.value;renderPriceBands();});
 
