@@ -75,16 +75,9 @@ neutral cream theme.
 
 ---
 
-## 4. Open backlog (derivable from existing columns, no new data)
+## 4. Open backlog
 
-### Price-band tiering — **backend ready, frontend pending** · medium effort
-**P5 backend is built:** `sku_level` now carries `ppu` (₹/unit), `pack` (count = SP÷PPU) and
-`gram` (grammage) — so value can be compared per-unit, not by misleading headline SP (~30% of
-SKUs are multipacks; in types like Drinking Glass / Tea Light Candle / Storage Container the
-majority are). **Remaining (frontend):** a per-sub-category price-architecture view — bucket SKUs
-into entry/mid/premium/luxury bands **on PPU**, showing demand / ₹ / supply (SKU & brand count) /
-typical discount per band → under-served price bands + the price points to attack. Plus optional
-pack-mix and PPU-value benchmarks by type.
+_Empty._ All planned insights are built.
 
 _Decided / not pursuing: P7 (promo-dependency) and time-basis (**April-only is permanent**)._
 
@@ -97,6 +90,8 @@ _Decided / not pursuing: P7 (promo-dependency) and time-basis (**April-only is p
 - **Competitive / white-space definition** → finalised as √(under-served × organic-beatable) with remark buckets.
 - **P6 — month-over-month** → built: SKU risers/fallers + entry/exit, brand & product-type entry/exit per
   category, and brand churn within a product type. (Uses March; everything else stays April-only.)
+- **P5 — pack-size / PPU** → built: `ppu`/`pack`/`gram` in `sku_level`, plus the **Price architecture**
+  section (product-type-wise value-per-unit tiers, demand-vs-supply, pack-mix, tier detail).
 - **Conversion efficiency (share ÷ SOV)** → dropped: already shown by the visibility-vs-conversion
   scatter (above/below the diagonal) and sharpened by the organic-vs-paid logic. If ever needed, add a
   sortable `share/SOV` column to the brand leaderboard (~10 min).
