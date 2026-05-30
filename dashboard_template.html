@@ -108,13 +108,23 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- ===== FOUNDER'S LAUNCHPAD ===== -->
 <h2 id="sec-launch">🚀 Founder's Launchpad <span class="tag" style="margin-left:6px;font-weight:400">if you were launching a brand here — where to enter & how to win</span></h2>
 <div class="note" style="border-left-color:var(--grn)">
-  <b>Reading this section as a founder:</b> <b>Opportunity</b> blends <b>Demand</b> (shopper interest / share-of-voice),
-  <b>Openness</b> (how un-concentrated the brands are — easy to break in) and <b>Availability gap</b> (how badly incumbents are out of stock — room to win on supply alone).
-  Pick a scope, read the <b>opportunity map</b>, then click any type to load its <b>price ladder</b> and <b>competitors</b>. Enter ₹ sales (below) to size each prize in rupees.
+  <b>Reading this section as a founder:</b> <b>Opportunity</b> blends <b>Demand</b> (total sales of the type),
+  <b>Competition</b> (how many brands &amp; how top-heavy — measured by HHI: low = fragmented/open, high = dominated) and
+  <b>Availability gap</b> (how badly incumbents are out of stock — sales-weighted). Tune the weights to match your thesis,
+  pick a scope, read the <b>opportunity map</b>, then click any type to load its <b>price ladder</b> and <b>competitors</b>. Enter ₹ sales (below) to size each prize in rupees.
 </div>
-<div class="card" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-  <span class="tag">Scope:</span><select id="lpScope"></select>
-  <span class="tag" style="margin-left:auto" id="lpScopeSummary"></span>
+<div class="card" style="margin-bottom:16px">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <span class="tag">Scope:</span><select id="lpScope"></select>
+    <span class="tag" style="margin-left:auto" id="lpScopeSummary"></span>
+  </div>
+  <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+    <span class="tag">Opportunity weights:</span>
+    <label class="tag" style="display:flex;align-items:center;gap:6px">Demand (sales) <input type="range" id="wDemand" min="0" max="100" value="50"><b id="wDemandV" style="color:var(--acc);width:32px;text-align:right">50</b></label>
+    <label class="tag" style="display:flex;align-items:center;gap:6px">Competition <input type="range" id="wOpen" min="0" max="100" value="25"><b id="wOpenV" style="color:var(--acc);width:32px;text-align:right">25</b></label>
+    <label class="tag" style="display:flex;align-items:center;gap:6px">Availability <input type="range" id="wAvail" min="0" max="100" value="25"><b id="wAvailV" style="color:var(--acc);width:32px;text-align:right">25</b></label>
+    <button id="wReset" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:11px">Reset</button>
+  </div>
 </div>
 
 <!-- 1 · Where to play -->
@@ -123,7 +133,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="cwrap tall"><canvas id="cLpOpp"></canvas></div>
 </div>
 <div class="card" style="margin-bottom:16px"><h3>Opportunity ranking</h3><div class="h3sub">Sorted by opportunity score (0–100). Click a row to load its price ladder &amp; competitors below.</div>
-  <div style="max-height:330px;overflow:auto"><table id="tLpOpp"><thead><tr><th>Product type</th><th class="num">Opportunity</th><th class="num">Demand</th><th class="num">Openness</th><th class="num">Avail. gap</th><th class="num">Brands</th><th class="num">SKUs</th><th class="num">Prize</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:330px;overflow:auto"><table id="tLpOpp"><thead><tr><th>Product type</th><th class="num">Opportunity</th><th class="num">Demand (sales)</th><th class="num">Competition</th><th class="num">Avail. gap</th><th class="num">Brands</th><th class="num">SKUs</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <div class="card" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -139,7 +149,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <!-- 3 · Who to beat -->
   <div class="card"><h3>3 · Who to beat — incumbents <span class="tag" id="lpTypeLbl2"></span></h3>
     <div class="h3sub">Brands competing in this type. <b style="color:var(--red)">Flags</b> mark beatable ones — out-of-stock leaders, visibility-renters, under-converters.</div>
-    <div style="max-height:300px;overflow:auto"><table id="tLpComp"><thead><tr><th>Brand</th><th class="num">Demand</th><th class="num">Share%</th><th class="num">OSA</th><th class="num">Ad-rel.</th><th class="num">SKUs</th><th>Vulnerability</th></tr></thead><tbody></tbody></table></div>
+    <div style="max-height:300px;overflow:auto"><table id="tLpComp"><thead><tr><th>Brand</th><th class="num">Sales/Share</th><th class="num">OSA</th><th class="num">Ad-rel.</th><th class="num">SKUs</th><th>Vulnerability</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 
@@ -627,49 +637,62 @@ function makeSortable(tableSel){
 // ===== Founder's Launchpad =====
 let lpScopeVal='ALL', lpTypeVal=null, lpArr=[], lpOppChart, lpPriceChart;
 function lpFilter(){return lpScopeVal==='ALL'?DATA.sku_level:DATA.sku_level.filter(s=>s.s===lpScopeVal);}
+function lpWeights(){
+  const d=+(($('#wDemand')||{}).value||50),o=+(($('#wOpen')||{}).value||25),a=+(($('#wAvail')||{}).value||25);
+  const s=d+o+a||1; return {d:d/s,o:o/s,a:a/s};
+}
 function lpTypeAgg(){
+  const sales=salesActive();
   const rows=lpFilter().filter(s=>s.pt&&s.pt!=='Other'); const map={};
-  rows.forEach(s=>{const t=s.pt;if(!map[t])map[t]={t,skus:0,brands:{},demand:0,csp:0,osaSum:0,osaN:0,val:0,spSum:0,spN:0,discSum:0,discN:0,stockout:0};
-    const a=map[t],dem=s.sov||0;a.skus++;a.demand+=dem;a.csp+=(s.csp||0);
-    const bk=s.b.toLowerCase();a.brands[bk]=(a.brands[bk]||0)+dem;
-    if(s.osa!=null){a.osaSum+=s.osa;a.osaN++;if(s.osa<40)a.stockout+=dem;}
-    if(s.sp){a.spSum+=s.sp;a.spN++;}if(s.disc!=null){a.discSum+=s.disc;a.discN++;}
-    a.val+=skuVal(s);});
-  let arr=Object.values(map).map(a=>{const bs=Object.values(a.brands),tot=bs.reduce((x,y)=>x+y,0)||1,
-    top=(bs.length?Math.max(...bs):0)/tot,avgOSA=a.osaN?a.osaSum/a.osaN:0;
-    return {t:a.t,skus:a.skus,brands:Object.keys(a.brands).length,demand:a.demand,csp:a.csp,
-      openness:bs.length<=1?(a.skus<=1?0.15:0.3):1-top,gap:1-avgOSA/100,avgOSA,val:a.val,
-      avgSP:a.spN?a.spSum/a.spN:0,avgDisc:a.discN?a.discSum/a.discN:0,stockout:a.stockout};});
-  arr=arr.filter(x=>x.demand>0||x.csp>0);
-  const maxDem=Math.max(...arr.map(x=>x.demand),1e-6);
-  arr.forEach(x=>{x.demandN=x.demand/maxDem;x.score=100*(0.45*x.demandN+0.30*x.openness+0.25*x.gap);});
+  rows.forEach(s=>{const t=s.pt;if(!map[t])map[t]={t,skus:0,brands:{},csp:0,val:0,osaW:0,osaWN:0,spSum:0,spN:0,discSum:0,discN:0};
+    const a=map[t],w=(s.csp||0);a.skus++;a.csp+=w;a.val+=skuVal(s);
+    const bk=s.b.toLowerCase();a.brands[bk]=(a.brands[bk]||0)+w;
+    if(s.osa!=null){const ww=w||1e-4;a.osaW+=s.osa*ww;a.osaWN+=ww;}
+    if(s.sp){a.spSum+=s.sp;a.spN++;}if(s.disc!=null){a.discSum+=s.disc;a.discN++;}});
+  const W=lpWeights();
+  let arr=Object.values(map).map(a=>{
+    const tot=Object.values(a.brands).reduce((x,y)=>x+y,0)||1;
+    const hhi=Object.values(a.brands).reduce((x,y)=>x+(y/tot)*(y/tot),0); // 0..1: low=fragmented, high=top-heavy
+    const wOSA=a.osaWN?a.osaW/a.osaWN:0;
+    return {t:a.t,skus:a.skus,brands:Object.keys(a.brands).length,csp:a.csp,val:a.val,
+      openness:1-hhi,hhi,gap:Math.max(0,1-wOSA/100),wOSA,
+      avgSP:a.spN?a.spSum/a.spN:0,avgDisc:a.discN?a.discSum/a.discN:0,
+      sizeRaw:sales?a.val:a.csp};});
+  arr=arr.filter(x=>x.sizeRaw>0);
+  const maxSize=Math.max(...arr.map(x=>x.sizeRaw),1e-9);
+  arr.forEach(x=>{x.demandN=x.sizeRaw/maxSize;
+    const gate=Math.min(1,x.demandN/0.03);                 // zero/near-zero sales => no opportunity
+    x.score=100*(W.d*x.demandN+W.o*x.openness+W.a*x.gap)*gate;});
   arr.sort((a,b)=>b.score-a.score); return arr;
 }
 function lpBands(rows){
+  const sales=salesActive();
   const sps=rows.map(s=>s.sp).filter(x=>x>0);if(!sps.length)return[];
   const min=Math.min(...sps),max=Math.max(...sps),n=5,span=(max-min)||1;
-  const bands=[...Array(n)].map((_,i)=>({lo:min+span*i/n,hi:min+span*(i+1)/n,demand:0,skus:0,val:0}));
-  rows.forEach(s=>{if(!s.sp)return;const idx=Math.min(n-1,Math.floor((s.sp-min)/span*n));const b=bands[idx];b.demand+=(s.sov||0);b.skus++;b.val+=skuVal(s);});
+  const bands=[...Array(n)].map((_,i)=>({lo:min+span*i/n,hi:min+span*(i+1)/n,csp:0,skus:0,val:0}));
+  rows.forEach(s=>{if(!s.sp)return;const idx=Math.min(n-1,Math.floor((s.sp-min)/span*n));const b=bands[idx];b.csp+=(s.csp||0);b.skus++;b.val+=skuVal(s);});
+  bands.forEach(b=>b.demand=sales?b.val:b.csp);
   return bands;
 }
 function lpBestBand(bands){let best=null,bv=-1;bands.forEach(b=>{if(b.demand<=0)return;const v=b.demand/(b.skus||1);if(v>bv){bv=v;best=b;}});return best;}
 function lpCompetitors(rows){
-  const map={};
-  rows.forEach(s=>{const k=s.b.toLowerCase();if(!map[k])map[k]={b:s.b,demand:0,csp:0,osaSum:0,osaN:0,asov:0,osov:0,skus:0,val:0};
-    const a=map[k];a.demand+=(s.sov||0);a.csp+=(s.csp||0);a.skus++;a.val+=skuVal(s);
-    if(s.osa!=null){a.osaSum+=s.osa;a.osaN++;}a.asov+=(s.asov||0);a.osov+=(s.osov||0);});
-  let arr=Object.values(map).map(a=>{const avgOSA=a.osaN?a.osaSum/a.osaN:0,adRel=(a.asov+a.osov)>0?a.asov/(a.asov+a.osov):0;return {...a,avgOSA,adRel};});
-  arr.sort((x,y)=>y.demand-x.demand);
-  const demMax=Math.max(...arr.map(x=>x.demand),1e-6);
-  arr.forEach(x=>{x.flag=(x.demand>=0.25*demMax&&x.avgOSA<40)?'Out-of-stock leader':(x.adRel>0.55&&x.demand>0)?'Renting visibility':(x.avgOSA<40)?'Low availability':'';});
+  const sales=salesActive(); const map={};
+  rows.forEach(s=>{const k=s.b.toLowerCase();if(!map[k])map[k]={b:s.b,csp:0,val:0,osaW:0,osaWN:0,asov:0,osov:0,skus:0};
+    const a=map[k],w=(s.csp||0);a.csp+=w;a.val+=skuVal(s);a.skus++;
+    if(s.osa!=null){const ww=w||1e-4;a.osaW+=s.osa*ww;a.osaWN+=ww;}a.asov+=(s.asov||0);a.osov+=(s.osov||0);});
+  let arr=Object.values(map).map(a=>{const wOSA=a.osaWN?a.osaW/a.osaWN:0,adRel=(a.asov+a.osov)>0?a.asov/(a.asov+a.osov):0;
+    return {...a,avgOSA:wOSA,adRel,size:sales?a.val:a.csp};});
+  arr.sort((x,y)=>y.size-x.size);
+  const sMax=Math.max(...arr.map(x=>x.size),1e-9);
+  arr.forEach(x=>{x.flag=(x.size>=0.25*sMax&&x.avgOSA<40)?'Out-of-stock leader':(x.adRel>0.55&&x.size>0)?'Renting visibility':(x.avgOSA<40)?'Low availability':'';});
   return arr;
 }
 function renderLaunchpad(){
   const sales=salesActive(); lpArr=lpTypeAgg();
   const totVal=lpArr.reduce((a,x)=>a+x.val,0);
   $('#lpScopeSummary').textContent=`${lpArr.length} product types · ${sales?('prize '+money(totVal)):'enter ₹ sales to size prize'}`;
-  const sizeOf=x=>sales?x.val:x.demand, maxSize=Math.max(...lpArr.map(sizeOf),1e-6);
-  const pts=lpArr.slice(0,30).map((x,i)=>({x:Math.round(x.openness*100),y:Math.round(x.demandN*100),r:Math.max(5,Math.sqrt(sizeOf(x)/maxSize)*26),t:x.t,gap:x.gap,score:x.score,i}));
+  const maxSize=Math.max(...lpArr.map(x=>x.sizeRaw),1e-9);
+  const pts=lpArr.slice(0,30).map((x,i)=>({x:Math.round(x.openness*100),y:Math.round(x.demandN*100),r:Math.max(5,Math.sqrt(x.sizeRaw/maxSize)*26),t:x.t,gap:x.gap,score:x.score,i}));
   if(lpOppChart)lpOppChart.destroy();
   lpOppChart=new Chart($('#cLpOpp'),{type:'bubble',data:{datasets:[{data:pts,
     backgroundColor:pts.map(p=>`rgba(${Math.round(110+p.gap*145)},${Math.round(150-p.gap*90)},${Math.round(120-p.gap*40)},.62)`),
@@ -679,10 +702,10 @@ function renderLaunchpad(){
             y:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'Demand — share of voice →'}}}}});
   $('#tLpOpp tbody').innerHTML=lpArr.slice(0,25).map(x=>`<tr data-type="${x.t}"><td>${x.t}</td>
     <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
-    <td class="num">${Math.round(x.demandN*100)}</td><td class="num">${Math.round(x.openness*100)}</td>
+    <td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.csp,1)}</td>
+    <td class="num">${Math.round(x.openness*100)}</td>
     <td class="num" style="color:${x.gap>0.6?C.red:C.txt}">${Math.round(x.gap*100)}</td>
-    <td class="num">${x.brands}</td><td class="num">${x.skus}</td>
-    <td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.demand,0)}</td></tr>`).join('');
+    <td class="num">${x.brands}</td><td class="num">${x.skus}</td></tr>`).join('');
   const tsel=$('#lpType');
   if(!lpTypeVal||!lpArr.find(x=>x.t===lpTypeVal))lpTypeVal=lpArr.length?lpArr[0].t:null;
   tsel.innerHTML=lpArr.slice(0,40).map(x=>`<option value="${x.t}"${x.t===lpTypeVal?' selected':''}>${x.t} — opp ${Math.round(x.score)}</option>`).join('');
@@ -702,10 +725,10 @@ function renderLpType(){
             y1:{position:'right',grid:{display:false},title:{display:true,text:'# SKUs'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
   const discRows=rows.filter(s=>s.disc!=null);
   $('#lpPriceNote').innerHTML=best?`<span><b style="color:var(--grn)">Attack band ₹${fmt(best.lo,0)}–${fmt(best.hi,0)}</b> — ${fmt(best.demand,1)} demand across only <b>${best.skus}</b> SKU(s). Typical discount ~${fmt(discRows.reduce((a,s)=>a+s.disc,0)/(discRows.length||1),0)}%.</span>`:'<span class="tag">No price data for this type.</span>';
-  const comp=lpCompetitors(rows);
+  const comp=lpCompetitors(rows), csales=salesActive();
   $('#tLpComp tbody').innerHTML=comp.slice(0,15).map(c=>{
     const fc=c.flag==='Out-of-stock leader'?C.red:c.flag==='Renting visibility'?C.org:c.flag==='Low availability'?C.acc:C.mut;
-    return `<tr><td>${c.b}</td><td class="num">${fmt(c.demand,1)}</td><td class="num">${fmt(c.csp,2)}</td>
+    return `<tr><td>${c.b}</td><td class="num" style="color:var(--acc)">${csales?money(c.val):fmt(c.csp,2)+'%'}</td>
     <td class="num" style="color:${c.avgOSA<40?C.red:C.grn}">${fmt(c.avgOSA,0)}</td>
     <td class="num">${Math.round(c.adRel*100)}%</td><td class="num">${c.skus}</td>
     <td style="color:${fc};font-size:11px">${c.flag||'—'}</td></tr>`;}).join('');
@@ -714,7 +737,7 @@ function renderLpShort(){
   const sales=salesActive();
   $('#tLpShort tbody').innerHTML=lpArr.slice(0,6).map((x,i)=>{
     const rows=lpFilter().filter(s=>s.pt===x.t);
-    const bench=[...rows].sort((a,b)=>(b.sov||0)-(a.sov||0))[0];
+    const bench=[...rows].sort((a,b)=>(b.csp||0)-(a.csp||0))[0];
     const best=lpBestBand(lpBands(rows)); const comp=lpCompetitors(rows)[0];
     return `<tr data-type="${x.t}"><td>${i+1}</td><td>${x.t}</td>
       <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
@@ -728,6 +751,10 @@ function renderLpShort(){
   DATA.subcats.forEach(s=>ssel.add(new Option(s,s)));
   ssel.addEventListener('change',e=>{lpScopeVal=e.target.value;lpTypeVal=null;renderLaunchpad();});
   $('#lpType').addEventListener('change',e=>{lpTypeVal=e.target.value;renderLpType();});
+  function syncW(){const W=lpWeights();$('#wDemandV').textContent=Math.round(W.d*100);$('#wOpenV').textContent=Math.round(W.o*100);$('#wAvailV').textContent=Math.round(W.a*100);}
+  ['#wDemand','#wOpen','#wAvail'].forEach(s=>$(s).addEventListener('input',()=>{syncW();renderLaunchpad();}));
+  $('#wReset').addEventListener('click',()=>{$('#wDemand').value=50;$('#wOpen').value=25;$('#wAvail').value=25;syncW();renderLaunchpad();});
+  syncW();
 })();
 onChartClick('#cLpOpp',i=>{const p=lpArr[i];if(p){lpTypeVal=p.t;const ts=$('#lpType');if(ts)ts.value=p.t;renderLpType();}});
 rowClick('#tLpOpp',tr=>{const t=tr.getAttribute('data-type');if(t){lpTypeVal=t;const ts=$('#lpType');if(ts)ts.value=t;renderLpType();}});
