@@ -174,17 +174,28 @@ g = (cur.groupby(['Product Name', 'Sub Category'])
             ppu=('Wt. PPU (x100)', 'mean'),
             gram=('Grammage', 'first'))
        .reset_index())
-def ppu_clean(sp, ppu):
-    # per-unit price can't exceed the pack price; source PPU is corrupt for ~4% of rows
-    if ppu and ppu > 0 and sp and sp > 0 and ppu > sp:
-        return sp
-    return ppu
-def pack_of(sp, ppu):
-    ppu = ppu_clean(sp, ppu)
-    if ppu and ppu > 0 and sp and sp > 0:
-        p = round(sp / ppu, 1)
-        return p if p >= 1 else 1.0
-    return 1.0
+import re
+def pack_count(gram, name):
+    # derive pack count from grammage piece-count; volume/weight/'unit' => single (pack 1).
+    # Falls back to an explicit count in the product name. Source Wt. PPU is ignored
+    # (it divides by volume numbers, e.g. "800 ml" -> 8, corrupting per-unit price).
+    g = str(gram).lower().strip()
+    m = re.match(r'^\s*(\d+)\s*(pcs|pc|pieces|piece|pair)\b', g)
+    if m:
+        return max(1, int(m.group(1)))
+    m = re.search(r'set of (\d+)', g) or re.match(r'^\s*(\d+)\s*sets?\b', g)
+    if m:
+        return max(1, int(m.group(1)))
+    n = str(name).lower()
+    m = (re.search(r'set of (\d+)', n) or re.search(r'pack of (\d+)', n)
+         or re.search(r'\b(\d+)\s*(pcs|pieces)\b', n))
+    if m:
+        return max(1, int(m.group(1)))
+    return 1
+def ppu_of(sp, gram, name):
+    if sp is None or pd.isna(sp) or sp <= 0:
+        return None
+    return round(sp / pack_count(gram, name))
 sku_level = [{
     'n': row['Product Name'][:60], 'b': row['brand'], 's': row['Sub Category'],
     'pt': classify(row['Product Name']),
@@ -192,7 +203,8 @@ sku_level = [{
     'sp': r(row['sp'], 0), 'mrp': r(row['mrp'], 0), 'osa': r(row['osa'], 0),
     'disc': r(row['disc'], 0), 'sov': r(row['sov'], 3),
     'osov': r(row['osov'], 3), 'asov': r(row['asov'], 3),
-    'ppu': r(ppu_clean(row['sp'], row['ppu']), 0), 'pack': pack_of(row['sp'], row['ppu']),
+    'ppu': ppu_of(row['sp'], row['gram'], row['Product Name']),
+    'pack': float(pack_count(row['gram'], row['Product Name'])),
     'gram': (str(row['gram']).strip()[:14] if pd.notna(row['gram']) else '')
 } for _, row in g.iterrows()]
 
