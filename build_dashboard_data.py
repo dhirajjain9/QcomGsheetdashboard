@@ -170,15 +170,23 @@ g = (cur.groupby(['Product Name', 'Sub Category'])
             disc=('Wt. Discount %', 'mean'),
             sov=('Overall SOV', 'mean'),
             osov=('Organic SOV', 'mean'),
-            asov=('Ad SOV', 'mean'))
+            asov=('Ad SOV', 'mean'),
+            ppu=('Wt. PPU (x100)', 'mean'),
+            gram=('Grammage', 'first'))
        .reset_index())
+def pack_of(sp, ppu):
+    if ppu and ppu > 0 and sp and sp > 0:
+        return round(sp / ppu, 1)
+    return 1.0
 sku_level = [{
     'n': row['Product Name'][:60], 'b': row['brand'], 's': row['Sub Category'],
     'pt': classify(row['Product Name']),
     'cs': r(row['cs'], 4), 'csp': r(row['csp'], 4),
     'sp': r(row['sp'], 0), 'mrp': r(row['mrp'], 0), 'osa': r(row['osa'], 0),
     'disc': r(row['disc'], 0), 'sov': r(row['sov'], 3),
-    'osov': r(row['osov'], 3), 'asov': r(row['asov'], 3)
+    'osov': r(row['osov'], 3), 'asov': r(row['asov'], 3),
+    'ppu': r(row['ppu'], 0), 'pack': pack_of(row['sp'], row['ppu']),
+    'gram': (str(row['gram']).strip()[:14] if pd.notna(row['gram']) else '')
 } for _, row in g.iterrows()]
 
 # ---------- SKU-level month-over-month (entrants / exits / risers / fallers) ----------
