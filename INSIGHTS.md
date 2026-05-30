@@ -1,12 +1,11 @@
 # Metrics & Insights Spec — Blinkit RCA Dashboard
 
-This is the reference for **what the data measures** and **what insights can be
-built from it**. It is the backlog and definition layer behind `dashboard.html` /
-`index.html`. See `CLAUDE.md` for the build pipeline and the ₹-sales model.
+Reference for **what the data measures**, **how the scores are built**, and the
+**remaining backlog**. See `CLAUDE.md` for the build pipeline and ₹-sales model.
 
 Data state: **2 monthly snapshots** (2026-03-01 → 2026-04-01) × **~3,000 SKUs**
 across 5 sub-categories (Kitchen & Dining, Home Decor, Bathroom Essentials,
-Cleaning Tools, Home Improvement). One row = one SKU in one month.
+Cleaning Tools, Home Improvement). Strategic views use **April only** (see P-Time).
 
 ---
 
@@ -14,134 +13,106 @@ Cleaning Tools, Home Improvement). One row = one SKU in one month.
 
 Coverage = % of rows with a non-null value (latest month).
 
-| Metric | Coverage | Meaning / definition | Notes |
+| Metric | Coverage | Meaning | Notes |
 |---|---|---|---|
-| **Est. Category Share** | 100% | Estimated share of category **volume/offtake**; sums to 100% per sub-cat/month | **demand proxy** |
-| **Est. Category Share SP** | 99.8% | Estimated share of category **value at SP**; sums to 100% | **revenue proxy** — use for ₹ |
-| **Overall SOV** | 78.6% | Share of Voice (visibility); sums to 100% per sub-cat | not = Org+Ad |
-| **Organic SOV** | 78.6% | Unpaid visibility | sums to 100% |
-| **Ad SOV** | 78.6% | Paid visibility | sums to 100% |
-| **Wt. OSA %** | 99.8% | Weighted On-Shelf Availability (in-stock %) | mean **34.8%**; **55% of SKUs < 40%** |
-| **SP** | 97.6% | Selling price (₹) | |
-| **MRP** | 97.6% | Max retail price (₹) | |
-| **Wt. Discount %** | 97.6% | (MRP−SP)/MRP weighted | median **40%**, p75 **55%** |
-| **Wt. PPU (x100)** | 97.6% | Price per **single unit** = SP / pack count | normalizes across pack sizes — **currently unused** |
-| **Grammage** | 100% | Pack/size label, e.g. "2 pcs" | **106 distinct values — unused** |
-| **Brand** | 100% | Brand (casing inconsistent → normalise via lowercase key) | |
-| **Product ID** | 100% | SKU id | enables entrant/exit tracking across months |
-| Item ID / Offtake MRP / Offtake SP / Units | ~0% | **Empty** | no native ₹/units → drives the entered-MRP sales model |
+| **Est. Category Share** | 100% | share of category **volume**; sums to 100%/sub-cat | demand proxy (volume) |
+| **Est. Category Share SP** | 99.8% | share of category **value at SP**; sums to 100% | **revenue proxy** (used for ₹) |
+| **Overall / Organic / Ad SOV** | 78.6% | Share of Voice (visibility); each sums to 100%/sub-cat | Overall ≠ Org+Ad |
+| **Wt. OSA %** | 99.8% | weighted On-Shelf Availability | mean **34.8%**; **55% of SKUs < 40%** |
+| **SP / MRP / Wt. Discount %** | 97.6% | price / list / depth | discount median 40%, p75 55% |
+| **Wt. PPU (x100)** | 97.6% | price per single unit | **still unused** (see P-Pack) |
+| **Grammage** | 100% | pack/size label | 106 distinct values — **still unused** |
+| **Brand / Product ID** | 100% | identity | Product ID enables entrant/exit tracking |
+| Item ID / Offtake / Units | ~0% | **empty** | no native ₹/units → entered-MRP sales model |
 
-### The ₹-sales model (already built)
-No native revenue/units. The user enters total **MRP sales per sub-category**
-(≈ ₹122.6 Cr). Per sub-cat, that total is distributed across SKUs using
-**Est. Category Share SP, SP, MRP** so that Σ gross MRP reconciles to the entered
-total. Toggle: Net ₹ / Gross ₹ / Units. Validated: gross 122.6 Cr, net ≈ 68.2 Cr
-(~56% realisation), ~2.44M units.
+**₹-sales model:** user enters total **MRP sales per sub-category** (≈ ₹122.6 Cr,
+pre-filled & saved per device). Distributed across SKUs via Est. Category Share SP,
+SP, MRP so Σ gross MRP reconciles to the entered total. **Show toggle defaults to
+Gross (MRP)**; also Net (SP, ~56% realisation ≈ ₹68 Cr) and Units (~2.44M). Avg gross
+≈ ₹4.1 L/SKU/month.
 
-### Key signals found in the data (design around these)
-- **corr(SOV, share) = 0.74** → visibility converts, but the *residuals* are the
-  prize: over-converters (efficient) vs under-converters (waste).
-- **25% of SKUs are ad-reliant** (Ad SOV > Organic SOV) → ad-dependency lens is supported.
-- **55% of SKUs below 40% OSA** → availability is the biggest structural gap =
-  richest white-space / lost-sales vein.
+**Key signals:** corr(SOV, share) ≈ 0.74; ~25% of SKUs ad-reliant; 55% below 40% OSA.
 
 ---
 
-## 2. Insights already built (9 dashboard sections)
+## 2. Scoring methodology (current, in `lpTypeAgg`)
 
-1. **KPIs** — SKUs, brands, sub-cats, avg OSA, avg discount, avg SP, period.
-2. **₹-sales input + Overall view** — gross/net/units/realisation, sales by sub-cat,
-   top brands across the full brand universe.
-3. **Market structure by sub-cat** — SKU/brand counts, avg OSA/disc/SP,
-   **top-5 concentration**, **HHI**.
-4. **Top SKUs** (product-wise, per sub-cat) by category share.
-5. **Brand leaderboard** — share %, SOV %, OSA, discount, # SKUs, # sub-cats, MoM Δ.
-6. **SOV vs Share scatter** — visibility vs conversion for top brands.
-7. **Product types** — ~130 keyword-classified types; top types, sales-split, detail table.
-8. **MoM momentum** — brand share gainers/losers.
-9. **White spaces** — unmet-demand SKUs (high SOV + low OSA), SOV×OSA quadrant,
-   category fragmentation + stockout demand.
+**Opportunity (Founder's Launchpad)** — per product type, scope-aware:
+```
+Opportunity = 100 × (0.50·Demand + 0.30·WhiteSpace + 0.20·AvailabilityGap) × demand-gate
+```
+weights tunable via sliders; demand-gate ≈ min(1, demandN/0.03) drops no-demand types.
 
----
+- **Demand** = total sales of the type (₹ when entered, else value-share), normalised to scope max.
+- **White space = √(under-served × beatable-leader)** — needs *both*:
+  - **under-served** = demand per SKU, capped at ~p90 (thin assortment for the demand).
+  - **beatable-leader** = 1 − **organic moat**, where organic moat = maxₚ share × (1 − ad-reliance),
+    ad-reliance = Ad SOV / (Ad SOV + Organic SOV). Ad-propped share is discounted (rented visibility fades).
+- **Availability gap** = 1 − sales-weighted OSA.
 
-## 3. Insight backlog (new — derivable from existing columns, no new data)
+**Remark buckets** (per type, on the white-space drivers): *Organic fortress* (organically
+entrenched leader), *Rented crown* (dominant but ad-propped → beatable), *Prime white space*
+(under-served + un-dominated), *Crowded shelf* (saturated), *Open & contested*.
 
-Each item notes the **signal**, the **formula**, and the **build surface**
-(new aggregation in `build_dashboard_data.py` + a template section).
-
-### P1 — Lost-sales from stockouts (₹)  ·  highest business impact
-- **Signal:** 55% of SKUs < 40% OSA, while demand (share/SOV) exists.
-- **Idea:** quantify revenue left on the table where demand is high but availability
-  is low. Combine the entered ₹ model with the OSA gap.
-- **Formula (per SKU):** `lost_₹ ≈ realized_₹ × (target_OSA − OSA) / OSA`, capped at
-  a sensible target (e.g. 80–90%); aggregate by sub-cat, brand, product type.
-- **Why:** turns the white-space section from descriptive → quantified ₹ at risk.
-
-### P2 — Conversion efficiency  ·  strong competitive lens, low effort
-- **Signal:** corr(SOV, share)=0.74; residuals identify winners/wasters.
-- **Formula:** `efficiency = Est. Category Share / Overall SOV` per SKU/brand.
-  >1 = converts above its visibility; <1 = visible but not converting.
-- **Surface:** ranked tables (top over-converters / under-converters) + colour the
-  existing SOV-vs-share scatter by efficiency.
-
-### P3 — Ad-dependency (organic vs paid)  ·  low effort
-- **Signal:** 25% ad-reliant.
-- **Formulas:** `ad_dependency = Ad SOV / (Organic SOV + Ad SOV)` per brand;
-  flag **"paying but not converting"** = high Ad SOV + low share (wasted spend),
-  and **"organic champions"** = high share + low Ad SOV (defensible).
-- **Surface:** brand table + organic-vs-paid scatter.
-
-### P4 — Price-band analysis  ·  medium effort
-- **Signal:** SP ranges 24 → 7,538, median 507 — real tiering.
-- **Idea:** bucket SP into entry / mid / premium (per sub-cat quantiles) and show
-  where **demand (share)** and **₹** concentrate; spot empty/underserved bands.
-- **Surface:** stacked bars per sub-cat (share & ₹ by price band).
-
-### P5 — Pack-size / PPU architecture  ·  medium effort
-- **Signal:** 106 grammages + Wt. PPU both unused.
-- **Idea:** which pack sizes own demand; true value-for-money (PPU) across packs;
-  flag SKUs that are expensive per unit despite a low headline price.
-- **Surface:** pack-mix bars + PPU benchmarks by product type.
-
-### P6 — SKU-level momentum & entrants/exits  ·  medium effort
-- **Signal:** two months + stable Product IDs.
-- **Ideas:** SKU share risers/fallers (today only brand-level); **new entrants vs
-  exited SKUs** (Product ID set diff across months); **OSA MoM** (improving/worsening
-  availability); **discount MoM** (deepening promos); **price changes MoM**.
-- **Surface:** extend the MoM section with SKU-level + entrant/exit tables.
-
-### P7 — Promo-dependency / pricing power  ·  low effort
-- **Signal:** discount median 40%, p75 55%.
-- **Idea:** SKUs/brands holding share at **low** discount (pricing power) vs those
-  whose share rides on **deep** discounts (promo-dependent / margin-fragile).
-- **Surface:** discount-vs-share scatter + flagged tables.
-
-### P8 — Time basis: single-month vs averaged / month toggle  ·  low effort
-- **Current state:** all views except MoM use **April 2026 only** (the latest
-  snapshot). The Launchpad opportunity scores are therefore a point-in-time read,
-  not a trend — a one-off April stockout or spike can move a type's score.
-- **Ideas:** (a) average March + April to smooth one-off noise; (b) add a
-  **month toggle** so the whole dashboard can switch between March and April;
-  (c) once ≥3 months exist, use a trailing average. Decide which becomes the
-  default basis for the strategic views.
-- **Why deferred:** kept on April for now by decision; revisit when refining the
-  Launchpad or when more monthly snapshots arrive.
+**Rev/SKU benchmark** = revenue per SKU vs the scope average (▲ higher / ▼ lower, ×avg).
 
 ---
 
-## 4. Recommended build order
-P1 (lost-sales ₹) → P2 (conversion efficiency) → P3 (ad-dependency) →
-P7 (promo-dependency) → P4 (price bands) → P5 (pack/PPU) → P6 (SKU momentum).
+## 3. What's in the dashboard now
 
-Rationale: P1 is the biggest "so what" (₹ at risk) and reuses the sales model;
-P2/P3/P7 are low-effort, high-signal competitive lenses; P4/P5 open new dimensions;
-P6 deepens trends and grows naturally as more monthly snapshots arrive.
+KPIs · ₹-sales input · **Overall view** · **Market structure** (HHI, top-5) · **Top SKUs**
+· **Brands** (leaderboard + visibility-vs-conversion, scope-aware, % of total) · **Product
+types** (top-40 bar+donut, detail table w/ Rev/SKU, By-SKU/By-Brand drill-down) · **🚀
+Founder's Launchpad** (opportunity map + ranking with remarks, price ladder, competitor
+teardown w/ ad-reliance flags, launch shortlist) · **White spaces** (white-space map, bucket
+breakdown, leaderboard w/ Rev/SKU) · **Availability & stockout loss** (est. ₹ lost, demand-
+vs-availability map, biggest losses).
 
-## 5. Dependencies & caveats
-- SOV metrics cover ~79% of SKUs — exclude nulls; note coverage on SOV-based views.
-- All ₹/units insights inherit the entered-MRP model — they are **estimates**, label them so.
-- Lost-sales (P1) needs a `target_OSA` assumption — make it a dashboard input, like the MRP totals.
+Scope selector (All categories default) drives SKUs/Brands/Product types. Interactivity:
+drill-down modals, sortable tables with frozen headers, section nav, persisted MRP inputs,
+neutral cream theme.
+
+---
+
+## 4. Open backlog (derivable from existing columns, no new data)
+
+### P2 — Conversion efficiency · low effort
+`efficiency = share / Overall SOV` per SKU/brand. >1 converts above its visibility; <1 seen
+but under-converting. Surface: over/under-converter tables + colour the SOV-vs-share scatter.
+
+### P7 — Promo-dependency / pricing power · low effort
+SKUs/brands holding share at **low** discount (pricing power) vs those whose share rides on
+**deep** discounts (margin-fragile). Surface: discount-vs-share scatter + flagged tables.
+
+### P5 — Pack-size / PPU architecture · medium effort
+Use Grammage + Wt. PPU (both unused): which pack sizes own demand; true value-for-money per
+unit; flag SKUs expensive per unit despite a low headline price.
+
+### P6 — SKU-level momentum & entrants/exits · medium effort
+Needs March re-introduced into views. SKU risers/fallers, new vs exited SKUs (Product ID diff),
+OSA/discount/price MoM. (Brand-level momentum section was removed by decision.)
+
+### P-Time — Time basis · low effort
+Views use **April only**; opportunity scores are point-in-time. Options: average Mar+Apr,
+a month toggle, or a trailing average once ≥3 months exist. Parked by decision.
+
+### Price-band tiering (partial) · medium effort
+Type-level price ladder is built (Launchpad). Remaining: per-sub-category entry/mid/premium
+bands showing where demand & ₹ concentrate.
+
+**Suggested order:** P2 → P7 → P5 → P-Time → P6.
+
+---
+
+## 5. Done / folded in (for the record)
+- **Lost-sales from stockouts (₹)** → *Availability & stockout-loss* section (75% target assumption).
+- **Ad-dependency (organic vs paid)** → baked into white space (organic-beatable) + competitor
+  "renting visibility" flags. *Optional remainder:* a standalone brand ad-dependency scatter.
+- **Competitive / white-space definition** → finalised as √(under-served × organic-beatable) with remark buckets.
+
+## 6. Dependencies & caveats
+- SOV covers ~79% of SKUs — exclude nulls on SOV-based views.
+- All ₹/units are **estimates** from the entered-MRP model; default basis is **Gross (MRP)**.
+- Stockout lost-₹ uses a **75% target OSA** assumption (could be exposed as a slider).
 - A **6th category** was mentioned but never provided — re-run the pipeline if it arrives.
-- More monthly snapshots will make P6 (momentum) and ₹-growth far stronger.
-- **Time basis (P8):** strategic views currently use **April 2026 only** by decision;
-  averaging / month-toggle is parked for later.
+- More monthly snapshots strengthen P6 (momentum) and the time-basis options.
