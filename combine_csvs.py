@@ -3,8 +3,12 @@ import re
 import glob
 import pandas as pd
 
-UPLOAD_DIR = "/root/.claude/uploads/99928b2c-8330-4099-b8aa-0a3fe4fd1910"
-OUTPUT = "/home/user/chapter-gobblecube-dashboard/blinkit_rca_combined.xlsx"
+# Read the raw CSV exports committed to the repo, and write the combined
+# workbook alongside them. Paths are relative to this script's directory so it
+# works from a fresh clone.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "raw_csvs")
+OUTPUT = os.path.join(BASE_DIR, "blinkit_rca_combined.xlsx")
 
 
 def sub_category_from_filename(path):
