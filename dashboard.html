@@ -169,8 +169,8 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- PRODUCT TYPES -->
 <h2 id="sec-types">Product types <span class="tag" style="margin-left:6px;font-weight:400">classified from product names · ~96% of SKUs</span></h2>
 <div class="grid g2">
-  <div class="card"><h3>Top product types across all categories</h3><div class="h3sub" id="ptSub">Top types by SKU count — enter totals to switch to ₹</div><div class="cwrap xtall"><canvas id="cPtBar"></canvas></div></div>
-  <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div class="cwrap xtall"><canvas id="cPtDonut"></canvas></div></div>
+  <div class="card"><h3>Top product types across all categories</h3><div class="h3sub" id="ptSub">Top types by SKU count — enter totals to switch to ₹</div><div style="height:520px;overflow-y:auto"><div id="ptBarWrap" style="position:relative;height:520px"><canvas id="cPtBar"></canvas></div></div></div>
+  <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div style="height:520px;overflow-y:auto"><div id="ptDonutWrap" style="position:relative;height:520px"><canvas id="cPtDonut"></canvas></div></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>Product-type detail</h3><div class="h3sub">Top 25 types — footprint, pricing, availability &amp; sales</div>
   <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
@@ -526,17 +526,21 @@ function renderProductTypes(){
   arr.sort((a,b)=>b[key]-a[key]);
   const totalVal=arr.reduce((s,x)=>s+x.val,0);
   const charted=arr.filter(x=>x.t!=='Other');
-  const top=charted.slice(0,15);
+  const top=charted.slice(0,40);
+  const _bw=$('#ptBarWrap'); if(_bw)_bw.style.height=Math.max(500,top.length*22)+'px';
   if(ptBarChart)ptBarChart.destroy();
   ptBarChart=new Chart($('#cPtBar'),{type:'bar',data:{labels:top.map(x=>x.t),datasets:[{data:top.map(x=>x[key]),backgroundColor:C.pur,borderRadius:5}]},
     options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs',afterLabel:c=>`${top[c.dataIndex].brands} brands · avg ₹${fmt(top[c.dataIndex].sp,0)}`}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false},ticks:{autoSkip:false,font:{size:10}}}}}});
-  // donut: top 8 + Others
-  const d8=charted.slice(0,8); const rest=charted.slice(8).reduce((a,x)=>a+x[key],0);
-  const dl=d8.map(x=>x.t).concat(['Other types']); const dv=d8.map(x=>x[key]).concat([rest]);
+  // donut: top 40 + Others
+  const d40=charted.slice(0,40); const rest=charted.slice(40).reduce((a,x)=>a+x[key],0);
+  const dl=d40.map(x=>x.t).concat(rest>0?['Other types']:[]); const dv=d40.map(x=>x[key]).concat(rest>0?[rest]:[]);
+  const ptColor=i=>`hsl(${Math.round((i*137.508)%360)},62%,55%)`;
+  const dcol=d40.map((_,i)=>ptColor(i)).concat(rest>0?['#9aa3b2']:[]);
+  const _dw=$('#ptDonutWrap'); if(_dw)_dw.style.height=Math.max(500,dl.length*16)+'px';
   ptTopLabels=top.map(x=>x.t); ptDonutLabels=dl;
   if(ptDonutChart)ptDonutChart.destroy();
-  ptDonutChart=new Chart($('#cPtDonut'),{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:PAL.concat(['#5a6b8c','#3a4866'])}]},
+  ptDonutChart=new Chart($('#cPtDonut'),{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:dcol}]},
     options:{maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.label}: ${sales?valFmt(c.raw):c.raw+' SKUs'}`}}}}});
   $('#ptSub').textContent=(sales?('Top types by '+metricLabel()):'Top types by SKU count — enter totals to switch to ₹')+' · '+scopeLabel();
   $$('.ptSalesCol,.ptShareCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.classList.contains('ptSalesCol')&&e.tagName==='TH')e.textContent=metricShort();});
