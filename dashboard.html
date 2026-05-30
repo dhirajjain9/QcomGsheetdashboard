@@ -229,7 +229,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- 4 · What to launch -->
 <div class="card" style="margin-top:16px"><h3>4 · What to launch first — shortlist</h3>
   <div class="h3sub">The top opportunities, each with the benchmark SKU to beat, the price band to hit, and the incumbent to displace.</div>
-  <div style="max-height:340px;overflow:auto"><table id="tLpShort"><thead><tr><th>#</th><th>Product type</th><th class="num">Opportunity</th><th>Target price band</th><th>Benchmark SKU to beat</th><th>Main incumbent</th><th class="num">Their OSA</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:340px;overflow:auto"><table id="tLpShort"><thead><tr><th>#</th><th>Product type</th><th class="num">Opportunity</th><th>Remark (why)</th><th>Target price band</th><th>Benchmark SKU to beat</th><th>Main incumbent</th><th class="num">Their OSA</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- MOMENTUM -->
@@ -814,7 +814,9 @@ function renderLaunchpad(){
 function renderLpType(){
   if(!lpTypeVal)return; const sales=salesActive();
   const rows=lpFilter().filter(s=>s.pt===lpTypeVal);
-  $('#lpTypeLbl').textContent='· '+lpTypeVal; $('#lpTypeLbl2').textContent='· '+lpTypeVal;
+  const _lpx=lpArr.find(z=>z.t===lpTypeVal);
+  const _lpr=_lpx?` · <b style="color:${lpRemarkColor(_lpx.remark)}">${_lpx.remark}</b>`:'';
+  $('#lpTypeLbl').innerHTML='· '+lpTypeVal+_lpr; $('#lpTypeLbl2').innerHTML='· '+lpTypeVal+_lpr;
   const bands=lpBands(rows),best=lpBestBand(bands);
   if(lpPriceChart)lpPriceChart.destroy();
   lpPriceChart=new Chart($('#cLpPrice'),{data:{labels:bands.map(b=>`₹${fmt(b.lo,0)}–${fmt(b.hi,0)}`),datasets:[
@@ -846,6 +848,7 @@ function renderLpShort(){
     const best=lpBestBand(lpBands(rows)); const comp=lpCompetitors(rows)[0];
     return `<tr data-type="${x.t}"><td>${i+1}</td><td>${x.t}</td>
       <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
+      <td title="${x.remarkWhy}" style="color:${lpRemarkColor(x.remark)};font-size:11.5px;white-space:nowrap">${x.remark}</td>
       <td>${best?('₹'+fmt(best.lo,0)+'–'+fmt(best.hi,0)):'–'}</td>
       <td title="${bench?bench.n:''}">${bench?bench.n.slice(0,38):'–'}</td>
       <td>${comp?comp.b:'–'}</td>
