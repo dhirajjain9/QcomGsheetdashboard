@@ -162,7 +162,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- SALES INPUT -->
 <h2 id="sec-sales">Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
 <div class="card" id="salesPanel">
-  <div class="h3sub">Enter each sub-category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. Leave blank to keep the share-% view.</div>
+  <div class="h3sub">Enter each sub-category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. <b>Pre-filled with the agreed split and saved on this device</b> — enter once and reloads keep it (edit anytime, or Clear all to reset to the share-% view).</div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
     <span class="tag">Enter in:</span>
     <select id="unitSel">
@@ -177,6 +177,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
       <option value="units">Units sold</option>
     </select>
     <button id="clearBtn" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer">Clear all</button>
+    <span class="tag" id="salesSaved" style="color:var(--grn);margin-left:auto"></span>
   </div>
   <div id="salesInputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px"></div>
   <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -507,17 +508,32 @@ new Chart($('#cCatWs'),{data:{labels:cw.map(x=>x.name),datasets:[
   {type:'bar',label:'Stockout demand (SOV pts)',data:cw.map(x=>x.stockout_demand),backgroundColor:C.red,borderRadius:5,yAxisID:'y'}]},
   options:{plugins:{legend:{position:'top'}},scales:{y:{grid:{color:C.line}},x:{grid:{display:false},ticks:{maxRotation:25,font:{size:10}}}}}});
 
-// ---- Sales input panel ----
+// ---- Sales input panel (with saved defaults + persistence) ----
+const SALES_KEY='blinkit_mrp_sales_v1';
+// Agreed per-sub-category MRP sales (₹ Cr) — pre-filled so the dashboard opens in ₹ mode
+const DEFAULT_SALES={'Kitchen and Dining needs':68.6,'Cleaning Tools':17,'Bathroom Essentials':16.6,'Home Decor':14,'Home Improvement':6.4};
+function loadSavedSales(){try{return JSON.parse(localStorage.getItem(SALES_KEY));}catch(e){return null;}}
+function saveSales(){
+  const vals={}; $$('#salesInputs input').forEach(i=>{if(i.value!=='')vals[i.dataset.sub]=parseFloat(i.value);});
+  try{localStorage.setItem(SALES_KEY,JSON.stringify({unit,vals}));}catch(e){}
+  updateSavedNote();
+}
+function updateSavedNote(){const n=$('#salesSaved'); if(n)n.textContent=salesActive()?'✓ Saved on this device — reloads keep these numbers':'';}
 function buildInputs(){
-  $('#salesInputs').innerHTML=DATA.subcats.map(s=>`
-    <label style="display:block">
+  const saved=loadSavedSales();
+  const init=saved?(saved.vals||{}):DEFAULT_SALES;   // first-ever load uses defaults; afterwards exactly what was saved
+  if(saved&&saved.unit){unit=saved.unit; $('#unitSel').value=String(saved.unit);}
+  $('#salesInputs').innerHTML=DATA.subcats.map(s=>{
+    const v=(init[s]!=null)?init[s]:'';
+    return `<label style="display:block">
       <span class="tag" style="display:block;margin-bottom:5px">${s}</span>
-      <input type="number" min="0" step="any" data-sub="${s}" placeholder="0"
+      <input type="number" min="0" step="any" data-sub="${s}" placeholder="0" value="${v}"
         style="width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:14px;font-variant-numeric:tabular-nums">
-    </label>`).join('');
-  $$('#salesInputs input').forEach(inp=>inp.addEventListener('input',e=>{
-    const v=parseFloat(e.target.value); totals[e.target.dataset.sub]=(isNaN(v)?0:v)*unit; applySales();
-  }));
+    </label>`;}).join('');
+  $$('#salesInputs input').forEach(inp=>{
+    const v=parseFloat(inp.value); totals[inp.dataset.sub]=(isNaN(v)?0:v)*unit;
+    inp.addEventListener('input',e=>{const x=parseFloat(e.target.value); totals[e.target.dataset.sub]=(isNaN(x)?0:x)*unit; saveSales(); applySales();});
+  });
 }
 function recomputeTotals(){   // re-apply unit multiplier to raw entries
   $$('#salesInputs input').forEach(inp=>{const v=parseFloat(inp.value); totals[inp.dataset.sub]=(isNaN(v)?0:v)*unit;});
@@ -529,9 +545,9 @@ function renderAll(){
   renderOverall(); renderProductTypes(); renderLaunchpad();
 }
 function applySales(){ computeSales(); renderAll(); }
-$('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); applySales();});
+$('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); saveSales(); applySales();});
 $('#metricSel').addEventListener('change',e=>{metric=e.target.value; renderAll();});
-$('#clearBtn').addEventListener('click',()=>{$$('#salesInputs input').forEach(i=>i.value=''); DATA.subcats.forEach(s=>totals[s]=0); applySales();});
+$('#clearBtn').addEventListener('click',()=>{$$('#salesInputs input').forEach(i=>i.value=''); DATA.subcats.forEach(s=>totals[s]=0); saveSales(); applySales();});
 sel.addEventListener('change',()=>renderSku(sel.value));
 
 // ===== Interactivity: drill-down modal, clickable charts/rows, sortable tables, section nav =====
@@ -763,6 +779,7 @@ rowClick('#tLpShort',tr=>{const t=tr.getAttribute('data-type');if(t){lpTypeVal=t
 buildInputs();
 computeSales();
 renderAll();
+updateSavedNote();
 </script>
 </body>
 </html>
