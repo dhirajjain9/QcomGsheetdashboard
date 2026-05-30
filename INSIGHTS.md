@@ -116,6 +116,17 @@ Each item notes the **signal**, the **formula**, and the **build surface**
   whose share rides on **deep** discounts (promo-dependent / margin-fragile).
 - **Surface:** discount-vs-share scatter + flagged tables.
 
+### P8 — Time basis: single-month vs averaged / month toggle  ·  low effort
+- **Current state:** all views except MoM use **April 2026 only** (the latest
+  snapshot). The Launchpad opportunity scores are therefore a point-in-time read,
+  not a trend — a one-off April stockout or spike can move a type's score.
+- **Ideas:** (a) average March + April to smooth one-off noise; (b) add a
+  **month toggle** so the whole dashboard can switch between March and April;
+  (c) once ≥3 months exist, use a trailing average. Decide which becomes the
+  default basis for the strategic views.
+- **Why deferred:** kept on April for now by decision; revisit when refining the
+  Launchpad or when more monthly snapshots arrive.
+
 ---
 
 ## 4. Recommended build order
@@ -132,3 +143,5 @@ P6 deepens trends and grows naturally as more monthly snapshots arrive.
 - Lost-sales (P1) needs a `target_OSA` assumption — make it a dashboard input, like the MRP totals.
 - A **6th category** was mentioned but never provided — re-run the pipeline if it arrives.
 - More monthly snapshots will make P6 (momentum) and ₹-growth far stronger.
+- **Time basis (P8):** strategic views currently use **April 2026 only** by decision;
+  averaging / month-toggle is parked for later.
