@@ -57,7 +57,7 @@ nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--txt)}
 th .ind{opacity:.45;font-size:9px;margin-left:2px}
-#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWs tbody tr{cursor:pointer}
+#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr{cursor:pointer}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:48px 16px;overflow:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(16,24,40,.22)}
@@ -233,22 +233,16 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 
 
 <!-- WHITE SPACES -->
-<h2 id="sec-ws">White spaces — where demand isn't being met</h2>
-<div class="card" style="margin-bottom:16px"><h3>Demand vs availability map <span class="tag" id="wsCatLbl"></span></h3>
-  <div class="h3sub">Each bubble = a product. <b>x</b> = Share of Voice (demand/visibility), <b>y</b> = On-Shelf Availability. Bubble size = market share.</div>
-  <div class="cwrap tall"><canvas id="cQuad"></canvas></div>
-  <div class="legend">
-    <span><b style="color:var(--red)">↘ Bottom-right</b> = high demand, low availability → <b>white space / stockout loss</b></span>
-    <span><b style="color:var(--grn)">↗ Top-right</b> = winning (visible &amp; in stock)</span>
-  </div>
+<h2 id="sec-ws">White spaces — where there's room to enter <span class="tag" id="wsScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
+<div class="note" style="border-left-color:var(--grn)">
+  <b>White space = √(under-served × beatable-leader)</b> — high when a product type has demand spread over <b>few SKUs</b> (under-served) <b>and</b> no organically-entrenched leader (a leader winning on ad spend is discounted, since rented visibility fades). Scope follows the <b>Launchpad</b> selector above. Click a row to drill in.
 </div>
 <div class="grid g2">
-  <div class="card"><h3>Unmet-demand SKUs</h3><div class="h3sub">High Share-of-Voice (top quartile) but availability &lt; 40% — losing sales to stockouts</div>
-    <div style="max-height:330px;overflow:auto"><table id="tWs"><thead><tr><th>Product</th><th>Sub-cat</th><th class="num">SOV</th><th class="num">OSA</th><th class="num">Share%</th><th class="num wsSalesCol" style="display:none">Sales</th></tr></thead><tbody></tbody></table></div>
-  </div>
-  <div class="card"><h3>Category-level opportunity</h3><div class="h3sub">Fragmentation = openness to new entrants · Stockout demand = SOV stuck in low-availability SKUs</div>
-    <div class="cwrap"><canvas id="cCatWs"></canvas></div>
-  </div>
+  <div class="card"><h3>White-space map</h3><div class="h3sub"><b>x</b> = beatable leader (organically un-dominated →), <b>y</b> = under-served (demand per SKU →). Bubble = demand. Colour = bucket. <b>Top-right, big = real room to enter.</b></div><div class="cwrap xtall"><canvas id="cWsMap"></canvas></div></div>
+  <div class="card"><h3>How the field breaks down</h3><div class="h3sub">Product types per competitive bucket</div><div class="cwrap xtall"><canvas id="cWsBuckets"></canvas></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>White-space leaderboard</h3><div class="h3sub">Product types ranked by white space, with the reason. Hover the remark for detail; click a row to drill in.</div>
+  <div style="max-height:380px;overflow:auto"><table id="tWsTypes"><thead><tr><th>Product type</th><th class="num">White space</th><th>Remark (why)</th><th class="num">Under-served</th><th class="num">Beatable</th><th>Leader</th><th class="num">Demand</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <footer id="ft"></footer>
@@ -360,7 +354,7 @@ function renderConcChart(){
 // ---- Top SKUs (reactive: by value-share, or by units/₹ once totals entered) ----
 let topSkuChart;
 function renderSku(cat){
-  const _scl=$('#skuCatLbl'); if(_scl)_scl.textContent='· '+scopeLabel(); const _wcl=$('#wsCatLbl'); if(_wcl)_wcl.textContent='· '+scopeLabel();
+  const _scl=$('#skuCatLbl'); if(_scl)_scl.textContent='· '+scopeLabel();
   const sales=salesActive();
   const rows=scopeRows().map(s=>({...s,v:skuVal(s)}))
               .sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp)).slice(0,12);
@@ -378,7 +372,6 @@ function renderSku(cat){
     <td class="num">${fmt(r.csp,2)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(r.v)}</td>`:''}
     <td class="num">₹${fmt(r.sp,0)}</td>
     <td class="num" style="color:${r.osa<40?C.red:C.grn}">${fmt(r.osa,0)}</td><td class="num">${fmt(r.disc,0)}</td></tr>`).join('');
-  renderQuad(cat);
 }
 
 // ---- Top brands (reactive: bar + leaderboard switch to ₹ when totals entered) ----
@@ -439,29 +432,38 @@ function renderSovChart(){
 }
 
 
-// ---- White space quadrant (reactive) ----
-let quadChart;
-function renderQuad(cat){
-  const pts=cat==='ALL'?Object.values(DATA.quad_pts).reduce((a,b)=>a.concat(b),[]):(DATA.quad_pts[cat]||[]);
-  if(quadChart)quadChart.destroy();
-  const med=40;
-  quadChart=new Chart($('#cQuad'),{type:'bubble',data:{datasets:[{
-    data:pts.map(p=>({x:p.x,y:p.y,r:Math.max(3,Math.sqrt(p.r2)*8)})),
-    backgroundColor:pts.map(p=>p.y<med&&p.x>0.3?'rgba(255,107,129,.7)':p.y>=med?'rgba(54,211,153,.6)':'rgba(132,147,173,.45)')}]},
-    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`SOV ${c.raw.x}% · OSA ${c.raw.y}%`}}},
-    scales:{x:{grid:{color:C.line},title:{display:true,text:'Share of Voice % (demand →)'}},
-            y:{grid:{color:C.line},min:0,max:100,title:{display:true,text:'On-shelf availability % (supply →)'}}}}});
-}
-
-// white space SKUs table (adds current sales/units column when totals entered)
-function renderWsTable(){
+// ---- White spaces (product-type white-space view; mirrors Launchpad scope via lpArr) ----
+let wsMapChart, wsBucketChart;
+function renderWhiteSpace(){
+  if(!lpArr||!lpArr.length)return;
   const sales=salesActive();
-  $$('.wsSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
-  $('#tWs tbody').innerHTML=DATA.white_space_skus.map(r=>{
-    const v=compMetric(r.csp,r.sp,r.mrp,r.subcat);
-    return `<tr><td title="${r.name}">${r.name}</td><td class="tag">${r.subcat}</td>
-    <td class="num">${fmt(r.sov,2)}</td><td class="num down">${fmt(r.osa,0)}</td><td class="num">${fmt(r.share,2)}</td>
-    ${sales?`<td class="num" style="color:var(--acc)">${valFmt(v)}</td>`:''}</tr>`}).join('');
+  $('#wsScopeLbl').textContent='· '+(lpScopeVal==='ALL'?'All categories':lpScopeVal);
+  const sizeOf=x=>sales?x.val:x.csp, maxS=Math.max(...lpArr.map(sizeOf),1e-9);
+  // map: x=beatable leader, y=under-served, bubble=demand, colour=bucket (top 40 by demand to limit clutter)
+  const pts=[...lpArr].sort((a,b)=>sizeOf(b)-sizeOf(a)).slice(0,40).map(x=>({
+    x:Math.round(x.beat*100),y:Math.round(x.underN*100),r:Math.max(4,Math.sqrt(sizeOf(x)/maxS)*24),
+    t:x.t,remark:x.remark,ws:Math.round(x.ws*100)}));
+  if(wsMapChart)wsMapChart.destroy();
+  wsMapChart=new Chart($('#cWsMap'),{type:'bubble',data:{datasets:[{data:pts,
+    backgroundColor:pts.map(p=>lpRemarkColor(p.remark)+'99'),borderColor:pts.map(p=>lpRemarkColor(p.remark)),borderWidth:1}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>c[0].raw.t,label:c=>`White space ${c.raw.ws} · ${c.raw.remark}`,afterLabel:c=>`beatable ${c.raw.x} · under-served ${c.raw.y}`}}},
+    scales:{x:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'Beatable leader (organically un-dominated →)'}},
+            y:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'Under-served (demand per SKU →)'}}}}});
+  // bucket breakdown
+  const order=['Prime white space','Rented crown','Open & contested','Crowded shelf','Organic fortress'];
+  const cnt={}; lpArr.forEach(x=>cnt[x.remark]=(cnt[x.remark]||0)+1);
+  const bl=order.filter(b=>cnt[b]);
+  if(wsBucketChart)wsBucketChart.destroy();
+  wsBucketChart=new Chart($('#cWsBuckets'),{type:'bar',data:{labels:bl,datasets:[{data:bl.map(b=>cnt[b]),backgroundColor:bl.map(b=>lpRemarkColor(b)),borderRadius:5}]},
+    options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' product types'}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:'# product types'}},y:{grid:{display:false}}}}});
+  // leaderboard ranked by white space
+  const byWs=[...lpArr].sort((a,b)=>b.ws-a.ws).slice(0,30);
+  $('#tWsTypes tbody').innerHTML=byWs.map(x=>`<tr data-type="${x.t}"><td>${x.t}</td>
+    <td class="num"><b style="color:${lpRemarkColor(x.remark)}">${Math.round(x.ws*100)}</b></td>
+    <td title="${x.remarkWhy}" style="color:${lpRemarkColor(x.remark)};font-size:11.5px;white-space:nowrap">${x.remark}</td>
+    <td class="num">${Math.round(x.underN*100)}</td><td class="num">${Math.round(x.beat*100)}</td>
+    <td class="tag">${x.leaderName}</td><td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.csp,1)}</td></tr>`).join('');
 }
 
 // ---- Overall view (across all 5 sub-categories) ----
@@ -529,13 +531,6 @@ function renderProductTypes(){
     ${sales?`<td class="num" style="color:var(--acc)">${valFmt(x.val)}</td><td class="num">${totalVal?fmt(x.val/totalVal*100,1):0}%</td>`:''}</tr>`).join('');
 }
 
-// category white space chart
-const cw=DATA.cat_ws;
-new Chart($('#cCatWs'),{data:{labels:cw.map(x=>x.name),datasets:[
-  {type:'bar',label:'Fragmentation (openness)',data:cw.map(x=>x.fragmentation),backgroundColor:C.pur,borderRadius:5,yAxisID:'y'},
-  {type:'bar',label:'Stockout demand (SOV pts)',data:cw.map(x=>x.stockout_demand),backgroundColor:C.red,borderRadius:5,yAxisID:'y'}]},
-  options:{plugins:{legend:{position:'top'}},scales:{y:{grid:{color:C.line}},x:{grid:{display:false},ticks:{maxRotation:25,font:{size:10}}}}}});
-
 // ---- Sales input panel (with saved defaults + persistence) ----
 const SALES_KEY='blinkit_mrp_sales_v1';
 // Agreed per-sub-category MRP sales (₹ Cr) — pre-filled so the dashboard opens in ₹ mode
@@ -569,7 +564,7 @@ function recomputeTotals(){   // re-apply unit multiplier to raw entries
 function renderAll(){
   const total=Object.values(totals).reduce((a,b)=>a+b,0);
   $('#totalSales').textContent=total>0?money(total):'–';
-  renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderSovChart(); renderWsTable();
+  renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderSovChart();
   renderOverall(); renderProductTypes(); renderLaunchpad();
   renderSkusChart(); renderConcChart();
 }
@@ -669,7 +664,7 @@ function rowClick(tableSel,fn){const t=$(tableSel);t&&t.addEventListener('click'
 rowClick('#tSku',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n,sel.value);});
 rowClick('#tBrand',tr=>{const n=tr.children[1]?.textContent;n&&showBrand(n);});
 rowClick('#tPt',tr=>{const t=tr.children[0]?.textContent;t&&showType(t);});
-rowClick('#tWs',tr=>{const n=tr.querySelector('td')?.getAttribute('title');const sub=tr.children[1]?.textContent;n&&showSku(n,sub);});
+rowClick('#tWsTypes',tr=>{const t=tr.getAttribute('data-type');t&&showType(t);});
 
 // sortable tables (sorts currently rendered rows)
 function makeSortable(tableSel){
@@ -687,7 +682,7 @@ function makeSortable(tableSel){
     });
   });
 }
-['#tSku','#tBrand','#tPt','#tWs'].forEach(makeSortable);
+['#tSku','#tBrand','#tPt','#tWsTypes'].forEach(makeSortable);
 
 // section nav: smooth scroll + active highlight
 (function(){
@@ -794,7 +789,7 @@ function renderLaunchpad(){
   const tsel=$('#lpType');
   if(!lpTypeVal||!lpArr.find(x=>x.t===lpTypeVal))lpTypeVal=lpArr.length?lpArr[0].t:null;
   tsel.innerHTML=lpArr.slice(0,40).map(x=>`<option value="${x.t}"${x.t===lpTypeVal?' selected':''}>${x.t} — opp ${Math.round(x.score)}</option>`).join('');
-  renderLpType(); renderLpShort();
+  renderLpType(); renderLpShort(); renderWhiteSpace();
 }
 function renderLpType(){
   if(!lpTypeVal)return; const sales=salesActive();
