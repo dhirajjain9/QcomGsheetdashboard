@@ -293,12 +293,13 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="card"><h3 style="color:var(--red)">－ Product types that exited</h3><div class="h3sub">Types present in March, gone in April (within scope) — by March value-share</div>
     <div style="max-height:300px;overflow:auto"><table id="tMomTypeExit"><thead><tr><th>Product type</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
-<div class="h3sub" style="margin:18px 0 0">Brand churn within a product type <span class="tag">— which brands entered or left a specific type (within scope)</span></div>
-<div class="card" style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag">Product type:</span><select id="momTypeSel"></select></div>
+<div class="h3sub" style="margin:18px 0 0">Brand churn within a product type <span class="tag">— only types with brand entry/exit (within scope), ranked by gross sales. Click a bar to see the brands.</span></div>
+<div class="card" style="margin-top:10px"><h3>Product types with brand churn</h3><div class="h3sub">Brands that <b style="color:var(--grn)">entered</b> (right) vs <b style="color:var(--red)">exited</b> (left) · ordered by gross sales · click to drill in</div>
+  <div style="height:360px;overflow-y:auto"><div id="momChurnWrap" style="position:relative;height:360px"><canvas id="cMomChurn"></canvas></div></div></div>
 <div class="grid g2" style="margin-top:10px">
-  <div class="card"><h3 style="color:var(--grn)">＋ Brands new to this type</h3><div class="h3sub">No SKU of this type in March, present in April — by April value-share</div>
+  <div class="card"><h3 style="color:var(--grn)">＋ Brands new to <span id="momTypeLbl" style="color:var(--txt)"></span></h3><div class="h3sub">No SKU of this type in March, present in April — by April value-share</div>
     <div style="max-height:300px;overflow:auto"><table id="tMomBTypeNew"><thead><tr><th>Brand</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
-  <div class="card"><h3 style="color:var(--red)">－ Brands that left this type</h3><div class="h3sub">In this type in March, gone in April — by March value-share</div>
+  <div class="card"><h3 style="color:var(--red)">－ Brands that left <span id="momTypeLbl2" style="color:var(--txt)"></span></h3><div class="h3sub">In this type in March, gone in April — by March value-share</div>
     <div style="max-height:300px;overflow:auto"><table id="tMomBTypeExit"><thead><tr><th>Brand</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
@@ -682,7 +683,7 @@ function renderAvailability(){
     ${sales?`<td class="num" style="color:var(--org)">${valFmt(lostOf(s))}</td>`:''}</tr>`).join('');
 }
 // ---- Month-over-month SKU movement (scope follows the Top-SKUs selector) ----
-let momTypeVal=null;
+let momTypeVal=null, momChurnChart=null, momChurnList=[];
 function momScope(){return sel.value==='ALL'?DATA.sku_mom:DATA.sku_mom.filter(x=>x.s===sel.value);}
 function renderMomentum(){
   if(!DATA.sku_mom)return;
@@ -725,15 +726,31 @@ function renderMomentum(){
   $('#tMomDn tbody').innerHTML=fallers.map(mvRow).join('');
   $('#tMomNew tbody').innerHTML=entrants.map(x=>`<tr><td title="${x.n}">${x.n.slice(0,30)}</td><td>${x.b}</td><td class="tag">${x.s}</td><td class="num">${fmt(x.ac,2)}</td><td class="num" style="color:${x.ao<40?C.red:C.grn}">${fmt(x.ao,0)}</td><td class="num">₹${fmt(x.asp,0)}</td></tr>`).join('');
   $('#tMomExit tbody').innerHTML=exits.map(x=>`<tr><td title="${x.n}">${x.n.slice(0,30)}</td><td>${x.b}</td><td class="tag">${x.s}</td><td class="num">${fmt(x.pc,2)}</td><td class="num">${fmt(x.po,0)}</td></tr>`).join('');
-  // brand churn within a selected product type
-  const types=[...new Set(rows.filter(x=>x.pt&&x.pt!=='Other').map(x=>x.pt))].sort();
-  const tsel=$('#momTypeSel');
-  if(tsel){ if(!momTypeVal||!types.includes(momTypeVal))momTypeVal=types[0]||null;
-    tsel.innerHTML=types.map(t=>`<option${t===momTypeVal?' selected':''}>${t}</option>`).join(''); }
+  renderMomChurn();
+}
+function renderMomChurn(){
+  const rows=momScope();
+  // brands entered/exited per product type (within scope)
+  const tb={};
+  rows.forEach(x=>{if(!x.pt||x.pt==='Other')return;const k=x.b.toLowerCase();(tb[x.pt]=tb[x.pt]||{});const o=(tb[x.pt][k]=tb[x.pt][k]||{apr:false,mar:false});if(x.st!=='exit')o.apr=true;if(x.st!=='new')o.mar=true;});
+  // gross sales per type (April, from the sales model) for ordering
+  const gross={}; scopeRows().forEach(s=>{if(s.pt)gross[s.pt]=(gross[s.pt]||0)+(s._gross||0);});
+  let list=Object.entries(tb).map(([pt,bs])=>{let ne=0,ex=0;Object.values(bs).forEach(o=>{if(o.apr&&!o.mar)ne++;if(!o.apr&&o.mar)ex++;});return {pt,ne,ex,gross:gross[pt]||0};})
+    .filter(x=>x.ne>0||x.ex>0).sort((a,b)=>b.gross-a.gross);
+  momChurnList=list;
+  if(!momTypeVal||!list.find(x=>x.pt===momTypeVal))momTypeVal=list.length?list[0].pt:null;
+  const wrap=$('#momChurnWrap'); if(wrap)wrap.style.height=Math.max(280,list.length*26)+'px';
+  if(momChurnChart)momChurnChart.destroy();
+  momChurnChart=new Chart($('#cMomChurn'),{type:'bar',data:{labels:list.map(x=>x.pt),datasets:[
+    {label:'Entered',data:list.map(x=>x.ne),backgroundColor:C.grn,stack:'s',borderRadius:4},
+    {label:'Exited',data:list.map(x=>-x.ex),backgroundColor:C.red,stack:'s',borderRadius:4}]},
+    options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{position:'top'},tooltip:{callbacks:{title:c=>c[0].label,label:c=>`${c.dataset.label}: ${Math.abs(c.raw)} brands`,afterBody:c=>{const x=list[c[0].dataIndex];return 'Gross '+money(x.gross);}}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:'← exited    entered →'},ticks:{callback:v=>Math.abs(v)}},y:{grid:{display:false},ticks:{autoSkip:false,font:{size:10}}}}}});
   renderMomBrandType();
 }
 function renderMomBrandType(){
   const t=momTypeVal, tn=$('#tMomBTypeNew tbody'), tx=$('#tMomBTypeExit tbody'); if(!tn||!tx)return;
+  const l1=$('#momTypeLbl'),l2=$('#momTypeLbl2'); if(l1)l1.textContent=t?('· '+t):''; if(l2)l2.textContent=t?('· '+t):'';
   if(!t){tn.innerHTML='';tx.innerHTML='';return;}
   const rows=momScope().filter(x=>x.pt===t), bp={};
   rows.forEach(x=>{const k=x.b.toLowerCase();if(!bp[k])bp[k]={b:x.b,apr:false,mar:false,aprSkus:0,marSkus:0,aprShare:0,marShare:0};const o=bp[k];
@@ -892,7 +909,7 @@ rowClick('#tAvail',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&
 ['#tMomBrandNew','#tMomBrandExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
 ['#tMomTypeNew','#tMomTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const t=tr.getAttribute('data-type');t&&showType(t);}));
 ['#tMomBTypeNew','#tMomBTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
-$('#momTypeSel')&&$('#momTypeSel').addEventListener('change',e=>{momTypeVal=e.target.value;renderMomBrandType();});
+onChartClick('#cMomChurn',i=>{const x=momChurnList[i];if(x){momTypeVal=x.pt;renderMomBrandType();}});
 $('#priceTypeSel')&&$('#priceTypeSel').addEventListener('change',e=>{priceTypeVal=e.target.value;renderPriceBands();});
 
 // sortable tables (sorts currently rendered rows)
