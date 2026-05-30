@@ -83,6 +83,7 @@ RULES = [
     ("Drinking Glass", ["whiskey glass", "water glass", "shot glass", "glass set", "wine glass", "juice glass", "drinking glass"]),
     ("Mug / Cup", ["mug", "cup"]),
     ("Bowl", ["bowl"]),
+    ("Plate Stand / Rack", ["plate stand", "plate rack", "plate holder", "plate display"]),
     ("Dinner Set / Plate", ["dinner set", "dinner plate", "plate set", "quarter plate", "thali", "platter", "plate"]),
     ("Serving Tray", ["tray"]),
     ("Jar / Canister", ["jar", "canister"]),
