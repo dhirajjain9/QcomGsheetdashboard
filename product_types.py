@@ -102,6 +102,7 @@ RULES = [
     ("Gift Box / Hamper", ["gift box", "gift set", "hamper"]),
     ("Colander / Strainer", ["colander", "strainer", "sieve", "sink strainer"]),
     ("Rolling Pin / Roti Maker", ["belan", "rolling pin", "chakla", "roti maker"]),
+    ("Salt & Pepper / Cruet", ["salt & pepper", "salt and pepper", "salt n pepper", "salt-pepper", "cruet"]),
     ("Shaker / Sipper", ["shaker", "sipper", "sippy"]),
     ("Table Linen / Mat", ["table runner", "table mat", "placemat", "place mat", "coaster", "dining mat"]),
     # --- Cleaning extras ---
