@@ -77,15 +77,16 @@ neutral cream theme.
 
 ## 4. Open backlog (derivable from existing columns, no new data)
 
-### Price-band tiering (partial) · medium effort
-Type-level price ladder is built (Launchpad). Remaining: a **per-sub-category** price-architecture
-view — bucket SKUs into entry/mid/premium/luxury bands and show, per band, the **demand** (share),
-**₹**, **supply** (SKU & brand count) and **typical discount** → reveals under-served price bands
-and the price points to attack. (MoM by SKU/brand/type uses both months; uses SP, so it's a
-headline-price view — pack-size/PPU nuance is out of scope since P5 was dropped.)
+### Price-band tiering — **backend ready, frontend pending** · medium effort
+**P5 backend is built:** `sku_level` now carries `ppu` (₹/unit), `pack` (count = SP÷PPU) and
+`gram` (grammage) — so value can be compared per-unit, not by misleading headline SP (~30% of
+SKUs are multipacks; in types like Drinking Glass / Tea Light Candle / Storage Container the
+majority are). **Remaining (frontend):** a per-sub-category price-architecture view — bucket SKUs
+into entry/mid/premium/luxury bands **on PPU**, showing demand / ₹ / supply (SKU & brand count) /
+typical discount per band → under-served price bands + the price points to attack. Plus optional
+pack-mix and PPU-value benchmarks by type.
 
-_Decided / not pursuing: P7 (promo-dependency), P5 (pack-size / PPU), and time-basis
-(**April-only is permanent**)._
+_Decided / not pursuing: P7 (promo-dependency) and time-basis (**April-only is permanent**)._
 
 ---
 
