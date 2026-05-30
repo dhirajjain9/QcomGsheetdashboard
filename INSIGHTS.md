@@ -76,10 +76,6 @@ neutral cream theme.
 
 ## 4. Open backlog (derivable from existing columns, no new data)
 
-### P2 — Conversion efficiency · low effort
-`efficiency = share / Overall SOV` per SKU/brand. >1 converts above its visibility; <1 seen
-but under-converting. Surface: over/under-converter tables + colour the SOV-vs-share scatter.
-
 ### P7 — Promo-dependency / pricing power · low effort
 SKUs/brands holding share at **low** discount (pricing power) vs those whose share rides on
 **deep** discounts (margin-fragile). Surface: discount-vs-share scatter + flagged tables.
@@ -100,7 +96,7 @@ a month toggle, or a trailing average once ≥3 months exist. Parked by decision
 Type-level price ladder is built (Launchpad). Remaining: per-sub-category entry/mid/premium
 bands showing where demand & ₹ concentrate.
 
-**Suggested order:** P2 → P7 → P5 → P-Time → P6.
+**Suggested order:** P7 → P5 → P-Time → P6.
 
 ---
 
@@ -109,6 +105,9 @@ bands showing where demand & ₹ concentrate.
 - **Ad-dependency (organic vs paid)** → baked into white space (organic-beatable) + competitor
   "renting visibility" flags. *Optional remainder:* a standalone brand ad-dependency scatter.
 - **Competitive / white-space definition** → finalised as √(under-served × organic-beatable) with remark buckets.
+- **Conversion efficiency (share ÷ SOV)** → dropped: already shown by the visibility-vs-conversion
+  scatter (above/below the diagonal) and sharpened by the organic-vs-paid logic. If ever needed, add a
+  sortable `share/SOV` column to the brand leaderboard (~10 min).
 
 ## 6. Dependencies & caveats
 - SOV covers ~79% of SKUs — exclude nulls on SOV-based views.
