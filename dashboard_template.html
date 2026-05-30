@@ -84,6 +84,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </header>
 
 <nav class="snav" id="snav">
+  <a href="#sec-launch">🚀 Launchpad</a>
   <a href="#sec-sales">₹ Sales</a>
   <a href="#sec-overall">Overall</a>
   <a href="#sec-market">Market</a>
@@ -103,6 +104,50 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 
 <!-- KPIs -->
 <div class="kpis" id="kpis"></div>
+
+<!-- ===== FOUNDER'S LAUNCHPAD ===== -->
+<h2 id="sec-launch">🚀 Founder's Launchpad <span class="tag" style="margin-left:6px;font-weight:400">if you were launching a brand here — where to enter & how to win</span></h2>
+<div class="note" style="border-left-color:var(--grn)">
+  <b>Reading this section as a founder:</b> <b>Opportunity</b> blends <b>Demand</b> (shopper interest / share-of-voice),
+  <b>Openness</b> (how un-concentrated the brands are — easy to break in) and <b>Availability gap</b> (how badly incumbents are out of stock — room to win on supply alone).
+  Pick a scope, read the <b>opportunity map</b>, then click any type to load its <b>price ladder</b> and <b>competitors</b>. Enter ₹ sales (below) to size each prize in rupees.
+</div>
+<div class="card" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <span class="tag">Scope:</span><select id="lpScope"></select>
+  <span class="tag" style="margin-left:auto" id="lpScopeSummary"></span>
+</div>
+
+<!-- 1 · Where to play -->
+<div class="card" style="margin-bottom:16px"><h3>1 · Where to play — opportunity map</h3>
+  <div class="h3sub">Each bubble = a product type. <b>x</b> = openness (low competition →), <b>y</b> = demand. Bubble size = prize (₹ once entered, else demand). Redder = bigger availability gap. <b>Top-right, big &amp; red = enter here.</b></div>
+  <div class="cwrap tall"><canvas id="cLpOpp"></canvas></div>
+</div>
+<div class="card" style="margin-bottom:16px"><h3>Opportunity ranking</h3><div class="h3sub">Sorted by opportunity score (0–100). Click a row to load its price ladder &amp; competitors below.</div>
+  <div style="max-height:330px;overflow:auto"><table id="tLpOpp"><thead><tr><th>Product type</th><th class="num">Opportunity</th><th class="num">Demand</th><th class="num">Openness</th><th class="num">Avail. gap</th><th class="num">Brands</th><th class="num">SKUs</th><th class="num">Prize</th></tr></thead><tbody></tbody></table></div>
+</div>
+
+<div class="card" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+  <span class="tag">Deep-dive into product type:</span><select id="lpType"></select>
+</div>
+<div class="grid g2">
+  <!-- 2 · At what price -->
+  <div class="card"><h3>2 · At what price — price ladder <span class="tag" id="lpTypeLbl"></span></h3>
+    <div class="h3sub">Demand (bars) vs number of competing SKUs (line) across price bands. A band with lots of demand but few SKUs is the <b>price white space</b> to attack.</div>
+    <div class="cwrap"><canvas id="cLpPrice"></canvas></div>
+    <div class="legend" id="lpPriceNote"></div>
+  </div>
+  <!-- 3 · Who to beat -->
+  <div class="card"><h3>3 · Who to beat — incumbents <span class="tag" id="lpTypeLbl2"></span></h3>
+    <div class="h3sub">Brands competing in this type. <b style="color:var(--red)">Flags</b> mark beatable ones — out-of-stock leaders, visibility-renters, under-converters.</div>
+    <div style="max-height:300px;overflow:auto"><table id="tLpComp"><thead><tr><th>Brand</th><th class="num">Demand</th><th class="num">Share%</th><th class="num">OSA</th><th class="num">Ad-rel.</th><th class="num">SKUs</th><th>Vulnerability</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</div>
+
+<!-- 4 · What to launch -->
+<div class="card" style="margin-top:16px"><h3>4 · What to launch first — shortlist</h3>
+  <div class="h3sub">The top opportunities, each with the benchmark SKU to beat, the price band to hit, and the incumbent to displace.</div>
+  <div style="max-height:340px;overflow:auto"><table id="tLpShort"><thead><tr><th>#</th><th>Product type</th><th class="num">Opportunity</th><th>Target price band</th><th>Benchmark SKU to beat</th><th>Main incumbent</th><th class="num">Their OSA</th></tr></thead><tbody></tbody></table></div>
+</div>
 
 <!-- SALES INPUT -->
 <h2 id="sec-sales">Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
@@ -471,7 +516,7 @@ function renderAll(){
   const total=Object.values(totals).reduce((a,b)=>a+b,0);
   $('#totalSales').textContent=total>0?money(total):'–';
   renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderWsTable();
-  renderOverall(); renderProductTypes();
+  renderOverall(); renderProductTypes(); renderLaunchpad();
 }
 function applySales(){ computeSales(); renderAll(); }
 $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); applySales();});
@@ -578,6 +623,115 @@ function makeSortable(tableSel){
   const obs=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[en.target.id]&&map[en.target.id].classList.add('active');}});},{rootMargin:'-20% 0px -70% 0px'});
   Object.keys(map).forEach(id=>{const el=document.getElementById(id);el&&obs.observe(el);});
 })();
+
+// ===== Founder's Launchpad =====
+let lpScopeVal='ALL', lpTypeVal=null, lpArr=[], lpOppChart, lpPriceChart;
+function lpFilter(){return lpScopeVal==='ALL'?DATA.sku_level:DATA.sku_level.filter(s=>s.s===lpScopeVal);}
+function lpTypeAgg(){
+  const rows=lpFilter().filter(s=>s.pt&&s.pt!=='Other'); const map={};
+  rows.forEach(s=>{const t=s.pt;if(!map[t])map[t]={t,skus:0,brands:{},demand:0,csp:0,osaSum:0,osaN:0,val:0,spSum:0,spN:0,discSum:0,discN:0,stockout:0};
+    const a=map[t],dem=s.sov||0;a.skus++;a.demand+=dem;a.csp+=(s.csp||0);
+    const bk=s.b.toLowerCase();a.brands[bk]=(a.brands[bk]||0)+dem;
+    if(s.osa!=null){a.osaSum+=s.osa;a.osaN++;if(s.osa<40)a.stockout+=dem;}
+    if(s.sp){a.spSum+=s.sp;a.spN++;}if(s.disc!=null){a.discSum+=s.disc;a.discN++;}
+    a.val+=skuVal(s);});
+  let arr=Object.values(map).map(a=>{const bs=Object.values(a.brands),tot=bs.reduce((x,y)=>x+y,0)||1,
+    top=(bs.length?Math.max(...bs):0)/tot,avgOSA=a.osaN?a.osaSum/a.osaN:0;
+    return {t:a.t,skus:a.skus,brands:Object.keys(a.brands).length,demand:a.demand,csp:a.csp,
+      openness:bs.length<=1?(a.skus<=1?0.15:0.3):1-top,gap:1-avgOSA/100,avgOSA,val:a.val,
+      avgSP:a.spN?a.spSum/a.spN:0,avgDisc:a.discN?a.discSum/a.discN:0,stockout:a.stockout};});
+  arr=arr.filter(x=>x.demand>0||x.csp>0);
+  const maxDem=Math.max(...arr.map(x=>x.demand),1e-6);
+  arr.forEach(x=>{x.demandN=x.demand/maxDem;x.score=100*(0.45*x.demandN+0.30*x.openness+0.25*x.gap);});
+  arr.sort((a,b)=>b.score-a.score); return arr;
+}
+function lpBands(rows){
+  const sps=rows.map(s=>s.sp).filter(x=>x>0);if(!sps.length)return[];
+  const min=Math.min(...sps),max=Math.max(...sps),n=5,span=(max-min)||1;
+  const bands=[...Array(n)].map((_,i)=>({lo:min+span*i/n,hi:min+span*(i+1)/n,demand:0,skus:0,val:0}));
+  rows.forEach(s=>{if(!s.sp)return;const idx=Math.min(n-1,Math.floor((s.sp-min)/span*n));const b=bands[idx];b.demand+=(s.sov||0);b.skus++;b.val+=skuVal(s);});
+  return bands;
+}
+function lpBestBand(bands){let best=null,bv=-1;bands.forEach(b=>{if(b.demand<=0)return;const v=b.demand/(b.skus||1);if(v>bv){bv=v;best=b;}});return best;}
+function lpCompetitors(rows){
+  const map={};
+  rows.forEach(s=>{const k=s.b.toLowerCase();if(!map[k])map[k]={b:s.b,demand:0,csp:0,osaSum:0,osaN:0,asov:0,osov:0,skus:0,val:0};
+    const a=map[k];a.demand+=(s.sov||0);a.csp+=(s.csp||0);a.skus++;a.val+=skuVal(s);
+    if(s.osa!=null){a.osaSum+=s.osa;a.osaN++;}a.asov+=(s.asov||0);a.osov+=(s.osov||0);});
+  let arr=Object.values(map).map(a=>{const avgOSA=a.osaN?a.osaSum/a.osaN:0,adRel=(a.asov+a.osov)>0?a.asov/(a.asov+a.osov):0;return {...a,avgOSA,adRel};});
+  arr.sort((x,y)=>y.demand-x.demand);
+  const demMax=Math.max(...arr.map(x=>x.demand),1e-6);
+  arr.forEach(x=>{x.flag=(x.demand>=0.25*demMax&&x.avgOSA<40)?'Out-of-stock leader':(x.adRel>0.55&&x.demand>0)?'Renting visibility':(x.avgOSA<40)?'Low availability':'';});
+  return arr;
+}
+function renderLaunchpad(){
+  const sales=salesActive(); lpArr=lpTypeAgg();
+  const totVal=lpArr.reduce((a,x)=>a+x.val,0);
+  $('#lpScopeSummary').textContent=`${lpArr.length} product types · ${sales?('prize '+money(totVal)):'enter ₹ sales to size prize'}`;
+  const sizeOf=x=>sales?x.val:x.demand, maxSize=Math.max(...lpArr.map(sizeOf),1e-6);
+  const pts=lpArr.slice(0,30).map((x,i)=>({x:Math.round(x.openness*100),y:Math.round(x.demandN*100),r:Math.max(5,Math.sqrt(sizeOf(x)/maxSize)*26),t:x.t,gap:x.gap,score:x.score,i}));
+  if(lpOppChart)lpOppChart.destroy();
+  lpOppChart=new Chart($('#cLpOpp'),{type:'bubble',data:{datasets:[{data:pts,
+    backgroundColor:pts.map(p=>`rgba(${Math.round(110+p.gap*145)},${Math.round(150-p.gap*90)},${Math.round(120-p.gap*40)},.62)`),
+    borderColor:pts.map(p=>lpArr.length&&p.score>=lpArr[0].score*0.7?C.acc:'transparent'),borderWidth:1}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>c[0].raw.t,label:c=>`Opportunity ${Math.round(c.raw.score)}`,afterLabel:c=>`demand ${c.raw.y} · openness ${c.raw.x} · avail-gap ${Math.round(c.raw.gap*100)}`}}},
+    scales:{x:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'Openness — low competition →'}},
+            y:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'Demand — share of voice →'}}}}});
+  $('#tLpOpp tbody').innerHTML=lpArr.slice(0,25).map(x=>`<tr data-type="${x.t}"><td>${x.t}</td>
+    <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
+    <td class="num">${Math.round(x.demandN*100)}</td><td class="num">${Math.round(x.openness*100)}</td>
+    <td class="num" style="color:${x.gap>0.6?C.red:C.txt}">${Math.round(x.gap*100)}</td>
+    <td class="num">${x.brands}</td><td class="num">${x.skus}</td>
+    <td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.demand,0)}</td></tr>`).join('');
+  const tsel=$('#lpType');
+  if(!lpTypeVal||!lpArr.find(x=>x.t===lpTypeVal))lpTypeVal=lpArr.length?lpArr[0].t:null;
+  tsel.innerHTML=lpArr.slice(0,40).map(x=>`<option value="${x.t}"${x.t===lpTypeVal?' selected':''}>${x.t} — opp ${Math.round(x.score)}</option>`).join('');
+  renderLpType(); renderLpShort();
+}
+function renderLpType(){
+  if(!lpTypeVal)return; const sales=salesActive();
+  const rows=lpFilter().filter(s=>s.pt===lpTypeVal);
+  $('#lpTypeLbl').textContent='· '+lpTypeVal; $('#lpTypeLbl2').textContent='· '+lpTypeVal;
+  const bands=lpBands(rows),best=lpBestBand(bands);
+  if(lpPriceChart)lpPriceChart.destroy();
+  lpPriceChart=new Chart($('#cLpPrice'),{data:{labels:bands.map(b=>`₹${fmt(b.lo,0)}–${fmt(b.hi,0)}`),datasets:[
+    {type:'bar',label:sales?'Prize':'Demand (SOV)',data:bands.map(b=>sales?b.val:b.demand),backgroundColor:bands.map(b=>best&&b===best?C.grn:C.acc2),borderRadius:5,yAxisID:'y'},
+    {type:'line',label:'Competing SKUs',data:bands.map(b=>b.skus),borderColor:C.org,backgroundColor:C.org,tension:.3,yAxisID:'y1'}]},
+    options:{plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>c.dataset.type==='line'?c.raw+' SKUs':(sales?'Prize '+money(c.raw):'Demand '+fmt(c.raw,1))}}},
+    scales:{y:{grid:{color:C.line},title:{display:true,text:sales?'Prize':'Demand'},ticks:{callback:v=>sales?money(v):v}},
+            y1:{position:'right',grid:{display:false},title:{display:true,text:'# SKUs'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  const discRows=rows.filter(s=>s.disc!=null);
+  $('#lpPriceNote').innerHTML=best?`<span><b style="color:var(--grn)">Attack band ₹${fmt(best.lo,0)}–${fmt(best.hi,0)}</b> — ${fmt(best.demand,1)} demand across only <b>${best.skus}</b> SKU(s). Typical discount ~${fmt(discRows.reduce((a,s)=>a+s.disc,0)/(discRows.length||1),0)}%.</span>`:'<span class="tag">No price data for this type.</span>';
+  const comp=lpCompetitors(rows);
+  $('#tLpComp tbody').innerHTML=comp.slice(0,15).map(c=>{
+    const fc=c.flag==='Out-of-stock leader'?C.red:c.flag==='Renting visibility'?C.org:c.flag==='Low availability'?C.acc:C.mut;
+    return `<tr><td>${c.b}</td><td class="num">${fmt(c.demand,1)}</td><td class="num">${fmt(c.csp,2)}</td>
+    <td class="num" style="color:${c.avgOSA<40?C.red:C.grn}">${fmt(c.avgOSA,0)}</td>
+    <td class="num">${Math.round(c.adRel*100)}%</td><td class="num">${c.skus}</td>
+    <td style="color:${fc};font-size:11px">${c.flag||'—'}</td></tr>`;}).join('');
+}
+function renderLpShort(){
+  const sales=salesActive();
+  $('#tLpShort tbody').innerHTML=lpArr.slice(0,6).map((x,i)=>{
+    const rows=lpFilter().filter(s=>s.pt===x.t);
+    const bench=[...rows].sort((a,b)=>(b.sov||0)-(a.sov||0))[0];
+    const best=lpBestBand(lpBands(rows)); const comp=lpCompetitors(rows)[0];
+    return `<tr data-type="${x.t}"><td>${i+1}</td><td>${x.t}</td>
+      <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
+      <td>${best?('₹'+fmt(best.lo,0)+'–'+fmt(best.hi,0)):'–'}</td>
+      <td title="${bench?bench.n:''}">${bench?bench.n.slice(0,38):'–'}</td>
+      <td>${comp?comp.b:'–'}</td>
+      <td class="num" style="color:${comp&&comp.avgOSA<40?C.red:C.grn}">${comp?fmt(comp.avgOSA,0):'–'}</td></tr>`;}).join('');
+}
+(function(){
+  const ssel=$('#lpScope'); ssel.add(new Option('All 5 categories','ALL',true,true));
+  DATA.subcats.forEach(s=>ssel.add(new Option(s,s)));
+  ssel.addEventListener('change',e=>{lpScopeVal=e.target.value;lpTypeVal=null;renderLaunchpad();});
+  $('#lpType').addEventListener('change',e=>{lpTypeVal=e.target.value;renderLpType();});
+})();
+onChartClick('#cLpOpp',i=>{const p=lpArr[i];if(p){lpTypeVal=p.t;const ts=$('#lpType');if(ts)ts.value=p.t;renderLpType();}});
+rowClick('#tLpOpp',tr=>{const t=tr.getAttribute('data-type');if(t){lpTypeVal=t;const ts=$('#lpType');if(ts)ts.value=t;renderLpType();}});
+rowClick('#tLpShort',tr=>{const t=tr.getAttribute('data-type');if(t){lpTypeVal=t;const ts=$('#lpType');if(ts)ts.value=t;renderLpType();}});
 
 buildInputs();
 computeSales();
