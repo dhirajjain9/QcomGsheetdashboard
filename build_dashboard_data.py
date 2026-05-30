@@ -1,4 +1,5 @@
 import pandas as pd, json, numpy as np
+from product_types import classify
 
 df = pd.read_excel('blinkit_rca_combined.xlsx')
 num = ['SP','MRP','Wt. OSA %','Wt. Discount %','Est. Category Share',
@@ -129,7 +130,8 @@ white_skus = ws[(ws['Overall SOV'] >= sov_hi) & (ws['Wt. OSA %'] < 40)] \
 white_space_skus = [{
     'name': row['Product Name'][:50], 'brand': row['Brand'], 'subcat': row['Sub Category'],
     'sov': r(row['Overall SOV'],2), 'osa': r(row['Wt. OSA %'],0),
-    'share': r(row['Est. Category Share'],2), 'disc': r(row['Wt. Discount %'],0)
+    'share': r(row['Est. Category Share'],2), 'disc': r(row['Wt. Discount %'],0),
+    'csp': r(row['Est. Category Share SP'],4), 'sp': r(row['SP'],0), 'mrp': r(row['MRP'],0)
 } for _, row in white_skus.iterrows()]
 
 # 2) Quadrant scatter: x = SOV, y = OSA for all SKUs with both (sample/aggregate by product)
@@ -161,14 +163,18 @@ for sc in subcat:
 g = (cur.groupby(['Product Name', 'Sub Category'])
        .agg(brand=('Brand', 'first'),
             cs=('Est. Category Share', 'sum'),
+            csp=('Est. Category Share SP', 'sum'),
             sp=('SP', 'mean'),
+            mrp=('MRP', 'mean'),
             osa=('Wt. OSA %', 'mean'),
             disc=('Wt. Discount %', 'mean'),
             sov=('Overall SOV', 'mean'))
        .reset_index())
 sku_level = [{
     'n': row['Product Name'][:60], 'b': row['brand'], 's': row['Sub Category'],
-    'cs': r(row['cs'], 4), 'sp': r(row['sp'], 0), 'osa': r(row['osa'], 0),
+    'pt': classify(row['Product Name']),
+    'cs': r(row['cs'], 4), 'csp': r(row['csp'], 4),
+    'sp': r(row['sp'], 0), 'mrp': r(row['mrp'], 0), 'osa': r(row['osa'], 0),
     'disc': r(row['disc'], 0), 'sov': r(row['sov'], 3)
 } for _, row in g.iterrows()]
 
