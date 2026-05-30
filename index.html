@@ -91,7 +91,6 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <a href="#sec-brands">Brands</a>
   <a href="#sec-types">Product types</a>
   <a href="#sec-launch">🚀 Launchpad</a>
-  <a href="#sec-momentum">Momentum</a>
   <a href="#sec-ws">White space</a>
 </nav>
 
@@ -232,12 +231,6 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div style="max-height:340px;overflow:auto"><table id="tLpShort"><thead><tr><th>#</th><th>Product type</th><th class="num">Opportunity</th><th>Remark (why)</th><th>Target price band</th><th>Benchmark SKU to beat</th><th>Main incumbent</th><th class="num">Their OSA</th></tr></thead><tbody></tbody></table></div>
 </div>
 
-<!-- MOMENTUM -->
-<h2 id="sec-momentum">Market-share momentum (MoM)</h2>
-<div class="grid g2">
-  <div class="card"><h3 class="up">▲ Top gainers</h3><div class="h3sub">Biggest share gains, month over month</div><div class="cwrap"><canvas id="cGain"></canvas></div></div>
-  <div class="card"><h3 class="down">▼ Top decliners</h3><div class="h3sub">Biggest share losses, month over month</div><div class="cwrap"><canvas id="cLoss"></canvas></div></div>
-</div>
 
 <!-- WHITE SPACES -->
 <h2 id="sec-ws">White spaces — where demand isn't being met</h2>
@@ -445,14 +438,6 @@ function renderSovChart(){
     scales:{x:{grid:{color:C.line},title:{display:true,text:'Share of Voice %'}},y:{grid:{color:C.line},title:{display:true,text:'Market share %'}}}}});
 }
 
-// ---- Momentum ----
-function momChart(el,arr,col){
-  new Chart($(el),{type:'bar',data:{labels:arr.map(x=>x.brand),datasets:[{data:arr.map(x=>x.delta),backgroundColor:col,borderRadius:5}]},
-    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:c=>`now ${arr[c.dataIndex].now}%`}}},
-    scales:{x:{grid:{color:C.line},title:{display:true,text:'Δ share pts'}},y:{grid:{display:false}}}}});
-}
-momChart('#cGain',DATA.gainers,C.grn);
-momChart('#cLoss',DATA.losers,C.red);
 
 // ---- White space quadrant (reactive) ----
 let quadChart;
