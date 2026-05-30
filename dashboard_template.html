@@ -57,7 +57,7 @@ nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--txt)}
 th .ind{opacity:.45;font-size:9px;margin-left:2px}
-#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr,#tMomUp tbody tr,#tMomDn tbody tr,#tMomNew tbody tr,#tMomExit tbody tr,#tMomBrandNew tbody tr,#tMomBrandExit tbody tr{cursor:pointer}
+#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr,#tMomUp tbody tr,#tMomDn tbody tr,#tMomNew tbody tr,#tMomExit tbody tr,#tMomBrandNew tbody tr,#tMomBrandExit tbody tr,#tMomTypeNew tbody tr,#tMomTypeExit tbody tr{cursor:pointer}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:48px 16px;overflow:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(16,24,40,.22)}
@@ -284,6 +284,13 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
     <div style="max-height:320px;overflow:auto"><table id="tMomBrandNew"><thead><tr><th>Brand</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
   <div class="card"><h3 style="color:var(--red)">－ Brands that exited</h3><div class="h3sub">Present in March, gone in April (within scope) — by March value-share</div>
     <div style="max-height:320px;overflow:auto"><table id="tMomBrandExit"><thead><tr><th>Brand</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="h3sub" style="margin:18px 0 0">Product-type entry/exit <span class="tag">— a product type counts as "new" only if it had <b>no</b> SKUs in the scope last month (and vice-versa)</span></div>
+<div class="grid g2" style="margin-top:10px">
+  <div class="card"><h3 style="color:var(--grn)">＋ New product types</h3><div class="h3sub">Types that appeared in April (within scope) — by April value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomTypeNew"><thead><tr><th>Product type</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--red)">－ Product types that exited</h3><div class="h3sub">Types present in March, gone in April (within scope) — by March value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomTypeExit"><thead><tr><th>Product type</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
 <footer id="ft"></footer>
@@ -677,6 +684,16 @@ function renderMomentum(){
   $('#momKpis').innerHTML=kp.map(k=>`<div class="kpi"><div class="v" style="color:${k[2]}">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('');
   $('#tMomBrandNew tbody').innerHTML=brandNew.map(o=>`<tr data-brand="${o.b}"><td>${o.b}</td><td class="num">${o.aprSkus}</td><td class="num" style="color:var(--grn)">${fmt(o.aprShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No new brands in scope</td></tr>';
   $('#tMomBrandExit tbody').innerHTML=brandExit.map(o=>`<tr data-brand="${o.b}"><td>${o.b}</td><td class="num">${o.marSkus}</td><td class="num" style="color:var(--red)">${fmt(o.marShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No brands exited in scope</td></tr>';
+  // product-type entry/exit within scope (exclude "Other")
+  const tpm={};
+  rows.forEach(x=>{const k=x.pt; if(!k||k==='Other')return; if(!tpm[k])tpm[k]={t:k,apr:false,mar:false,aprSkus:0,marSkus:0,aprShare:0,marShare:0};
+    const o=tpm[k];
+    if(x.st==='both'||x.st==='new'){o.apr=true;o.aprSkus++;o.aprShare+=(x.ac||0);}
+    if(x.st==='both'||x.st==='exit'){o.mar=true;o.marSkus++;o.marShare+=(x.pc||0);}});
+  const typeNew=Object.values(tpm).filter(o=>o.apr&&!o.mar).sort((a,b)=>b.aprShare-a.aprShare);
+  const typeExit=Object.values(tpm).filter(o=>!o.apr&&o.mar).sort((a,b)=>b.marShare-a.marShare);
+  $('#tMomTypeNew tbody').innerHTML=typeNew.map(o=>`<tr data-type="${o.t}"><td>${o.t}</td><td class="num">${o.aprSkus}</td><td class="num" style="color:var(--grn)">${fmt(o.aprShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No new product types in scope</td></tr>';
+  $('#tMomTypeExit tbody').innerHTML=typeExit.map(o=>`<tr data-type="${o.t}"><td>${o.t}</td><td class="num">${o.marSkus}</td><td class="num" style="color:var(--red)">${fmt(o.marShare,2)}</td></tr>`).join('')||'<tr><td class="tag" colspan="3">No product types exited in scope</td></tr>';
   const dCell=d=>`<td class="num ${d>0?'up':d<0?'down':''}">${d>0?'+':''}${fmt(d,2)}</td>`;
   const osaD=x=>(x.ao!=null&&x.po!=null)?(x.ao-x.po):null;
   const mvRow=x=>`<tr><td title="${x.n}">${x.n.slice(0,34)}</td><td>${x.b}</td><td class="num">${fmt(x.pc,2)}</td><td class="num">${fmt(x.ac,2)}</td>${dCell(dlt(x))}<td class="num ${osaD(x)>0?'up':osaD(x)<0?'down':''}">${osaD(x)==null?'–':(osaD(x)>0?'+':'')+fmt(osaD(x),0)}</td></tr>`;
@@ -782,6 +799,7 @@ rowClick('#tWsTypes',tr=>{const t=tr.getAttribute('data-type');t&&showType(t);})
 rowClick('#tAvail',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n,sel.value==='ALL'?null:sel.value);});
 ['#tMomUp','#tMomDn','#tMomNew','#tMomExit'].forEach(sel2=>rowClick(sel2,tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n);}));
 ['#tMomBrandNew','#tMomBrandExit'].forEach(sel2=>rowClick(sel2,tr=>{const b=tr.getAttribute('data-brand');b&&showBrand(b);}));
+['#tMomTypeNew','#tMomTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const t=tr.getAttribute('data-type');t&&showType(t);}));
 
 // sortable tables (sorts currently rendered rows)
 function makeSortable(tableSel){
@@ -799,7 +817,7 @@ function makeSortable(tableSel){
     });
   });
 }
-['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail','#tMomUp','#tMomDn','#tMomNew','#tMomExit','#tMomBrandNew','#tMomBrandExit'].forEach(makeSortable);
+['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail','#tMomUp','#tMomDn','#tMomNew','#tMomExit','#tMomBrandNew','#tMomBrandExit','#tMomTypeNew','#tMomTypeExit'].forEach(makeSortable);
 
 // section nav: smooth scroll + active highlight
 (function(){
