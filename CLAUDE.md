@@ -16,8 +16,9 @@ Competitive Analytics) CSV exports for 5 home categories. Originally built in re
   file name (`<hash>-blinkitrcadownload_<SubCategory>.csv`).
 - Sub-categories: Kitchen and Dining needs, Home Decor, Bathroom Essentials,
   Cleaning Tools, Home Improvement.
-- Two monthly snapshots: 2026-03-01 and 2026-04-01. Latest month drives the views;
-  MoM deltas use both.
+- Two monthly snapshots: 2026-03-01 and 2026-04-01. **April-only is the permanent
+  basis for all strategic views** (by decision); the Month-over-month section is the
+  only view that uses March.
 - **A 6th category file was mentioned but never provided** — re-run the pipeline if it arrives.
 
 ## Data dictionary (source columns)
@@ -33,7 +34,7 @@ Competitive Analytics) CSV exports for 5 home categories. Originally built in re
 | Brand | brand (casing inconsistent → normalise via lowercase key) | |
 | MRP / SP | max retail price / selling price (₹) | |
 | Wt. Discount % | (MRP−SP)/MRP weighted | |
-| Wt. PPU (x100) | price per **single unit** = SP / pack count | verified |
+| Wt. PPU (x100) | price per **single unit** = SP / pack count | **~3.7% of rows corrupt (PPU > SP, impossible)** — build clamps `ppu ≤ sp`, `pack ≥ 1`. A few jugs etc. encode volume as pack-count (residual noise). |
 | Wt. OSA % | weighted On-Shelf Availability (in-stock %) | avg ~35% |
 | **Est. Category Share** | est. share of category **volume/offtake**; sums to 100% per sub-cat/month | sales proxy (volume) |
 | **Est. Category Share SP** | est. share of category **value at SP**; sums to 100% | sales proxy (value) — **use this for revenue** |
@@ -57,34 +58,55 @@ reconcile. The dashboard has a **Show:** toggle (Net ₹ / Gross ₹ / Units). V
 gross reconciles to 122.6 Cr, net ≈ 68.2 Cr (~56% realisation), ~2.44M units.
 
 ## Product-type classification
-`product_types.py` maps each Product Name → one of ~130 product types
-(e.g. Laundry Basket, Induction Cooktop, Pressure Cooker, Scented Candle) via an
-ordered keyword rule list (first match wins). ~96% of SKUs classified; rest = "Other".
-Edit the `RULES` list to refine. Used for the Product-type section and detail table.
+`product_types.py` maps each Product Name → one of ~133 product types via an ordered
+keyword rule list (first match wins). ~96% of SKUs classified; rest = "Other". Edit the
+`RULES` list to refine (order matters — specific before general). A data-quality pass
+split mis-tagged holders/stands (e.g. *Candle / Diya Holder* out of candles, *Cloth
+Drying Stand* out of ropes, *Napkin Holder / Ring* out of kitchen cloth). Used across
+the Product-type, Launchpad, White-space, MoM and Price-Band sections.
 
-## Dashboard sections
-1. KPIs · 2. Sales input panel (per-sub-cat MRP) · 3. **Overall view**
-(gross/net/units/realisation, sales by sub-cat, top brands across the *full* brand
-universe) · 4. Market structure by sub-cat · 5. Top SKUs (product-wise, per sub-cat)
-· 6. Top brands & market share (visibility-vs-conversion) · 7. **Product types**
-(top types, sales-split donut, detail table) · 8. MoM momentum · 9. White spaces
-(demand-vs-availability map, unmet-demand SKUs, category fragmentation).
+## Scope selector
+A dropdown above **Top SKUs** (default **All categories**, plus each sub-category) is the
+global scope and drives the **Top SKUs, Brands, and Product-types** sections; Availability,
+MoM and Price-Band sections also follow it. The Launchpad has its own independent scope.
 
-Known methodological caveat: cross-category brand "market share %" equal-weights
-sub-categories; once MRP totals are entered, all ₹/units aggregation is sales-weighted
-and correct. The brand **leaderboard** is the top-20-by-share re-ranked by ₹; the
-**Overall view** ranks the full brand universe by ₹.
+## Dashboard sections (current)
+1. **KPIs** · 2. **Founder's Launchpad** (opportunity map + ranking with remark buckets,
+   price ladder, competitor teardown w/ ad-reliance flags, launch shortlist) ·
+3. **Sales input** (per-sub-cat MRP) · 4. **Overall view** (gross/net/units/realisation,
+   sales by sub-cat, full brand universe) · 5. **Market structure** by sub-cat (HHI, top-5) ·
+6. **Top SKUs** (scope-aware) · 7. **Brands** (leaderboard with **% of Total**, visibility-
+   vs-conversion scatter — all scope-aware) · 8. **Product types** (top-40 bar+donut,
+   detail table w/ Rev/SKU, By-SKU/By-Brand drill-down) · 9. **White spaces** (white-space
+   map, bucket breakdown, leaderboard w/ Rev/SKU) · 10. **Availability & stockout loss**
+   (est. ₹ lost, demand-vs-availability map) · 11. **Month-over-month** (SKU risers/fallers
+   + entry/exit; brand & product-type entry/exit per category; brand-churn chart ranked by
+   gross sales) · 12. **Price Band Analysis** (PPU value tiers — bands adaptive per product
+   type — demand-vs-supply, pack-mix, tier detail).
+
+**Scoring methodology** (opportunity score weights, white space = √(under-served ×
+organic-beatable-leader), remark buckets, Rev/SKU benchmark) is documented in **`INSIGHTS.md`**
+— keep that file as the source of truth for analytics logic.
+
+Known caveat: the old cross-category brand "market share %" equal-weighted sub-categories;
+the leaderboard is now scope-aware with a sales-weighted **% of Total** column. UX: drill-down
+modals, sortable tables with frozen headers, section nav, persisted MRP inputs, cream theme.
 
 ## Build pipeline
 ```
-python3 build_dashboard_data.py   # CSVs/xlsx → dashboard_data.json (+ product types, sku-level)
+python3 build_dashboard_data.py   # CSVs/xlsx → dashboard_data.json
 python3 make_dashboard.py         # inject JSON into template → dashboard.html + index.html
 ```
 - `dashboard_template.html` holds the HTML/CSS/JS with a `/*__DATA__*/` placeholder.
-- `combine_csvs.py` rebuilds `blinkit_rca_combined.xlsx` from the raw CSV uploads.
+- `combine_csvs.py` rebuilds `blinkit_rca_combined.xlsx` from `raw_csvs/`.
+- Key emitted datasets in `dashboard_data.json`:
+  - `sku_level` (April per SKU): `cs, csp, sp, mrp, osa, disc, sov, osov, asov, ppu, pack, gram, pt`.
+  - `sku_mom` (Mar↔Apr per Product ID): `ac/pc` (Apr/Mar value-share), `ao/po` (OSA),
+    `ad/pd` (disc), `asp/psp` (SP), `pt`, `st` = `both|new|exit` — powers the MoM section.
 
 ## Open items / next ideas
 - Add the missing **6th category** file when provided.
-- MoM **₹ growth** now that real sales exist; export per-SKU units/revenue to Excel.
-- Optionally rank the brand leaderboard by the **global top sellers by ₹** (not just
-  top-20-by-share).
+- MoM **₹ growth** (March isn't in the ₹ model — MoM is value-share only); per-SKU
+  units/revenue export to Excel.
+- Parked by decision: promo-dependency, averaged/month-toggle time basis.
+- Backlog is otherwise clear (see `INSIGHTS.md`).
