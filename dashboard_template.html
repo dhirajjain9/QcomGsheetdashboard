@@ -204,7 +204,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="cwrap tall"><canvas id="cLpOpp"></canvas></div>
 </div>
 <div class="card" style="margin-bottom:16px"><h3>Opportunity ranking</h3><div class="h3sub">Sorted by opportunity score (0–100). Click a row to load its price ladder &amp; competitors below.</div>
-  <div style="max-height:330px;overflow:auto"><table id="tLpOpp"><thead><tr><th>Product type</th><th class="num">Opportunity</th><th class="num">Demand (sales)</th><th class="num">White space</th><th class="num">Avail. gap</th><th class="num">Brands</th><th class="num">SKUs</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:330px;overflow:auto"><table id="tLpOpp"><thead><tr><th>Product type</th><th class="num">Opportunity</th><th class="num">Demand (sales)</th><th class="num">White space</th><th>Remark (why)</th><th class="num">Avail. gap</th><th class="num">Brands</th><th class="num">SKUs</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <div class="card" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -720,6 +720,7 @@ function lpWeights(){
   const d=+(($('#wDemand')||{}).value||50),o=+(($('#wOpen')||{}).value||30),a=+(($('#wAvail')||{}).value||20);
   const s=d+o+a||1; return {d:d/s,o:o/s,a:a/s};
 }
+function lpRemarkColor(r){return r==='Prime white space'?C.grn:r==='Rented crown'?C.acc2:r==='Organic fortress'?C.red:r==='Crowded shelf'?C.org:C.mut;}
 function lpTypeAgg(){
   const sales=salesActive();
   const rows=lpFilter().filter(s=>s.pt&&s.pt!=='Other'); const map={};
@@ -736,9 +737,11 @@ function lpTypeAgg(){
     const cr1=Math.max(...v.map(y=>y.csp),0)/tot;                         // top brand's raw share
     // organic moat = strongest organically-EARNED share; ad-propped share is discounted (rented visibility fades)
     const moat=Math.max(0,...v.map(y=>{const ad=(y.asov+y.osov)>0?y.asov/(y.asov+y.osov):0;return (y.csp/tot)*(1-ad);}));
+    const leader=v.reduce((m,y)=>(m&&m.csp>=y.csp?m:y),null)||{b:'—',csp:0,osov:0,asov:0};
+    const leaderAd=(leader.asov+leader.osov)>0?leader.asov/(leader.asov+leader.osov):0;
     const wOSA=a.osaWN?a.osaW/a.osaWN:0;
     return {t:a.t,skus:a.skus,brands:Object.keys(a.brands).length,csp:a.csp,val:a.val,
-      openness:1-hhi,hhi,cr1,moat,beat:1-moat,gap:Math.max(0,1-wOSA/100),wOSA,
+      openness:1-hhi,hhi,cr1,moat,beat:1-moat,leaderName:leader.b,leaderAd,gap:Math.max(0,1-wOSA/100),wOSA,
       avgSP:a.spN?a.spSum/a.spN:0,avgDisc:a.discN?a.discSum/a.discN:0,
       sizeRaw:sales?a.val:a.csp};});
   arr=arr.filter(x=>x.sizeRaw>0);
@@ -751,7 +754,14 @@ function lpTypeAgg(){
     // White space = √(under-served × beatable-leader): needs BOTH a thin assortment AND no dominant #1
     x.ws=Math.sqrt(x.underN*x.beat);
     const gate=Math.min(1,x.demandN/0.03);                 // zero/near-zero sales => no opportunity
-    x.score=100*(W.d*x.demandN+W.o*x.ws+W.a*x.gap)*gate;});
+    x.score=100*(W.d*x.demandN+W.o*x.ws+W.a*x.gap)*gate;
+    // remark = WHY the white-space (competitive) score is what it is (first match wins)
+    const lead=Math.round(x.cr1*100), ad=Math.round(x.leaderAd*100);
+    if(x.moat>=0.45){x.remark='Organic fortress';x.remarkWhy=`${x.leaderName} owns ~${lead}% organically — real moat, hard to crack → low white space.`;}
+    else if(x.cr1>=0.45){x.remark='Rented crown';x.remarkWhy=`${x.leaderName} leads ~${lead}% but ~${ad}% ad-driven — rented, so beatable → white space lifted.`;}
+    else if(x.ws>=0.5){x.remark='Prime white space';x.remarkWhy='Under-served (few SKUs for the demand) & no entrenched leader → high white space.';}
+    else if(x.underN<0.25){x.remark='Crowded shelf';x.remarkWhy=`${x.skus} SKUs / ${x.brands} brands already — saturated, little room → low white space.`;}
+    else {x.remark='Open & contested';x.remarkWhy='Fragmented field, moderate thinness — winnable but no standout gap.';}});
   arr.sort((a,b)=>b.score-a.score); return arr;
 }
 function lpBands(rows){
@@ -793,6 +803,7 @@ function renderLaunchpad(){
     <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
     <td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.csp,1)}</td>
     <td class="num">${Math.round(x.ws*100)}</td>
+    <td title="${x.remarkWhy}" style="color:${lpRemarkColor(x.remark)};font-size:11.5px;white-space:nowrap">${x.remark}</td>
     <td class="num" style="color:${x.gap>0.6?C.red:C.txt}">${Math.round(x.gap*100)}</td>
     <td class="num">${x.brands}</td><td class="num">${x.skus}</td></tr>`).join('');
   const tsel=$('#lpType');
