@@ -180,7 +180,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <h2 id="sec-launch">🚀 Founder's Launchpad <span class="tag" style="margin-left:6px;font-weight:400">if you were launching a brand here — where to enter & how to win</span></h2>
 <div class="note" style="border-left-color:var(--grn)">
   <b>Reading this section as a founder:</b> <b>Opportunity</b> blends <b>Demand</b> (total sales of the type),
-  <b>Competition</b> (how many brands &amp; how top-heavy — measured by HHI: low = fragmented/open, high = dominated) and
+  <b>White space</b> (how open/fragmented the brand field is — from HHI: high = many small players &amp; room to enter, low = dominated by a few) and
   <b>Availability gap</b> (how badly incumbents are out of stock — sales-weighted). Tune the weights to match your thesis,
   pick a scope, read the <b>opportunity map</b>, then click any type to load its <b>price ladder</b> and <b>competitors</b>. Enter ₹ sales (below) to size each prize in rupees.
 </div>
@@ -192,7 +192,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
     <span class="tag">Opportunity weights:</span>
     <label class="tag" style="display:flex;align-items:center;gap:6px">Demand (sales) <input type="range" id="wDemand" min="0" max="100" value="50"><b id="wDemandV" style="color:var(--acc);width:32px;text-align:right">50</b></label>
-    <label class="tag" style="display:flex;align-items:center;gap:6px">Competition <input type="range" id="wOpen" min="0" max="100" value="30"><b id="wOpenV" style="color:var(--acc);width:32px;text-align:right">30</b></label>
+    <label class="tag" style="display:flex;align-items:center;gap:6px">White space <input type="range" id="wOpen" min="0" max="100" value="30"><b id="wOpenV" style="color:var(--acc);width:32px;text-align:right">30</b></label>
     <label class="tag" style="display:flex;align-items:center;gap:6px">Availability <input type="range" id="wAvail" min="0" max="100" value="20"><b id="wAvailV" style="color:var(--acc);width:32px;text-align:right">20</b></label>
     <button id="wReset" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:11px">Reset</button>
   </div>
@@ -200,11 +200,11 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 
 <!-- 1 · Where to play -->
 <div class="card" style="margin-bottom:16px"><h3>1 · Where to play — opportunity map</h3>
-  <div class="h3sub">Each bubble = a product type. <b>x</b> = openness (low competition →), <b>y</b> = demand. Bubble size = prize (₹ once entered, else demand). Redder = bigger availability gap. <b>Top-right, big &amp; red = enter here.</b></div>
+  <div class="h3sub">Each bubble = a product type. <b>x</b> = white space (open/fragmented →), <b>y</b> = demand. Bubble size = prize (₹ once entered, else demand). Redder = bigger availability gap. <b>Top-right, big &amp; red = enter here.</b></div>
   <div class="cwrap tall"><canvas id="cLpOpp"></canvas></div>
 </div>
 <div class="card" style="margin-bottom:16px"><h3>Opportunity ranking</h3><div class="h3sub">Sorted by opportunity score (0–100). Click a row to load its price ladder &amp; competitors below.</div>
-  <div style="max-height:330px;overflow:auto"><table id="tLpOpp"><thead><tr><th>Product type</th><th class="num">Opportunity</th><th class="num">Demand (sales)</th><th class="num">Competition</th><th class="num">Avail. gap</th><th class="num">Brands</th><th class="num">SKUs</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:330px;overflow:auto"><table id="tLpOpp"><thead><tr><th>Product type</th><th class="num">Opportunity</th><th class="num">Demand (sales)</th><th class="num">White space</th><th class="num">Avail. gap</th><th class="num">Brands</th><th class="num">SKUs</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <div class="card" style="margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -777,7 +777,7 @@ function renderLaunchpad(){
     backgroundColor:pts.map(p=>`rgba(${Math.round(110+p.gap*145)},${Math.round(150-p.gap*90)},${Math.round(120-p.gap*40)},.62)`),
     borderColor:pts.map(p=>lpArr.length&&p.score>=lpArr[0].score*0.7?C.acc:'transparent'),borderWidth:1}]},
     options:{plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>c[0].raw.t,label:c=>`Opportunity ${Math.round(c.raw.score)}`,afterLabel:c=>`demand ${c.raw.y} · openness ${c.raw.x} · avail-gap ${Math.round(c.raw.gap*100)}`}}},
-    scales:{x:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'Openness — low competition →'}},
+    scales:{x:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'White space — open/fragmented →'}},
             y:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'Demand — share of voice →'}}}}});
   $('#tLpOpp tbody').innerHTML=lpArr.slice(0,25).map(x=>`<tr data-type="${x.t}"><td>${x.t}</td>
     <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
