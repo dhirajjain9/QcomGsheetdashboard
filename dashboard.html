@@ -57,7 +57,7 @@ nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--txt)}
 th .ind{opacity:.45;font-size:9px;margin-left:2px}
-#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr{cursor:pointer}
+#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr{cursor:pointer}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:48px 16px;overflow:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(16,24,40,.22)}
@@ -92,6 +92,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <a href="#sec-types">Product types</a>
   <a href="#sec-launch">🚀 Launchpad</a>
   <a href="#sec-ws">White space</a>
+  <a href="#sec-avail">Availability</a>
 </nav>
 
 <div class="note">
@@ -243,6 +244,19 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </div>
 <div class="card" style="margin-top:16px"><h3>White-space leaderboard</h3><div class="h3sub">Product types ranked by white space, with the reason. Hover the remark for detail; click a row to drill in.</div>
   <div style="max-height:380px;overflow:auto"><table id="tWsTypes"><thead><tr><th>Product type</th><th class="num">White space</th><th>Remark (why)</th><th class="num">Under-served</th><th class="num">Beatable</th><th>Leader</th><th class="num">Demand</th></tr></thead><tbody></tbody></table></div>
+</div>
+
+<!-- AVAILABILITY / STOCKOUTS -->
+<h2 id="sec-avail">Availability &amp; stockout loss <span class="tag" id="availScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
+<div class="note" style="border-left-color:var(--org)">
+  <b>OSA</b> = on-shelf availability (% of time in stock). Where demand (Share of Voice) is high but OSA is low, sales are being lost to stockouts. <b>Est. lost</b> is a rough estimate assuming a <b>75% target availability</b> (capped at 2× current sales). Scope follows the Top-SKUs selector above.
+</div>
+<div class="kpis" id="availKpis"></div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3>Demand vs availability</h3><div class="h3sub"><b>x</b> = Share of Voice (demand →), <b>y</b> = on-shelf availability. Bubble = sales/share. <b style="color:var(--red)">Bottom-right = high demand, low stock → stockout loss.</b></div><div class="cwrap xtall"><canvas id="cAvailMap"></canvas></div></div>
+  <div class="card"><h3>Biggest stockout losses</h3><div class="h3sub">SKUs with real demand but low availability — ranked by estimated sales lost</div>
+    <div style="max-height:480px;overflow:auto"><table id="tAvail"><thead><tr><th>Product</th><th>Brand</th><th class="num">SOV</th><th class="num">OSA</th><th class="num availSalesCol" style="display:none">Sales</th><th class="num availLostCol" style="display:none">Est. lost</th></tr></thead><tbody></tbody></table></div>
+  </div>
 </div>
 
 <footer id="ft"></footer>
@@ -566,13 +580,43 @@ function renderAll(){
   $('#totalSales').textContent=total>0?money(total):'–';
   renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderSovChart();
   renderOverall(); renderProductTypes(); renderLaunchpad();
-  renderSkusChart(); renderConcChart();
+  renderSkusChart(); renderConcChart(); renderAvailability();
 }
 function applySales(){ computeSales(); renderAll(); }
 $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); saveSales(); applySales();});
 $('#metricSel').addEventListener('change',e=>{metric=e.target.value; renderAll();});
 $('#clearBtn').addEventListener('click',()=>{$$('#salesInputs input').forEach(i=>i.value=''); DATA.subcats.forEach(s=>totals[s]=0); saveSales(); applySales();});
-function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();}
+// ---- Availability & stockout loss (SKU-level; scope follows the Top-SKUs selector) ----
+let availMapChart;
+const AVAIL_TARGET=75;
+const lostOf=s=>{const o=s.osa; if(o==null||o>=AVAIL_TARGET)return 0; const R=skuVal(s); return R*Math.min(2,Math.max(0,(AVAIL_TARGET-o)/o));};
+function renderAvailability(){
+  const sales=salesActive(), rows=scopeRows();
+  $('#availScopeLbl').textContent='· '+scopeLabel();
+  const withOsa=rows.filter(s=>s.osa!=null);
+  const avgOsa=withOsa.length?withOsa.reduce((a,s)=>a+s.osa,0)/withOsa.length:0;
+  const lowPct=withOsa.length?withOsa.filter(s=>s.osa<40).length/withOsa.length*100:0;
+  const totalLost=rows.reduce((a,s)=>a+lostOf(s),0);
+  const kp=[['Avg availability',fmt(avgOsa,0)+'%',C.grn],['SKUs below 40% OSA',fmt(lowPct,0)+'%',C.red],
+    ['Est. sales lost to stockouts',sales?valFmt(totalLost):'– (enter ₹)',C.org]];
+  $('#availKpis').innerHTML=kp.map(k=>`<div class="kpi"><div class="v" style="color:${k[2]}">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('');
+  // map: top 150 by demand (SOV)
+  const mp=rows.filter(s=>s.sov!=null&&s.osa!=null).sort((a,b)=>(b.sov||0)-(a.sov||0)).slice(0,150);
+  const sizeOf=s=>(sales?skuVal(s):s.csp)||0, maxS=Math.max(...mp.map(sizeOf),1e-9);
+  if(availMapChart)availMapChart.destroy();
+  availMapChart=new Chart($('#cAvailMap'),{type:'bubble',data:{datasets:[{data:mp.map(s=>({x:s.sov,y:s.osa,r:Math.max(3,Math.sqrt(sizeOf(s)/maxS)*22),n:s.n,b:s.b})),
+    backgroundColor:mp.map(s=>s.osa<40?'#dc262699':'#16a34a88')}]},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:c=>c[0].raw.n,label:c=>`${c.raw.b}: SOV ${fmt(c.raw.x,2)} · OSA ${fmt(c.raw.y,0)}%`}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:'Share of Voice (demand →)'}},y:{min:0,max:100,grid:{color:C.line},title:{display:true,text:'On-shelf availability %'}}}}});
+  // table: high demand + low availability, by est. lost (or demand)
+  $$('.availSalesCol,.availLostCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.classList.contains('availSalesCol')&&e.tagName==='TH')e.textContent=metricShort();});
+  const un=rows.filter(s=>s.osa!=null&&s.osa<40&&(s.sov||0)>0).sort((a,b)=>sales?(lostOf(b)-lostOf(a)):((b.sov||0)-(a.sov||0))).slice(0,25);
+  $('#tAvail tbody').innerHTML=un.map(s=>`<tr><td title="${s.n}">${s.n.slice(0,36)}</td><td>${s.b}</td>
+    <td class="num">${fmt(s.sov,2)}</td><td class="num" style="color:var(--red)">${fmt(s.osa,0)}</td>
+    ${sales?`<td class="num">${valFmt(skuVal(s))}</td>`:''}
+    ${sales?`<td class="num" style="color:var(--org)">${valFmt(lostOf(s))}</td>`:''}</tr>`).join('');
+}
+function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();renderAvailability();}
 sel.addEventListener('change',renderScope);
 
 // ===== Interactivity: drill-down modal, clickable charts/rows, sortable tables, section nav =====
@@ -665,6 +709,7 @@ rowClick('#tSku',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&s
 rowClick('#tBrand',tr=>{const n=tr.children[1]?.textContent;n&&showBrand(n);});
 rowClick('#tPt',tr=>{const t=tr.children[0]?.textContent;t&&showType(t);});
 rowClick('#tWsTypes',tr=>{const t=tr.getAttribute('data-type');t&&showType(t);});
+rowClick('#tAvail',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n,sel.value==='ALL'?null:sel.value);});
 
 // sortable tables (sorts currently rendered rows)
 function makeSortable(tableSel){
@@ -682,7 +727,7 @@ function makeSortable(tableSel){
     });
   });
 }
-['#tSku','#tBrand','#tPt','#tWsTypes'].forEach(makeSortable);
+['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail'].forEach(makeSortable);
 
 // section nav: smooth scroll + active highlight
 (function(){
