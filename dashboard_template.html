@@ -192,8 +192,8 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
     <span class="tag">Opportunity weights:</span>
     <label class="tag" style="display:flex;align-items:center;gap:6px">Demand (sales) <input type="range" id="wDemand" min="0" max="100" value="50"><b id="wDemandV" style="color:var(--acc);width:32px;text-align:right">50</b></label>
-    <label class="tag" style="display:flex;align-items:center;gap:6px">Competition <input type="range" id="wOpen" min="0" max="100" value="25"><b id="wOpenV" style="color:var(--acc);width:32px;text-align:right">25</b></label>
-    <label class="tag" style="display:flex;align-items:center;gap:6px">Availability <input type="range" id="wAvail" min="0" max="100" value="25"><b id="wAvailV" style="color:var(--acc);width:32px;text-align:right">25</b></label>
+    <label class="tag" style="display:flex;align-items:center;gap:6px">Competition <input type="range" id="wOpen" min="0" max="100" value="30"><b id="wOpenV" style="color:var(--acc);width:32px;text-align:right">30</b></label>
+    <label class="tag" style="display:flex;align-items:center;gap:6px">Availability <input type="range" id="wAvail" min="0" max="100" value="20"><b id="wAvailV" style="color:var(--acc);width:32px;text-align:right">20</b></label>
     <button id="wReset" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:5px 10px;cursor:pointer;font-size:11px">Reset</button>
   </div>
 </div>
@@ -394,7 +394,7 @@ function renderBrandChart(){
   if(brandChart)brandChart.destroy();
   brandChart=new Chart($('#cBrand'),{type:'bar',data:{labels:tb.map(b=>b.brand),datasets:[{
       data:tb.map(b=>sales?b.v:b.share_pct),backgroundColor:C.acc,borderRadius:5}]},
-    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{
+    options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{
       label:c=>sales?valFmt(c.raw):fmt(c.raw,2)+'%',
       afterLabel:c=>`SOV ${tb[c.dataIndex].sov_pct}% · ${tb[c.dataIndex].skus} SKUs`}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'% of tracked market'},
@@ -483,7 +483,7 @@ function renderOverall(){
   const tb=useCount?Object.entries(cntMap).sort((a,b)=>b[1]-a[1]).slice(0,15):top;
   if(ovBrandChart)ovBrandChart.destroy();
   ovBrandChart=new Chart($('#cOvBrand'),{type:'bar',data:{labels:tb.map(e=>disp[e[0]]||e[0]),datasets:[{data:tb.map(e=>e[1]),backgroundColor:C.acc2,borderRadius:5}]},
-    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
+    options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false},ticks:{autoSkip:false,font:{size:11}}}}}});
 }
 
@@ -673,7 +673,7 @@ function makeSortable(tableSel){
 let lpScopeVal='ALL', lpTypeVal=null, lpArr=[], lpOppChart, lpPriceChart;
 function lpFilter(){return lpScopeVal==='ALL'?DATA.sku_level:DATA.sku_level.filter(s=>s.s===lpScopeVal);}
 function lpWeights(){
-  const d=+(($('#wDemand')||{}).value||50),o=+(($('#wOpen')||{}).value||25),a=+(($('#wAvail')||{}).value||25);
+  const d=+(($('#wDemand')||{}).value||50),o=+(($('#wOpen')||{}).value||30),a=+(($('#wAvail')||{}).value||20);
   const s=d+o+a||1; return {d:d/s,o:o/s,a:a/s};
 }
 function lpTypeAgg(){
@@ -788,7 +788,7 @@ function renderLpShort(){
   $('#lpType').addEventListener('change',e=>{lpTypeVal=e.target.value;renderLpType();});
   function syncW(){const W=lpWeights();$('#wDemandV').textContent=Math.round(W.d*100);$('#wOpenV').textContent=Math.round(W.o*100);$('#wAvailV').textContent=Math.round(W.a*100);}
   ['#wDemand','#wOpen','#wAvail'].forEach(s=>$(s).addEventListener('input',()=>{syncW();renderLaunchpad();}));
-  $('#wReset').addEventListener('click',()=>{$('#wDemand').value=50;$('#wOpen').value=25;$('#wAvail').value=25;syncW();renderLaunchpad();});
+  $('#wReset').addEventListener('click',()=>{$('#wDemand').value=50;$('#wOpen').value=30;$('#wAvail').value=20;syncW();renderLaunchpad();});
   syncW();
 })();
 onChartClick('#cLpOpp',i=>{const p=lpArr[i];if(p){lpTypeVal=p.t;const ts=$('#lpType');if(ts)ts.value=p.t;renderLpType();}});
