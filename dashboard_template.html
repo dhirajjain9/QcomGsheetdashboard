@@ -57,7 +57,7 @@ nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--txt)}
 th .ind{opacity:.45;font-size:9px;margin-left:2px}
-#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr{cursor:pointer}
+#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr,#tMomUp tbody tr,#tMomDn tbody tr,#tMomNew tbody tr,#tMomExit tbody tr{cursor:pointer}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:48px 16px;overflow:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(16,24,40,.22)}
@@ -93,6 +93,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <a href="#sec-launch">🚀 Launchpad</a>
   <a href="#sec-ws">White space</a>
   <a href="#sec-avail">Availability</a>
+  <a href="#sec-mom">MoM</a>
 </nav>
 
 <div class="note">
@@ -257,6 +258,25 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="card"><h3>Biggest stockout losses</h3><div class="h3sub">SKUs with real demand but low availability — ranked by estimated sales lost</div>
     <div style="max-height:480px;overflow:auto"><table id="tAvail"><thead><tr><th>Product</th><th>Brand</th><th class="num">SOV</th><th class="num">OSA</th><th class="num availSalesCol" style="display:none">Sales</th><th class="num availLostCol" style="display:none">Est. lost</th></tr></thead><tbody></tbody></table></div>
   </div>
+</div>
+
+<!-- MONTH-OVER-MONTH (SKU MOVEMENT) -->
+<h2 id="sec-mom">Month-over-month — SKU movement <span class="tag" id="momScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
+<div class="note">
+  Mar → Apr change in each SKU's <b>value-share</b> (Est. Category Share SP, in share-points of its sub-category). <b>New entrants</b> = SKUs that appeared in April; <b>exits</b> = SKUs that dropped out. Scope follows the Top-SKUs selector above.
+</div>
+<div class="kpis" id="momKpis"></div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3 class="up">▲ Top share risers</h3><div class="h3sub">Biggest value-share gains, Mar → Apr (share-points)</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomUp"><thead><tr><th>Product</th><th>Brand</th><th class="num">Mar</th><th class="num">Apr</th><th class="num">Δ</th><th class="num">OSA Δ</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 class="down">▼ Top share fallers</h3><div class="h3sub">Biggest value-share losses, Mar → Apr</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomDn"><thead><tr><th>Product</th><th>Brand</th><th class="num">Mar</th><th class="num">Apr</th><th class="num">Δ</th><th class="num">OSA Δ</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3 style="color:var(--grn)">＋ New entrants</h3><div class="h3sub">New in April — by April value-share</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomNew"><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Apr share</th><th class="num">OSA</th><th class="num">SP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--red)">－ Exited SKUs</h3><div class="h3sub">In March, gone in April — by March value-share</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomExit"><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Mar share</th><th class="num">Last OSA</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
 <footer id="ft"></footer>
@@ -588,7 +608,7 @@ function renderAll(){
   $('#totalSales').textContent=total>0?money(total):'–';
   renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderSovChart();
   renderOverall(); renderProductTypes(); renderLaunchpad();
-  renderSkusChart(); renderConcChart(); renderAvailability();
+  renderSkusChart(); renderConcChart(); renderAvailability(); renderMomentum();
 }
 function applySales(){ computeSales(); renderAll(); }
 $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); saveSales(); applySales();});
@@ -624,7 +644,30 @@ function renderAvailability(){
     ${sales?`<td class="num">${valFmt(skuVal(s))}</td>`:''}
     ${sales?`<td class="num" style="color:var(--org)">${valFmt(lostOf(s))}</td>`:''}</tr>`).join('');
 }
-function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();renderAvailability();}
+// ---- Month-over-month SKU movement (scope follows the Top-SKUs selector) ----
+function momScope(){return sel.value==='ALL'?DATA.sku_mom:DATA.sku_mom.filter(x=>x.s===sel.value);}
+function renderMomentum(){
+  if(!DATA.sku_mom)return;
+  const rows=momScope();
+  $('#momScopeLbl').textContent='· '+scopeLabel();
+  const both=rows.filter(x=>x.st==='both');
+  const dlt=x=>(x.ac||0)-(x.pc||0);
+  const risers=[...both].filter(x=>dlt(x)>0).sort((a,b)=>dlt(b)-dlt(a)).slice(0,12);
+  const fallers=[...both].filter(x=>dlt(x)<0).sort((a,b)=>dlt(a)-dlt(b)).slice(0,12);
+  const entrants=rows.filter(x=>x.st==='new').sort((a,b)=>(b.ac||0)-(a.ac||0)).slice(0,12);
+  const exits=rows.filter(x=>x.st==='exit').sort((a,b)=>(b.pc||0)-(a.pc||0)).slice(0,12);
+  const kp=[['New entrants',rows.filter(x=>x.st==='new').length,C.grn],['Exited SKUs',rows.filter(x=>x.st==='exit').length,C.red],
+    ['Share risers',both.filter(x=>dlt(x)>0).length,C.grn],['Share fallers',both.filter(x=>dlt(x)<0).length,C.red]];
+  $('#momKpis').innerHTML=kp.map(k=>`<div class="kpi"><div class="v" style="color:${k[2]}">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('');
+  const dCell=d=>`<td class="num ${d>0?'up':d<0?'down':''}">${d>0?'+':''}${fmt(d,2)}</td>`;
+  const osaD=x=>(x.ao!=null&&x.po!=null)?(x.ao-x.po):null;
+  const mvRow=x=>`<tr><td title="${x.n}">${x.n.slice(0,34)}</td><td>${x.b}</td><td class="num">${fmt(x.pc,2)}</td><td class="num">${fmt(x.ac,2)}</td>${dCell(dlt(x))}<td class="num ${osaD(x)>0?'up':osaD(x)<0?'down':''}">${osaD(x)==null?'–':(osaD(x)>0?'+':'')+fmt(osaD(x),0)}</td></tr>`;
+  $('#tMomUp tbody').innerHTML=risers.map(mvRow).join('');
+  $('#tMomDn tbody').innerHTML=fallers.map(mvRow).join('');
+  $('#tMomNew tbody').innerHTML=entrants.map(x=>`<tr><td title="${x.n}">${x.n.slice(0,30)}</td><td>${x.b}</td><td class="tag">${x.s}</td><td class="num">${fmt(x.ac,2)}</td><td class="num" style="color:${x.ao<40?C.red:C.grn}">${fmt(x.ao,0)}</td><td class="num">₹${fmt(x.asp,0)}</td></tr>`).join('');
+  $('#tMomExit tbody').innerHTML=exits.map(x=>`<tr><td title="${x.n}">${x.n.slice(0,30)}</td><td>${x.b}</td><td class="tag">${x.s}</td><td class="num">${fmt(x.pc,2)}</td><td class="num">${fmt(x.po,0)}</td></tr>`).join('');
+}
+function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();renderAvailability();renderMomentum();}
 sel.addEventListener('change',renderScope);
 
 // ===== Interactivity: drill-down modal, clickable charts/rows, sortable tables, section nav =====
@@ -719,6 +762,7 @@ rowClick('#tBrand',tr=>{const n=tr.children[1]?.textContent;n&&showBrand(n);});
 rowClick('#tPt',tr=>{const t=tr.children[0]?.textContent;t&&showType(t);});
 rowClick('#tWsTypes',tr=>{const t=tr.getAttribute('data-type');t&&showType(t);});
 rowClick('#tAvail',tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n,sel.value==='ALL'?null:sel.value);});
+['#tMomUp','#tMomDn','#tMomNew','#tMomExit'].forEach(sel2=>rowClick(sel2,tr=>{const n=tr.querySelector('td')?.getAttribute('title');n&&showSku(n);}));
 
 // sortable tables (sorts currently rendered rows)
 function makeSortable(tableSel){
@@ -736,7 +780,7 @@ function makeSortable(tableSel){
     });
   });
 }
-['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail'].forEach(makeSortable);
+['#tSku','#tBrand','#tPt','#tWsTypes','#tAvail','#tMomUp','#tMomDn','#tMomNew','#tMomExit'].forEach(makeSortable);
 
 // section nav: smooth scroll + active highlight
 (function(){
