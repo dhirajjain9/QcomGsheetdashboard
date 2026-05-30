@@ -219,8 +219,10 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   </div>
   <!-- 3 · Who to beat -->
   <div class="card"><h3>3 · Who to beat — incumbents <span class="tag" id="lpTypeLbl2"></span></h3>
-    <div class="h3sub">Brands competing in this type. <b style="color:var(--red)">Flags</b> mark beatable ones — out-of-stock leaders, visibility-renters, under-converters.</div>
-    <div style="max-height:300px;overflow:auto"><table id="tLpComp"><thead><tr><th>Brand</th><th class="num">Sales/Share</th><th class="num">OSA</th><th class="num">Ad-rel.</th><th class="num">SKUs</th><th>Vulnerability</th></tr></thead><tbody></tbody></table></div>
+    <div class="h3sub">Competitors in this type. <b style="color:var(--red)">Flags</b> mark beatable brands — out-of-stock leaders, visibility-renters, under-converters.</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="tag">View:</span>
+      <button id="lpCompBrand">By Brand</button><button id="lpCompSku">By SKU</button></div>
+    <div style="max-height:300px;overflow:auto"><table id="tLpComp"></table></div>
   </div>
 </div>
 
@@ -709,7 +711,7 @@ function makeSortable(tableSel){
 })();
 
 // ===== Founder's Launchpad =====
-let lpScopeVal='ALL', lpTypeVal=null, lpArr=[], lpOppChart, lpPriceChart;
+let lpScopeVal='ALL', lpTypeVal=null, lpArr=[], lpOppChart, lpPriceChart, lpCompMode='brand';
 function lpFilter(){return lpScopeVal==='ALL'?DATA.sku_level:DATA.sku_level.filter(s=>s.s===lpScopeVal);}
 function lpWeights(){
   const d=+(($('#wDemand')||{}).value||50),o=+(($('#wOpen')||{}).value||30),a=+(($('#wAvail')||{}).value||20);
@@ -799,13 +801,18 @@ function renderLpType(){
             y1:{position:'right',grid:{display:false},title:{display:true,text:'# SKUs'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
   const discRows=rows.filter(s=>s.disc!=null);
   $('#lpPriceNote').innerHTML=best?`<span><b style="color:var(--grn)">Attack band ₹${fmt(best.lo,0)}–${fmt(best.hi,0)}</b> — ${fmt(best.demand,1)} demand across only <b>${best.skus}</b> SKU(s). Typical discount ~${fmt(discRows.reduce((a,s)=>a+s.disc,0)/(discRows.length||1),0)}%.</span>`:'<span class="tag">No price data for this type.</span>';
-  const comp=lpCompetitors(rows), csales=salesActive();
-  $('#tLpComp tbody').innerHTML=comp.slice(0,15).map(c=>{
-    const fc=c.flag==='Out-of-stock leader'?C.red:c.flag==='Renting visibility'?C.org:c.flag==='Low availability'?C.acc:C.mut;
-    return `<tr><td>${c.b}</td><td class="num" style="color:var(--acc)">${csales?money(c.val):fmt(c.csp,2)+'%'}</td>
-    <td class="num" style="color:${c.avgOSA<40?C.red:C.grn}">${fmt(c.avgOSA,0)}</td>
-    <td class="num">${Math.round(c.adRel*100)}%</td><td class="num">${c.skus}</td>
-    <td style="color:${fc};font-size:11px">${c.flag||'—'}</td></tr>`;}).join('');
+  const csales=salesActive();
+  // competitor panel: By Brand (aggregate) or By SKU
+  const segStyle=on=>`background:${on?'var(--acc)':'var(--panel2)'};color:${on?'#fff':'var(--mut)'};border:1px solid var(--line);border-radius:7px;padding:4px 11px;cursor:pointer;font-size:11.5px;font-weight:${on?'600':'400'}`;
+  const _bB=$('#lpCompBrand'),_bS=$('#lpCompSku'); if(_bB)_bB.style.cssText=segStyle(lpCompMode==='brand'); if(_bS)_bS.style.cssText=segStyle(lpCompMode==='sku');
+  const tbl=$('#tLpComp');
+  if(lpCompMode==='sku'){
+    const skus=[...rows].sort((a,b)=>csales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,30);
+    tbl.innerHTML=`<thead><tr><th>Product</th><th>Brand</th><th class="num">${csales?metricShort():'Share%'}</th><th class="num">SP</th><th class="num">OSA</th></tr></thead><tbody>${skus.map(s=>`<tr><td title="${s.n}">${s.n.slice(0,32)}</td><td>${s.b}</td><td class="num" style="color:var(--acc)">${csales?valFmt(skuVal(s)):fmt(s.csp,2)+'%'}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td></tr>`).join('')}</tbody>`;
+  } else {
+    const comp=lpCompetitors(rows);
+    tbl.innerHTML=`<thead><tr><th>Brand</th><th class="num">${csales?'Sales':'Share'}</th><th class="num">OSA</th><th class="num">Ad-rel.</th><th class="num">SKUs</th><th>Vulnerability</th></tr></thead><tbody>${comp.slice(0,15).map(c=>{const fc=c.flag==='Out-of-stock leader'?C.red:c.flag==='Renting visibility'?C.org:c.flag==='Low availability'?C.acc:C.mut;return `<tr><td>${c.b}</td><td class="num" style="color:var(--acc)">${csales?money(c.val):fmt(c.csp,2)+'%'}</td><td class="num" style="color:${c.avgOSA<40?C.red:C.grn}">${fmt(c.avgOSA,0)}</td><td class="num">${Math.round(c.adRel*100)}%</td><td class="num">${c.skus}</td><td style="color:${fc};font-size:11px">${c.flag||'—'}</td></tr>`;}).join('')}</tbody>`;
+  }
 }
 function renderLpShort(){
   const sales=salesActive();
@@ -825,6 +832,8 @@ function renderLpShort(){
   DATA.subcats.forEach(s=>ssel.add(new Option(s,s)));
   ssel.addEventListener('change',e=>{lpScopeVal=e.target.value;lpTypeVal=null;renderLaunchpad();});
   $('#lpType').addEventListener('change',e=>{lpTypeVal=e.target.value;renderLpType();});
+  $('#lpCompBrand').addEventListener('click',()=>{lpCompMode='brand';renderLpType();});
+  $('#lpCompSku').addEventListener('click',()=>{lpCompMode='sku';renderLpType();});
   function syncW(){const W=lpWeights();$('#wDemandV').textContent=Math.round(W.d*100);$('#wOpenV').textContent=Math.round(W.o*100);$('#wAvailV').textContent=Math.round(W.a*100);}
   ['#wDemand','#wOpen','#wAvail'].forEach(s=>$(s).addEventListener('input',()=>{syncW();renderLaunchpad();}));
   $('#wReset').addEventListener('click',()=>{$('#wDemand').value=50;$('#wOpen').value=30;$('#wAvail').value=20;syncW();renderLaunchpad();});
