@@ -136,7 +136,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <h2 id="sec-overall">Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all 5 sub-categories</span></h2>
 <div class="kpis" id="overallKpis"></div>
 <div class="grid g2" style="margin-top:16px">
-  <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per sub-category — enter totals to see ₹</div><div class="cwrap"><canvas id="cOvSub"></canvas></div></div>
+  <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per sub-category — enter totals to see ₹</div><div class="cwrap xtall"><canvas id="cOvSub"></canvas></div></div>
   <div class="card"><h3>Top brands overall</h3><div class="h3sub">Every brand's total, ₹-weighted across all categories (full brand universe)</div><div class="cwrap xtall"><canvas id="cOvBrand"></canvas></div></div>
 </div>
 
@@ -160,7 +160,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <h2 id="sec-brands">Top brands &amp; market share <span class="tag" id="brandScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
 <div class="grid g2">
   <div class="card"><h3>Top 15 brands by share of tracked market</h3><div class="h3sub">% of all category-share points across the 5 sub-categories</div><div class="cwrap xtall"><canvas id="cBrand"></canvas></div></div>
-  <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap tall"><canvas id="cSov"></canvas></div></div>
+  <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap xtall"><canvas id="cSov"></canvas></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>Brand leaderboard</h3><div class="h3sub">Share, voice, footprint &amp; month-over-month momentum</div>
   <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">OSA</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
@@ -439,7 +439,7 @@ function renderSovChart(){
   if(sovChart)sovChart.destroy();
   sovChart=new Chart($('#cSov'),{type:'scatter',data:{datasets:[{data:sovList.map(d=>({x:d.sov_pct,y:d.share_pct,b:d.brand})),
     backgroundColor:sovList.map(d=>d.share_pct>=d.sov_pct?C.grn:C.red),pointRadius:6,pointHoverRadius:9}]},
-    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.b}: SOV ${fmt(c.raw.x,2)}% · Share ${fmt(c.raw.y,2)}%`}}},
+    options:{maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.b}: SOV ${fmt(c.raw.x,2)}% · Share ${fmt(c.raw.y,2)}%`}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:'Share of Voice %'}},y:{grid:{color:C.line},title:{display:true,text:'Market share %'}}}}});
 }
 
@@ -495,7 +495,7 @@ function renderOverall(){
     return sales?r.reduce((a,s)=>a+skuVal(s),0):r.length;});
   if(ovSubChart)ovSubChart.destroy();
   ovSubChart=new Chart($('#cOvSub'),{type:'bar',data:{labels:ovOrder,datasets:[{data:bySub,backgroundColor:PAL,borderRadius:6}]},
-    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
+    options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
   $('#ovSubSub').textContent=sales?metricLabel()+' per sub-category':'SKUs per sub-category — enter totals to see ₹';
   // top brands overall across ALL brands
