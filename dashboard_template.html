@@ -57,7 +57,7 @@ nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--txt)}
 th .ind{opacity:.45;font-size:9px;margin-left:2px}
-#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr,#tMomUp tbody tr,#tMomDn tbody tr,#tMomNew tbody tr,#tMomExit tbody tr,#tMomBrandNew tbody tr,#tMomBrandExit tbody tr,#tMomTypeNew tbody tr,#tMomTypeExit tbody tr,#tMomBTypeNew tbody tr,#tMomBTypeExit tbody tr{cursor:pointer}
+#tSku tbody tr,#tBrand tbody tr,#tPt tbody tr,#tWsTypes tbody tr,#tAvail tbody tr,#tMomUp tbody tr,#tMomDn tbody tr,#tMomNew tbody tr,#tMomExit tbody tr,#tMomBrandNew tbody tr,#tMomBrandExit tbody tr,#tMomTypeNew tbody tr,#tMomTypeExit tbody tr,#tMomBTypeNew tbody tr,#tMomBTypeExit tbody tr,#tPriceBands tbody tr{cursor:pointer}
 .modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:48px 16px;overflow:auto}
 .modal-bg.open{display:flex}
 .modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:22px 24px;box-shadow:0 20px 60px rgba(16,24,40,.22)}
@@ -808,7 +808,7 @@ function renderPriceBands(){
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw+' SKUs'}}},scales:{x:{grid:{color:C.line},title:{display:true,text:'# SKUs'}},y:{grid:{display:false}}}}});
   // detail table
   $$('.priceSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
-  $('#tPriceBands tbody').innerHTML=bands.map(b=>`<tr><td>${b.lbl}</td><td class="num">${b.skus}</td><td class="num">${b.brands.size}</td><td class="num">${fmt(b.demand,1)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.val)}</td>`:''}<td class="num">${b.discN?fmt(b.disc/b.discN,0):'–'}</td><td class="num">${b.packN?fmt(b.pack/b.packN,1):'–'}</td></tr>`).join('');
+  $('#tPriceBands tbody').innerHTML=bands.map(b=>`<tr data-lo="${b.lo}" data-hi="${b.hi}" data-lbl="${b.lbl}"><td>${b.lbl}</td><td class="num">${b.skus}</td><td class="num">${b.brands.size}</td><td class="num">${fmt(b.demand,1)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.val)}</td>`:''}<td class="num">${b.discN?fmt(b.disc/b.discN,0):'–'}</td><td class="num">${b.packN?fmt(b.pack/b.packN,1):'–'}</td></tr>`).join('');
 }
 function renderScope(){renderSku(sel.value);renderBrandChart();renderBrandTable();renderSovChart();renderProductTypes();renderAvailability();renderMomentum();renderPrice();}
 sel.addEventListener('change',renderScope);
@@ -852,6 +852,19 @@ function showChurnSkus(brand, pt, dir){
       return `<tr><td title="${s.n}">${s.n}</td><td class="num">${fmt(sh,2)}</td><td class="num" style="color:${osa<40?C.red:C.grn}">${osa==null?'–':fmt(osa,0)}</td><td class="num">₹${fmt(sp,0)}</td></tr>`}).join('')
     +`</tbody></table></div>`;
   openModal(`${rows[0].b} — ${pt||scopeLabel()}`, `${isExit?'exited':'new to'} this ${pt?'product type':'scope'} · ${m} snapshot`, body);
+}
+// price-band drill-down: all SKUs of the selected product type within a ₹/unit tier
+function showPriceBandSkus(lo,hi,lbl){
+  const sales=salesActive();
+  const rows=scopeRows().filter(s=>s.pt===priceTypeVal && s.ppu>0 && s.ppu>=lo && s.ppu<hi);
+  if(!rows.length)return;
+  rows.sort((a,b)=> sales ? (skuVal(b)-skuVal(a)) : (a.ppu-b.ppu));
+  const stats=[['Product type',priceTypeVal],['Value tier',lbl+'/unit'],['SKUs',rows.length],['Scope',scopeLabel()]];
+  const body=statBox(stats)
+    +`<div style="max-height:50vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th class="num">SP</th><th class="num">₹/unit</th><th class="num">Pack</th><th>Grammage</th><th class="num">OSA</th>${sales?`<th class="num">${metricShort()}</th>`:`<th class="num">Share%</th>`}</tr></thead><tbody>`
+    +rows.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num">₹${fmt(s.ppu,0)}</td><td class="num">${fmt(s.pack,1)}</td><td class="tag">${s.gram||'–'}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num" style="color:var(--acc)">${sales?valFmt(skuVal(s)):fmt(s.csp,2)+'%'}</td></tr>`).join('')
+    +`</tbody></table></div>`;
+  openModal(`${priceTypeVal} · ${lbl}/unit`, `${rows.length} SKUs in this value tier · ${scopeLabel()}`, body);
 }
 let _typeViewPt=null;
 function setTypeView(mode){ if(_typeViewPt!=null) showType(_typeViewPt,mode); }
@@ -929,6 +942,7 @@ rowClick('#tMomBrandExit',tr=>{const b=tr.getAttribute('data-brand');b&&showChur
 ['#tMomTypeNew','#tMomTypeExit'].forEach(sel2=>rowClick(sel2,tr=>{const t=tr.getAttribute('data-type');t&&showType(t);}));
 rowClick('#tMomBTypeNew',tr=>{const b=tr.getAttribute('data-brand');b&&showChurnSkus(b,momTypeVal,'new');});
 rowClick('#tMomBTypeExit',tr=>{const b=tr.getAttribute('data-brand');b&&showChurnSkus(b,momTypeVal,'exit');});
+rowClick('#tPriceBands',tr=>{const lo=+tr.getAttribute('data-lo'),hi=+tr.getAttribute('data-hi'),lbl=tr.getAttribute('data-lbl');if(!isNaN(lo))showPriceBandSkus(lo,hi,lbl);});
 onChartClick('#cMomChurn',i=>{const x=momChurnList[i];if(x){momTypeVal=x.pt;renderMomBrandType();}});
 $('#priceTypeSel')&&$('#priceTypeSel').addEventListener('change',e=>{priceTypeVal=e.target.value;renderPriceBands();});
 
