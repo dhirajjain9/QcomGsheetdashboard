@@ -73,21 +73,35 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 <!-- SALES INPUT -->
 <h2>Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
 <div class="card" id="salesPanel">
-  <div class="h3sub">Each SKU's sales = (its category share ÷ 100) × the sub-category total you enter. Leave blank to keep share-% view. Numbers update everywhere live.</div>
+  <div class="h3sub">Enter each sub-category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. Leave blank to keep the share-% view.</div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
-    <span class="tag">Units:</span>
+    <span class="tag">Enter in:</span>
     <select id="unitSel">
       <option value="1">₹ (absolute)</option>
-      <option value="100000" selected>₹ Lakh</option>
-      <option value="10000000">₹ Crore</option>
+      <option value="100000">₹ Lakh</option>
+      <option value="10000000" selected>₹ Crore</option>
+    </select>
+    <span class="tag" style="margin-left:8px">Show:</span>
+    <select id="metricSel">
+      <option value="net" selected>Net sales (SP ₹)</option>
+      <option value="gross">Gross sales (MRP ₹)</option>
+      <option value="units">Units sold</option>
     </select>
     <button id="clearBtn" style="background:var(--panel2);color:var(--mut);border:1px solid var(--line);border-radius:7px;padding:6px 12px;cursor:pointer">Clear all</button>
   </div>
   <div id="salesInputs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px"></div>
   <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-    <span class="tag">Total market sales entered</span>
+    <span class="tag">Total MRP sales entered (gross)</span>
     <span id="totalSales" style="font-size:22px;font-weight:700;color:var(--acc)">–</span>
   </div>
+</div>
+
+<!-- OVERALL VIEW -->
+<h2>Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all 5 sub-categories</span></h2>
+<div class="kpis" id="overallKpis"></div>
+<div class="grid g2" style="margin-top:16px">
+  <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per sub-category — enter totals to see ₹</div><div class="cwrap"><canvas id="cOvSub"></canvas></div></div>
+  <div class="card"><h3>Top brands overall</h3><div class="h3sub">Every brand's total, ₹-weighted across all categories (full brand universe)</div><div class="cwrap tall"><canvas id="cOvBrand"></canvas></div></div>
 </div>
 
 <!-- OVERVIEW -->
@@ -114,6 +128,16 @@ footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 </div>
 <div class="card" style="margin-top:16px"><h3>Brand leaderboard</h3><div class="h3sub">Share, voice, footprint &amp; month-over-month momentum</div>
   <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">OSA</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
+</div>
+
+<!-- PRODUCT TYPES -->
+<h2>Product types <span class="tag" style="margin-left:6px;font-weight:400">classified from product names · ~96% of SKUs</span></h2>
+<div class="grid g2">
+  <div class="card"><h3>Top product types across all categories</h3><div class="h3sub" id="ptSub">Top types by SKU count — enter totals to switch to ₹</div><div class="cwrap tall"><canvas id="cPtBar"></canvas></div></div>
+  <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div class="cwrap tall"><canvas id="cPtDonut"></canvas></div></div>
+</div>
+<div class="card" style="margin-top:16px"><h3>Product-type detail</h3><div class="h3sub">Top 25 types — footprint, pricing, availability &amp; sales</div>
+  <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- MOMENTUM -->
@@ -155,23 +179,48 @@ const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
 const fmt=(n,d=1)=>n==null?'–':Number(n).toLocaleString(undefined,{maximumFractionDigits:d});
 
-// ---- Sales-conversion state & helpers ----
-const totals={};            // sub-category -> total MRP sales (₹, absolute)
-let unit=100000;            // current unit multiplier (default ₹ Lakh)
+// ---- Sales model: entered MRP sales -> units / net(SP) / gross(MRP) per SKU ----
+// Per sub-category: SP-revenue_i = shareSP_i x T_sp ; units_i = SP-rev_i / SP_i ;
+// MRP-rev_i = units_i x MRP_i ; constraint Σ MRP-rev = entered total  =>  T_sp = T / Σ[shareSP_i x (MRP_i/SP_i)]
+const totals={};            // sub-category -> entered MRP sales (₹, absolute)
+const subAgg={};            // sub-category -> {shareSum, Tsp}
+let unit=10000000;          // unit multiplier (default ₹ Crore)
+let metric='net';           // 'net' (SP ₹) | 'gross' (MRP ₹) | 'units'
 const salesActive=()=>Object.values(totals).some(v=>v>0);
-const skuSales=s=>(totals[s.s]||0)*(s.cs||0)/100;
-function money(v){            // compact ₹ formatting
+
+function computeSales(){
+  DATA.sku_level.forEach(s=>{s._net=0;s._gross=0;s._units=0;});
+  DATA.subcats.forEach(sub=>{
+    subAgg[sub]=null;
+    const T=totals[sub]||0; if(T<=0)return;
+    const rows=DATA.sku_level.filter(s=>s.s===sub&&s.csp>0&&s.sp>0&&s.mrp>0);
+    const shareSum=rows.reduce((a,s)=>a+s.csp,0); if(!shareSum)return;
+    const denom=rows.reduce((a,s)=>a+(s.csp/shareSum)*(s.mrp/s.sp),0); if(!denom)return;
+    const Tsp=T/denom; subAgg[sub]={shareSum,Tsp};
+    rows.forEach(s=>{const f=s.csp/shareSum; s._net=f*Tsp; s._units=s._net/s.sp; s._gross=s._units*s.mrp;});
+  });
+}
+const skuVal=s=>metric==='gross'?(s._gross||0):metric==='units'?(s._units||0):(s._net||0);
+function compMetric(csp,sp,mrp,sub){   // metric value for rows not on sku_level (white space)
+  const a=subAgg[sub]; if(!a||!csp||!sp||!mrp)return 0;
+  const net=(csp/a.shareSum)*a.Tsp, units=net/sp, gross=units*mrp;
+  return metric==='gross'?gross:metric==='units'?units:net;
+}
+const metricLabel=()=>metric==='gross'?'Gross sales (MRP ₹)':metric==='units'?'Units sold':'Net sales (SP ₹)';
+const metricShort=()=>metric==='gross'?'Gross ₹':metric==='units'?'Units':'Net ₹';
+function money(v){
   if(v==null||isNaN(v))return '–';
   if(v>=1e7)return '₹'+(v/1e7).toLocaleString(undefined,{maximumFractionDigits:2})+' Cr';
   if(v>=1e5)return '₹'+(v/1e5).toLocaleString(undefined,{maximumFractionDigits:2})+' L';
   if(v>=1e3)return '₹'+(v/1e3).toLocaleString(undefined,{maximumFractionDigits:1})+'K';
   return '₹'+v.toLocaleString(undefined,{maximumFractionDigits:0});
 }
-// brand -> total ₹ sales (across all sub-categories), computed from SKU-level data
-function brandSalesMap(){
-  const m={};
-  DATA.sku_level.forEach(s=>{const k=s.b.toLowerCase(); m[k]=(m[k]||0)+skuSales(s);});
-  return m;
+const valFmt=v=>metric==='units'?fmt(v,0)+' u':money(v);
+const axisFmt=v=>metric==='units'?v:money(v);
+function brandAgg(){        // brand -> {metric value, display name} across ALL categories
+  const m={},disp={};
+  DATA.sku_level.forEach(s=>{const k=s.b.toLowerCase(); m[k]=(m[k]||0)+skuVal(s); if(!disp[k])disp[k]=s.b;});
+  return {m,disp};
 }
 
 document.getElementById('subt').textContent=`5 sub-categories · ${DATA.kpis.skus.toLocaleString()} SKUs · ${DATA.kpis.brands} brands · ${DATA.meta.prev.slice(0,7)} → ${DATA.meta.latest.slice(0,7)}`;
@@ -197,25 +246,25 @@ new Chart($('#cConc'),{data:{labels:scNames,datasets:[
   {type:'line',label:'Avg availability %',data:sc.map(x=>x.avg_osa),borderColor:C.grn,backgroundColor:C.grn,tension:.3,yAxisID:'y'}]},
   options:{scales:{y:{grid:{color:C.line},max:100,title:{display:true,text:'%'}},x:{grid:{display:false},ticks:{maxRotation:20}}}}});
 
-// ---- Top SKUs (reactive: by share, or by ₹ sales once totals entered) ----
+// ---- Top SKUs (reactive: by value-share, or by units/₹ once totals entered) ----
 let topSkuChart;
 function renderSku(cat){
   $('#skuCatLbl').textContent='· '+cat; $('#wsCatLbl').textContent='· '+cat;
   const sales=salesActive();
-  const rows=DATA.sku_level.filter(s=>s.s===cat).map(s=>({...s,sales:skuSales(s)}))
-              .sort((a,b)=>sales?(b.sales-a.sales):(b.cs-a.cs)).slice(0,12);
-  $$('.skuSalesCol').forEach(e=>e.style.display=sales?'':'none');
+  const rows=DATA.sku_level.filter(s=>s.s===cat).map(s=>({...s,v:skuVal(s)}))
+              .sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp)).slice(0,12);
+  $$('.skuSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
   if(topSkuChart)topSkuChart.destroy();
   topSkuChart=new Chart($('#cTopSku'),{type:'bar',data:{labels:rows.map(r=>r.n),datasets:[{
-      data:rows.map(r=>sales?r.sales:r.cs),
+      data:rows.map(r=>sales?r.v:r.csp),
       backgroundColor:rows.map(r=>r.osa<40?C.red:C.acc),borderRadius:5}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{
-      label:c=>sales?money(c.raw):fmt(c.raw,2)+'%',
-      afterLabel:c=>`OSA ${rows[c.dataIndex].osa}% · Disc ${rows[c.dataIndex].disc}%`}}},
-    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?'Estimated sales (₹)':'Category share %'},
-      ticks:{callback:v=>sales?money(v):v}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+      label:c=>sales?valFmt(c.raw):fmt(c.raw,2)+'%',
+      afterLabel:c=>`${rows[c.dataIndex].pt} · OSA ${rows[c.dataIndex].osa}%`}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'Value share % (SP)'},
+      ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
   $('#tSku tbody').innerHTML=rows.map(r=>`<tr><td title="${r.n}">${r.n}</td><td>${r.b}</td>
-    <td class="num">${fmt(r.cs,2)}</td>${sales?`<td class="num" style="color:var(--acc)">${money(r.sales)}</td>`:''}
+    <td class="num">${fmt(r.csp,2)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(r.v)}</td>`:''}
     <td class="num">₹${fmt(r.sp,0)}</td>
     <td class="num" style="color:${r.osa<40?C.red:C.grn}">${fmt(r.osa,0)}</td><td class="num">${fmt(r.disc,0)}</td></tr>`).join('');
   renderQuad(cat);
@@ -224,28 +273,28 @@ function renderSku(cat){
 // ---- Top brands (reactive: bar + leaderboard switch to ₹ when totals entered) ----
 let brandChart;
 function brandOrdered(){
-  const sales=salesActive(), sm=sales?brandSalesMap():{};
-  return {sales,sm,list:DATA.top_brands.map(b=>({...b,sales:sm[b.brand.toLowerCase()]||0}))
-    .sort((a,b)=>sales?(b.sales-a.sales):(b.share_pct-a.share_pct))};
+  const sales=salesActive(), sm=sales?brandAgg().m:{};
+  return {sales,list:DATA.top_brands.map(b=>({...b,v:sm[b.brand.toLowerCase()]||0}))
+    .sort((a,b)=>sales?(b.v-a.v):(b.share_pct-a.share_pct))};
 }
 function renderBrandChart(){
   const {sales,list}=brandOrdered(), tb=list.slice(0,15);
   if(brandChart)brandChart.destroy();
   brandChart=new Chart($('#cBrand'),{type:'bar',data:{labels:tb.map(b=>b.brand),datasets:[{
-      data:tb.map(b=>sales?b.sales:b.share_pct),backgroundColor:C.acc,borderRadius:5}]},
+      data:tb.map(b=>sales?b.v:b.share_pct),backgroundColor:C.acc,borderRadius:5}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{
-      label:c=>sales?money(c.raw):fmt(c.raw,2)+'%',
+      label:c=>sales?valFmt(c.raw):fmt(c.raw,2)+'%',
       afterLabel:c=>`SOV ${tb[c.dataIndex].sov_pct}% · ${tb[c.dataIndex].skus} SKUs`}}},
-    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?'Estimated sales (₹)':'% of tracked market'},
-      ticks:{callback:v=>sales?money(v):v}},y:{grid:{display:false}}}}});
+    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'% of tracked market'},
+      ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
 }
 function renderBrandTable(){
   const {sales,list}=brandOrdered();
-  $$('.brandSalesCol').forEach(e=>e.style.display=sales?'':'none');
+  $$('.brandSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
   $('#tBrand tbody').innerHTML=list.map((b,i)=>{
     const d=b.delta||0, cls=d>0?'up':d<0?'down':'', arrow=d>0?'▲':d<0?'▼':'–';
     return `<tr><td>${i+1}</td><td>${b.brand}</td><td class="num">${fmt(b.share_pct,2)}</td>
-    ${sales?`<td class="num" style="color:var(--acc)">${money(b.sales)}</td>`:''}
+    ${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}
     <td class="num">${fmt(b.sov_pct,2)}</td>
     <td class="num ${cls}">${arrow} ${fmt(Math.abs(d),2)}</td><td class="num">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>
     <td class="num">${b.skus}</td><td class="num">${b.subcats}</td></tr>`}).join('');
@@ -279,15 +328,78 @@ function renderQuad(cat){
             y:{grid:{color:C.line},min:0,max:100,title:{display:true,text:'On-shelf availability % (supply →)'}}}}});
 }
 
-// white space SKUs table (adds current ₹ sales column when totals entered)
+// white space SKUs table (adds current sales/units column when totals entered)
 function renderWsTable(){
   const sales=salesActive();
-  $$('.wsSalesCol').forEach(e=>e.style.display=sales?'':'none');
+  $$('.wsSalesCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.tagName==='TH')e.textContent=metricShort();});
   $('#tWs tbody').innerHTML=DATA.white_space_skus.map(r=>{
-    const s=(totals[r.subcat]||0)*r.share/100;
+    const v=compMetric(r.csp,r.sp,r.mrp,r.subcat);
     return `<tr><td title="${r.name}">${r.name}</td><td class="tag">${r.subcat}</td>
     <td class="num">${fmt(r.sov,2)}</td><td class="num down">${fmt(r.osa,0)}</td><td class="num">${fmt(r.share,2)}</td>
-    ${sales?`<td class="num" style="color:var(--acc)">${money(s)}</td>`:''}</tr>`}).join('');
+    ${sales?`<td class="num" style="color:var(--acc)">${valFmt(v)}</td>`:''}</tr>`}).join('');
+}
+
+// ---- Overall view (across all 5 sub-categories) ----
+let ovSubChart, ovBrandChart;
+function renderOverall(){
+  const sales=salesActive();
+  const gross=DATA.sku_level.reduce((a,s)=>a+(s._gross||0),0);
+  const net=DATA.sku_level.reduce((a,s)=>a+(s._net||0),0);
+  const units=DATA.sku_level.reduce((a,s)=>a+(s._units||0),0);
+  const cards=[['Total gross sales (MRP)',sales?money(gross):'–',C.acc],
+    ['Total net sales (SP)',sales?money(net):'–',C.grn],
+    ['Total units',sales?fmt(units,0):'–',C.acc2],
+    ['Realisation (Net÷Gross)',sales&&gross?fmt(net/gross*100,1)+'%':'–',C.pur]];
+  $('#overallKpis').innerHTML=cards.map(c=>`<div class="kpi"><div class="v" style="color:${c[2]}">${c[1]}</div><div class="l">${c[0]}</div></div>`).join('');
+  // sales by sub-category (or SKU count if no totals)
+  const bySub=DATA.subcats.map(sub=>{const r=DATA.sku_level.filter(s=>s.s===sub);
+    return sales?r.reduce((a,s)=>a+skuVal(s),0):r.length;});
+  if(ovSubChart)ovSubChart.destroy();
+  ovSubChart=new Chart($('#cOvSub'),{type:'bar',data:{labels:DATA.subcats,datasets:[{data:bySub,backgroundColor:PAL,borderRadius:6}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
+  $('#ovSubSub').textContent=sales?metricLabel()+' per sub-category':'SKUs per sub-category — enter totals to see ₹';
+  // top brands overall across ALL brands
+  const {m,disp}=brandAgg();
+  const top=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const useCount=!sales;
+  const cntMap={}; if(useCount)DATA.sku_level.forEach(s=>{const k=s.b.toLowerCase();cntMap[k]=(cntMap[k]||0)+1;});
+  const tb=useCount?Object.entries(cntMap).sort((a,b)=>b[1]-a[1]).slice(0,15):top;
+  if(ovBrandChart)ovBrandChart.destroy();
+  ovBrandChart=new Chart($('#cOvBrand'),{type:'bar',data:{labels:tb.map(e=>disp[e[0]]||e[0]),datasets:[{data:tb.map(e=>e[1]),backgroundColor:C.acc2,borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
+}
+
+// ---- Product types (classified from names) ----
+let ptBarChart, ptDonutChart;
+function renderProductTypes(){
+  const sales=salesActive();
+  const agg={};
+  DATA.sku_level.forEach(s=>{const t=s.pt; if(!agg[t])agg[t]={skus:0,brands:new Set(),sp:0,spn:0,osa:0,osan:0,val:0};
+    const a=agg[t]; a.skus++; a.brands.add(s.b.toLowerCase());
+    if(s.sp){a.sp+=s.sp;a.spn++;} if(s.osa!=null){a.osa+=s.osa;a.osan++;} a.val+=skuVal(s);});
+  let arr=Object.entries(agg).map(([t,a])=>({t,skus:a.skus,brands:a.brands.size,sp:a.spn?a.sp/a.spn:0,osa:a.osan?a.osa/a.osan:0,val:a.val}));
+  const key=sales?'val':'skus';
+  arr.sort((a,b)=>b[key]-a[key]);
+  const totalVal=arr.reduce((s,x)=>s+x.val,0);
+  const charted=arr.filter(x=>x.t!=='Other');
+  const top=charted.slice(0,15);
+  if(ptBarChart)ptBarChart.destroy();
+  ptBarChart=new Chart($('#cPtBar'),{type:'bar',data:{labels:top.map(x=>x.t),datasets:[{data:top.map(x=>x[key]),backgroundColor:C.pur,borderRadius:5}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs',afterLabel:c=>`${top[c.dataIndex].brands} brands · avg ₹${fmt(top[c.dataIndex].sp,0)}`}}},
+    scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+  // donut: top 8 + Others
+  const d8=charted.slice(0,8); const rest=charted.slice(8).reduce((a,x)=>a+x[key],0);
+  const dl=d8.map(x=>x.t).concat(['Other types']); const dv=d8.map(x=>x[key]).concat([rest]);
+  if(ptDonutChart)ptDonutChart.destroy();
+  ptDonutChart=new Chart($('#cPtDonut'),{type:'doughnut',data:{labels:dl,datasets:[{data:dv,backgroundColor:PAL.concat(['#5a6b8c','#3a4866'])}]},
+    options:{plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:c=>`${c.label}: ${sales?valFmt(c.raw):c.raw+' SKUs'}`}}}}});
+  $('#ptSub').textContent=sales?('Top types by '+metricLabel()):'Top types by SKU count — enter totals to switch to ₹';
+  $$('.ptSalesCol,.ptShareCol').forEach(e=>{e.style.display=sales?'':'none'; if(e.classList.contains('ptSalesCol')&&e.tagName==='TH')e.textContent=metricShort();});
+  $('#tPt tbody').innerHTML=arr.slice(0,25).map(x=>`<tr><td>${x.t}</td><td class="num">${x.skus}</td><td class="num">${x.brands}</td>
+    <td class="num">₹${fmt(x.sp,0)}</td><td class="num" style="color:${x.osa<40?C.red:C.grn}">${fmt(x.osa,0)}</td>
+    ${sales?`<td class="num" style="color:var(--acc)">${valFmt(x.val)}</td><td class="num">${totalVal?fmt(x.val/totalVal*100,1):0}%</td>`:''}</tr>`).join('');
 }
 
 // category white space chart
@@ -312,18 +424,21 @@ function buildInputs(){
 function recomputeTotals(){   // re-apply unit multiplier to raw entries
   $$('#salesInputs input').forEach(inp=>{const v=parseFloat(inp.value); totals[inp.dataset.sub]=(isNaN(v)?0:v)*unit;});
 }
-function applySales(){
+function renderAll(){
   const total=Object.values(totals).reduce((a,b)=>a+b,0);
   $('#totalSales').textContent=total>0?money(total):'–';
   renderSku(sel.value); renderBrandChart(); renderBrandTable(); renderWsTable();
+  renderOverall(); renderProductTypes();
 }
+function applySales(){ computeSales(); renderAll(); }
 $('#unitSel').addEventListener('change',e=>{unit=+e.target.value; recomputeTotals(); applySales();});
+$('#metricSel').addEventListener('change',e=>{metric=e.target.value; renderAll();});
 $('#clearBtn').addEventListener('click',()=>{$$('#salesInputs input').forEach(i=>i.value=''); DATA.subcats.forEach(s=>totals[s]=0); applySales();});
 sel.addEventListener('change',()=>renderSku(sel.value));
 
 buildInputs();
-renderBrandChart(); renderBrandTable(); renderWsTable();
-renderSku(DATA.subcats[0]);
+computeSales();
+renderAll();
 </script>
 </body>
 </html>
