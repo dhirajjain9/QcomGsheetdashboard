@@ -361,7 +361,7 @@ function renderConcChart(){
 // ---- Top SKUs (reactive: by value-share, or by units/₹ once totals entered) ----
 let topSkuChart;
 function renderSku(cat){
-  $('#skuCatLbl').textContent='· '+cat; $('#wsCatLbl').textContent='· '+cat;
+  const _scl=$('#skuCatLbl'); if(_scl)_scl.textContent='· '+cat; const _wcl=$('#wsCatLbl'); if(_wcl)_wcl.textContent='· '+cat;
   const sales=salesActive();
   const rows=DATA.sku_level.filter(s=>s.s===cat).map(s=>({...s,v:skuVal(s)}))
               .sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp)).slice(0,12);
@@ -432,7 +432,7 @@ momChart('#cLoss',DATA.losers,C.red);
 // ---- White space quadrant (reactive) ----
 let quadChart;
 function renderQuad(cat){
-  const pts=DATA.quad_pts[cat];
+  const pts=DATA.quad_pts[cat]||[];
   if(quadChart)quadChart.destroy();
   const med=40;
   quadChart=new Chart($('#cQuad'),{type:'bubble',data:{datasets:[{
