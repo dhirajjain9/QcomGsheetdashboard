@@ -180,7 +180,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <h2 id="sec-launch">🚀 Founder's Launchpad <span class="tag" style="margin-left:6px;font-weight:400">if you were launching a brand here — where to enter & how to win</span></h2>
 <div class="note" style="border-left-color:var(--grn)">
   <b>Reading this section as a founder:</b> <b>Opportunity</b> blends <b>Demand</b> (total sales of the type),
-  <b>White space</b> (how open/fragmented the brand field is — from HHI: high = many small players &amp; room to enter, low = dominated by a few) and
+  <b>White space</b> (blends an <b>un-dominated</b> brand field — low concentration via HHI — with <b>under-served</b> demand — lots of demand spread over few SKUs; high = room to enter) and
   <b>Availability gap</b> (how badly incumbents are out of stock — sales-weighted). Tune the weights to match your thesis,
   pick a scope, read the <b>opportunity map</b>, then click any type to load its <b>price ladder</b> and <b>competitors</b>. Enter ₹ sales (below) to size each prize in rupees.
 </div>
@@ -739,9 +739,14 @@ function lpTypeAgg(){
       sizeRaw:sales?a.val:a.csp};});
   arr=arr.filter(x=>x.sizeRaw>0);
   const maxSize=Math.max(...arr.map(x=>x.sizeRaw),1e-9);
+  // under-served = demand per SKU; cap at ~90th percentile so one outlier doesn't flatten the rest
+  arr.forEach(x=>{x.under=x.sizeRaw/Math.max(1,x.skus);});
+  const us=arr.map(x=>x.under).sort((p,q)=>p-q), cap=us[Math.floor(0.9*(us.length-1))]||1e-9;
   arr.forEach(x=>{x.demandN=x.sizeRaw/maxSize;
+    x.underN=Math.min(1,x.under/cap);
+    x.ws=0.6*x.openness+0.4*x.underN;        // White space = un-dominated (1-HHI) + under-served (demand per SKU)
     const gate=Math.min(1,x.demandN/0.03);                 // zero/near-zero sales => no opportunity
-    x.score=100*(W.d*x.demandN+W.o*x.openness+W.a*x.gap)*gate;});
+    x.score=100*(W.d*x.demandN+W.o*x.ws+W.a*x.gap)*gate;});
   arr.sort((a,b)=>b.score-a.score); return arr;
 }
 function lpBands(rows){
@@ -771,7 +776,7 @@ function renderLaunchpad(){
   const totVal=lpArr.reduce((a,x)=>a+x.val,0);
   $('#lpScopeSummary').textContent=`${lpArr.length} product types · ${sales?('prize '+money(totVal)):'enter ₹ sales to size prize'}`;
   const maxSize=Math.max(...lpArr.map(x=>x.sizeRaw),1e-9);
-  const pts=lpArr.slice(0,30).map((x,i)=>({x:Math.round(x.openness*100),y:Math.round(x.demandN*100),r:Math.max(5,Math.sqrt(x.sizeRaw/maxSize)*26),t:x.t,gap:x.gap,score:x.score,i}));
+  const pts=lpArr.slice(0,30).map((x,i)=>({x:Math.round(x.ws*100),y:Math.round(x.demandN*100),r:Math.max(5,Math.sqrt(x.sizeRaw/maxSize)*26),t:x.t,gap:x.gap,score:x.score,i}));
   if(lpOppChart)lpOppChart.destroy();
   lpOppChart=new Chart($('#cLpOpp'),{type:'bubble',data:{datasets:[{data:pts,
     backgroundColor:pts.map(p=>`rgba(${Math.round(110+p.gap*145)},${Math.round(150-p.gap*90)},${Math.round(120-p.gap*40)},.62)`),
@@ -782,7 +787,7 @@ function renderLaunchpad(){
   $('#tLpOpp tbody').innerHTML=lpArr.slice(0,25).map(x=>`<tr data-type="${x.t}"><td>${x.t}</td>
     <td class="num"><b style="color:var(--acc)">${Math.round(x.score)}</b></td>
     <td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.csp,1)}</td>
-    <td class="num">${Math.round(x.openness*100)}</td>
+    <td class="num">${Math.round(x.ws*100)}</td>
     <td class="num" style="color:${x.gap>0.6?C.red:C.txt}">${Math.round(x.gap*100)}</td>
     <td class="num">${x.brands}</td><td class="num">${x.skus}</td></tr>`).join('');
   const tsel=$('#lpType');
