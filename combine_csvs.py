@@ -23,9 +23,17 @@ files = sorted(glob.glob(os.path.join(UPLOAD_DIR, "*.csv")))
 frames = []
 summary = []
 for f in files:
-    sub = sub_category_from_filename(f)
+    fallback = sub_category_from_filename(f)
     df = pd.read_csv(f)
-    df.insert(0, "Sub Category", sub)
+    # Prefer the source's own "Category" column (canonical label); fall back to
+    # the filename only where Category is missing — minimizes filename dependency.
+    if "Category" in df.columns:
+        sub_col = df["Category"].astype(str).str.strip()
+        sub_col = sub_col.mask(sub_col.isin(["", "nan", "None"]), fallback)
+    else:
+        sub_col = fallback
+    df.insert(0, "Sub Category", sub_col)
+    sub = df["Sub Category"].mode().iloc[0] if len(df) else fallback
     frames.append(df)
     summary.append((os.path.basename(f), sub, len(df)))
 
