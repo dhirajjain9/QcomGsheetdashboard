@@ -137,6 +137,15 @@ def money(v):
         return f"₹{v/1e3:.1f}K"
     return f"₹{v:.0f}"
 
+def dominant_category(type_rows):
+    by_cat = {}
+    for s in type_rows:
+        by_cat[s["s"]] = by_cat.get(s["s"], 0.0) + s["_gross"]
+    if not any(by_cat.values()):  # no gross -> fall back to SKU count
+        for s in type_rows:
+            by_cat[s["s"]] = by_cat.get(s["s"], 0) + 1
+    return max(by_cat, key=by_cat.get) if by_cat else ""
+
 out = []
 for x in arr:
     trows = [s for s in SKU if s.get("pt") == x["t"]]
@@ -146,6 +155,7 @@ for x in arr:
     c = [comp[i]["b"] if i < len(comp) else "" for i in range(3)]
     out.append({
         "Product Type": x["t"],
+        "Category": dominant_category(trows),
         "No of Brands": x["brands"],
         "No of SKUs": x["skus"],
         "Gross Sales": round(x["gross"]),
