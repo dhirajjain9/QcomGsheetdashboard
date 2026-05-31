@@ -56,7 +56,9 @@ tr:hover td{background:rgba(0,0,0,.025)}
 .legend b{color:var(--txt)}
 footer{color:var(--mut);font-size:11.5px;margin-top:40px;text-align:center}
 h2{scroll-margin-top:64px}
-nav.snav{position:sticky;top:0;z-index:30;display:flex;gap:6px;flex-wrap:wrap;background:rgba(250,246,238,.92);backdrop-filter:blur(6px);padding:10px 0;margin-bottom:14px;border-bottom:1px solid var(--line)}
+nav.snav{position:sticky;top:0;z-index:30;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:var(--navbg,rgba(250,246,238,.92));backdrop-filter:blur(6px);padding:10px 0;margin-bottom:14px;border-bottom:1px solid var(--line)}
+nav.snav .snavPlat{font-weight:700;font-size:12.5px;padding:5px 12px;border-radius:7px;margin-right:6px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+nav.snav .snavPlat::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.85}
 nav.snav a{color:var(--mut);text-decoration:none;font-size:12px;padding:5px 11px;border-radius:7px;border:1px solid transparent;white-space:nowrap}
 nav.snav a:hover{color:var(--txt);background:var(--panel2)}
 nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
@@ -91,6 +93,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </header>
 
 <nav class="snav" id="snav">
+  <span class="snavPlat" id="snavPlat"></span>
   <a href="#sec-sales">₹ Sales</a>
   <a href="#sec-overall">Overall</a>
   <a href="#sec-market">Market</a>
@@ -400,7 +403,17 @@ document.title=`${PLAT_LABEL} RCA Dashboard`;
  const PLATS=[{p:'blinkit',label:'Blinkit',href:'index.html'},{p:'instamart',label:'Instamart',href:'instamart.html'}];
  const ps=document.getElementById('platSwitch');
  if(ps)ps.innerHTML='<span class="lbl">Platform:</span>'+PLATS.map(x=>
-   x.p===cur?`<span class="active">${x.label}</span>`:`<a href="${x.href}">${x.label}</a>`).join('');}
+   x.p===cur?`<span class="active">${x.label}</span>`:`<a href="${x.href}">${x.label}</a>`).join('');
+ // per-platform tint so you always know which platform you're analysing
+ const PTHEME={
+   blinkit:{bg:'#faf6ee',nav:'rgba(250,246,238,.93)',chipBg:'#fef3c7',chipFg:'#b45309'},
+   instamart:{bg:'#fdf1ee',nav:'rgba(253,241,238,.93)',chipBg:'#fde4df',chipFg:'#be123c'},
+ };
+ const t=PTHEME[cur]||PTHEME.blinkit, rs=document.documentElement.style;
+ rs.setProperty('--bg',t.bg); rs.setProperty('--navbg',t.nav);
+ // platform name pinned in the sticky nav so it stays visible while deep-diving
+ const sp=document.getElementById('snavPlat');
+ if(sp){sp.textContent=PLAT_LABEL; sp.style.background=t.chipBg; sp.style.color=t.chipFg;}}
 
 // KPIs
 const k=DATA.kpis;
