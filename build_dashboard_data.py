@@ -16,6 +16,12 @@ DEFAULT_SALES = {
                   'Cutlery & Ladles': 0.353, 'Glasses Cups Mugs': 4.8, 'Jars Containers Holders': 6.5,
                   'Kitchen Cleaning': 3.4, 'Kitchen Tools': 5.4, 'Plates Bowls Crockery': 5.7,
                   'Serveware': 1.2, 'Storage & Organizers': 7.1},
+    'zepto': {'Cleaning Aids': 17.7, 'Household Utility': 9.6, 'Home Decor': 7.3,
+              'Kitchen Tools': 7.2, 'Kitchen Storage': 7.1, 'Cookware': 6.7,
+              'Drinkware & Bar': 3.9, 'Lunch Boxes': 3.5, 'Kitchen Aids': 3.1,
+              'Bath & Laundry': 2.8, 'Gas Stove & Accessories': 2.1, 'Pressure Cooker': 2.1,
+              'Steel Utensils': 1.9, 'Hardware & Fittings': 1.4, 'Tableware': 1.3,
+              'Kitchen Cleaning': 0.529},
 }.get(PLATFORM, {})
 SALES_KEY = f'{PLATFORM}_mrp_sales_v1'   # localStorage namespace (per platform, no collisions)
 IN_XLSX = f'{PLATFORM}_rca_combined.xlsx'
