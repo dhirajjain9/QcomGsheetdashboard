@@ -340,6 +340,13 @@ thead th:first-child,tbody td:first-child{text-align:left;width:23%;padding-left
 tbody td{padding:12px 10px;text-align:center;border-bottom:1px solid var(--hair);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{background:rgba(0,113,227,.07)}
 .tableScroll{max-height:360px;overflow:auto;border-radius:12px;border:1px solid var(--hair)}
+.tiers{margin-top:10px;border-top:1px solid var(--hair);padding-top:10px}
+.trow{display:flex;align-items:center;gap:9px;font-size:11.5px;margin-top:7px}
+.trow .tl{width:88px;color:var(--ink2);white-space:nowrap;text-align:left;font-variant-numeric:tabular-nums}
+.trow .tbar{flex:1;height:8px;background:var(--hair);border-radius:5px;overflow:hidden}
+.trow .tbar i{display:block;height:100%;border-radius:5px}
+.trow .tp{width:34px;text-align:right;color:var(--ink2);font-variant-numeric:tabular-nums}
+.trow.peak .tl,.trow.peak .tp{font-weight:700;color:var(--ink)}
 .cwrap{position:relative;height:300px}
 .miss{color:var(--ink3)}
 </style></head>
@@ -368,7 +375,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
   <div class="card"><div class="step">③ Who leads</div><h3>Top brands</h3><div class="h3sub">Across Q-Commerce (combined) and each platform's #1.</div><div id="leadQcom" style="margin-bottom:10px"></div><div id="leadPlat" class="leadrow"></div></div>
  </div>
  <div class="card"><div class="step">④ All attributes across platforms</div><h3>Platform scorecard</h3><div class="h3sub">Gross, net, discount, share, assortment, price & availability.</div><div class="spot" id="prodSpot"></div></div>
- <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Where each platform's gross sits across shared ₹ tiers. Same peak → one SP strategy; divergent → tailor by platform.</div><div class="cwrap"><canvas id="tierChart"></canvas></div><div class="verdict" id="tierVerdict"></div></div>
+ <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Each platform's <b>own</b> price-tier mix on the <b>same shared ₹ tiers</b> — read independently (the gross on each card shows its true size, so a small platform never looks like it "leads"). Bar = % of that platform's gross.</div><div class="spot" id="tierCards"></div><div class="verdict" id="tierVerdict"></div></div>
  <div class="card"><div class="step">⑥ Opportunity to launch</div><h3>Where the opening is — per platform</h3><div class="h3sub">Founder's Launchpad scoring computed within each platform: opportunity score (0–100), white-space signal, availability gap & the attack price band.</div><div class="spot" id="oppSpot"></div></div>
 </div>
 
@@ -461,17 +468,20 @@ function renderProduct(t){
     <div class="row"><span class="k">Attack band</span><span>${o.band?('₹'+o.band[0]+'–'+o.band[1]):'–'}</span></div></div>`;}).join('');
 }
 function renderTiers(r){
- const T=r.tiers,el=document.getElementById('tierChart'),v=document.getElementById('tierVerdict');
- if(tierChart)tierChart.destroy();
- if(!T){el.parentElement.style.display='none';v.className='verdict vary';v.innerHTML='Not enough price points across platforms to tier this product.';return;}
- el.parentElement.style.display='';
- const nb=T.edges.length-1,labels=[...Array(nb)].map((_,i)=>`₹${T.edges[i]}–${T.edges[i+1]}`),pr=pres(r);
- const ds=pr.map(k=>{const t=T.g[k].reduce((a,b)=>a+b,0)||1;return {label:NAME[k],data:T.g[k].map(x=>Math.round(x/t*100)),backgroundColor:COL[k],borderRadius:4,categoryPercentage:.7,barPercentage:.9};});
- tierChart=new Chart(el,{type:'bar',data:{labels,datasets:ds},options:{maintainAspectRatio:false,plugins:{legend:{position:'top'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.raw}% of its gross`}}},scales:{y:{title:{display:true,text:'% of platform gross'},ticks:{callback:v=>v+'%'},grid:{color:'#eee'}},x:{grid:{display:false}}}}});
+ const T=r.tiers,host=document.getElementById('tierCards'),v=document.getElementById('tierVerdict');
+ if(!T){host.innerHTML='';v.className='verdict vary';v.innerHTML='Not enough price points across platforms to tier this product.';return;}
+ const lab=i=>`₹${T.edges[i]}–${T.edges[i+1]}`, pr=pres(r);
  const topT={};pr.forEach(k=>{const a=T.g[k];let mi=0;a.forEach((x,i)=>{if(x>a[mi])mi=i;});topT[k]=mi;});
- const used=[...new Set(pr.map(k=>topT[k]))],lab=i=>`₹${T.edges[i]}–${T.edges[i+1]}`;
- if(used.length===1){v.className='verdict uniform';v.innerHTML=`✅ <b>One SP strategy can work.</b> Gross concentrates in the same tier (<b>${lab(used[0])}</b>) on all ${pr.length} platforms.`;}
- else{v.className='verdict vary';v.innerHTML=`⚠️ <b>Tailor pricing by platform.</b> Sweet-spot tier differs: `+pr.map(k=>`<span style="color:${COL[k]}">●</span> ${NAME[k]} <b>${lab(topT[k])}</b>`).join(' · ')+`.`;}
+ // one card per platform: its own SP-tier mix on the same shared tiers, with its real gross shown
+ host.innerHTML=PK.map(([k,n])=>{
+   if(!r[k])return `<div class="pcard ${k} absent"><div class="pn">${n}</div><div class="big" style="font-size:15px;color:#a99">— not tracked —</div></div>`;
+   const arr=T.g[k], tot=arr.reduce((a,b)=>a+b,0)||1;
+   const rows=arr.map((x,i)=>{const pct=Math.round(x/tot*100);
+     return `<div class="trow${i===topT[k]?' peak':''}"><span class="tl">${lab(i)}</span><span class="tbar"><i style="width:${pct}%;background:${COL[k]}"></i></span><span class="tp">${pct}%</span></div>`;}).join('');
+   return `<div class="pcard ${k}"><div class="pn">${n}</div><div class="big">${money(r[k].g)}</div><div class="biglbl">gross · price-tier mix ↓</div><div class="tiers">${rows}</div></div>`;}).join('');
+ const used=[...new Set(pr.map(k=>topT[k]))];
+ if(used.length===1){v.className='verdict uniform';v.innerHTML=`✅ <b>One SP strategy can work.</b> Each platform's gross peaks in the same tier (<b>${lab(used[0])}</b>).`;}
+ else{v.className='verdict vary';v.innerHTML=`⚠️ <b>Tailor pricing by platform.</b> Peak tier differs: `+pr.map(k=>`<span style="color:${COL[k]}">●</span> ${NAME[k]} <b>${lab(topT[k])}</b>`).join(' · ')+`.`;}
 }
 
 // ===== BRAND TABLE + DETAIL =====
