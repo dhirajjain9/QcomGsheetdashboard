@@ -12,6 +12,7 @@ Product type & brand are the only axes comparable across platforms (categories
 differ), normalised via product_types.py / lowercase brand key.
 """
 import json
+import math
 from collections import defaultdict
 
 PLATS = [("Blinkit", "dashboard_data.json", "B"),
@@ -69,7 +70,69 @@ def aggregate(sku, key_fn, sub_fn, disp_fn):
     return out
 
 
-type_aggs, brand_aggs, totals = {}, {}, {}
+def opp_for_platform(sku):
+    """Replicate the Founder's Launchpad opportunity scoring (lpTypeAgg) for one
+    platform: per product type -> opportunity score, white-space remark, attack band."""
+    T = defaultdict(lambda: {"skus": 0, "csp": 0.0, "g": 0.0, "osaW": 0.0, "osaWN": 0.0,
+                             "brands": defaultdict(lambda: {"csp": 0.0, "osov": 0.0, "asov": 0.0}), "sps": []})
+    for s in sku:
+        t = s["pt"]
+        if t == "Other":
+            continue
+        a = T[t]; w = s.get("csp") or 0
+        a["skus"] += 1; a["csp"] += w; a["g"] += s["_g"]
+        b = a["brands"][s["b"].lower()]; b["csp"] += w; b["osov"] += (s.get("osov") or 0); b["asov"] += (s.get("asov") or 0)
+        if s.get("osa") is not None:
+            ww = w or 1e-4; a["osaW"] += s["osa"]*ww; a["osaWN"] += ww
+        if s.get("sp") and s["sp"] > 0:
+            a["sps"].append((s["sp"], s["_g"]))
+    if not T:
+        return {}
+    for a in T.values():
+        v = list(a["brands"].values()); tot = sum(x["csp"] for x in v) or 1
+        a["cr1"] = max((x["csp"] for x in v), default=0)/tot
+        a["moat"] = max([0]+[(x["csp"]/tot)*(1-((x["asov"]/(x["asov"]+x["osov"])) if (x["asov"]+x["osov"]) > 0 else 0)) for x in v])
+        wOSA = a["osaW"]/a["osaWN"] if a["osaWN"] else 0
+        a["gap"] = max(0, 1-wOSA/100); a["beat"] = 1-a["moat"]; a["size"] = a["g"]
+    maxSize = max(a["size"] for a in T.values()) or 1e-9
+    us = sorted(a["size"]/max(1, a["skus"]) for a in T.values())
+    cap = us[int(0.9*(len(us)-1))] or 1e-9
+    out = {}
+    for t, a in T.items():
+        underN = min(1, (a["size"]/max(1, a["skus"]))/cap); demandN = a["size"]/maxSize
+        ws = math.sqrt(underN*a["beat"]); gate = min(1, demandN/0.03)
+        score = round(100*(0.30*demandN + 0.50*ws + 0.20*a["gap"])*gate)
+        if a["moat"] >= 0.45:
+            rem = "Organic fortress"
+        elif a["cr1"] >= 0.45:
+            rem = "Rented crown"
+        elif ws >= 0.5:
+            rem = "Prime white space"
+        elif underN < 0.25:
+            rem = "Crowded shelf"
+        else:
+            rem = "Open & contested"
+        band = None
+        sps = [sp for sp, g in a["sps"]]
+        if sps:
+            mn, mx = min(sps), max(sps); span = (mx-mn) or 1; n = 5
+            bands = [{"lo": mn+span*i/n, "hi": mn+span*(i+1)/n, "g": 0.0, "k": 0} for i in range(n)]
+            for sp, g in a["sps"]:
+                idx = min(n-1, int((sp-mn)/span*n)); bands[idx]["g"] += g; bands[idx]["k"] += 1
+            best, bv = None, -1
+            for b in bands:
+                if b["g"] <= 0:
+                    continue
+                val = b["g"]/(b["k"] or 1)
+                if val > bv:
+                    bv = val; best = b
+            if best:
+                band = [round(best["lo"]), round(best["hi"])]
+        out[t] = {"score": score, "rem": rem, "ws": round(ws*100), "gap": round(a["gap"]*100), "band": band}
+    return out
+
+
+type_aggs, brand_aggs, totals, OPP = {}, {}, {}, {}
 BRAND_DISP = {}
 TYPE_BRAND = defaultdict(lambda: defaultdict(float))
 TYPE_SP = defaultdict(lambda: {"B": [], "I": [], "Z": []})
@@ -83,6 +146,7 @@ for name, f, key in PLATS:
             TYPE_BRAND[s["pt"]][bk] += s["_g"]
             if s.get("sp") and s["sp"] > 0:
                 TYPE_SP[s["pt"]][key].append((s["sp"], s["_g"]))
+    OPP[key] = opp_for_platform(sku)
     type_aggs[key] = aggregate(sku, lambda s: s["pt"] if s["pt"] != "Other" else None,
                                lambda s: s["b"].lower(), lambda s: s["pt"])
     brand_aggs[key] = aggregate(sku, lambda s: s["b"].lower(),
@@ -166,6 +230,7 @@ def build_rows(aggs, use_disp, with_extras=False):
             lead = sorted(TYPE_BRAND[kk].items(), key=lambda x: -x[1])[:4]
             row["lead"] = [[BRAND_DISP.get(bk, bk), round(g)] for bk, g in lead]
             row["tiers"] = sp_tiers(kk)
+            row["opp"] = {k: OPP[k].get(kk) for k in ("B", "I", "Z")}
         rows.append(row)
     rows.sort(key=lambda r: -r["tot"]["g"])
     return rows
@@ -305,6 +370,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
  </div>
  <div class="card"><div class="step">④ All attributes across platforms</div><h3>Platform scorecard</h3><div class="h3sub">Gross, net, discount, share, assortment, price & availability.</div><div class="spot" id="prodSpot"></div></div>
  <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Where each platform's gross sits across shared ₹ tiers. Same peak → one SP strategy; divergent → tailor by platform.</div><div class="cwrap"><canvas id="tierChart"></canvas></div><div class="verdict" id="tierVerdict"></div></div>
+ <div class="card"><div class="step">⑥ Opportunity to launch</div><h3>Where the opening is — per platform</h3><div class="h3sub">Founder's Launchpad scoring computed within each platform: opportunity score (0–100), white-space signal, availability gap & the attack price band.</div><div class="spot" id="oppSpot"></div></div>
 </div>
 
 <!-- ===== BRAND ===== -->
@@ -384,6 +450,16 @@ function renderProduct(t){
  document.getElementById('prodSpot').innerHTML=PK.map(([k])=>pcard(k,r[k],{bigKey:'g',bigLbl:'gross sales (MRP)',fmtBig:v=>money(v),badges:{[strong]:'<span class="badge bg-grn">biggest</span>'},
    rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`${shareOf(k,x.g).toFixed(2)}%`],['SKUs',x=>x.k],['Brands',x=>x.b],['Avg SP',x=>'₹'+x.sp],['OSA',x=>`<b style="color:${x.o<40?'var(--red)':'var(--grn)'}">${x.o}%</b>`],['Top brand',x=>x.top||'–']]})).join('');
  renderTiers(r);
+ // ⑥ opportunity cards (per platform)
+ const RC={'Prime white space':'#34c759','Rented crown':'#0a84c2','Organic fortress':'#ff3b30','Crowded shelf':'#ff9500','Open & contested':'#86868b'};
+ document.getElementById('oppSpot').innerHTML=PK.map(([k])=>{const o=(r.opp||{})[k];
+   if(!o)return `<div class="pcard ${k} absent"><div class="pn">${NAME[k]}</div><div class="big" style="font-size:15px;color:#a99">— not tracked —</div></div>`;
+   const c=RC[o.rem]||'#86868b';
+   return `<div class="pcard ${k}"><div class="pn">${NAME[k]}</div><div class="big">${o.score}</div><div class="biglbl">opportunity score</div>
+    <div class="row"><span class="k">Signal</span><span style="color:${c};font-weight:600">${o.rem}</span></div>
+    <div class="row"><span class="k">White space</span><span>${o.ws}</span></div>
+    <div class="row"><span class="k">Availability gap</span><span>${o.gap}%</span></div>
+    <div class="row"><span class="k">Attack band</span><span>${o.band?('₹'+o.band[0]+'–'+o.band[1]):'–'}</span></div></div>`;}).join('');
 }
 function renderTiers(r){
  const T=r.tiers,el=document.getElementById('tierChart'),v=document.getElementById('tierVerdict');
