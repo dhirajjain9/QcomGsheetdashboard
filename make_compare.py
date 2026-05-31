@@ -226,12 +226,12 @@ a.back:hover{background:rgba(0,113,227,.15)}
 .pban::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--pc)}
 .pban.B{--pc:var(--B)}.pban.I{--pc:var(--I)}.pban.Z{--pc:var(--Z)}
 .pban .pn{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--pc);display:flex;align-items:center;gap:7px}
-.pban .pn::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--pc)}
-.pban .big{font-size:27px;font-weight:600;letter-spacing:-.02em;margin:8px 0 0}
-.pban .cap2{font-size:12px;color:var(--ink3);margin-bottom:10px}
-.pban .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px;border-top:1px solid var(--hair);padding-top:13px;margin-top:11px}
-.pban .mets .m .l{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.03em}
-.pban .mets .m .v{font-size:15px;font-weight:600;color:var(--ink);margin-top:2px}
+.pban .pn::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pc)}
+.pban .big{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:7px 0 0}
+.pban .cap2{font-size:11.5px;color:var(--ink3);margin-bottom:8px}
+.pban .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px;border-top:1px solid var(--hair);padding-top:11px;margin-top:9px}
+.pban .mets .m .l{font-size:9.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.pban .mets .m .v{font-size:13.5px;font-weight:600;color:var(--ink);margin-top:1px;white-space:nowrap}
 /* sections + cards */
 .sec{font-size:22px;font-weight:600;letter-spacing:-.02em;margin:38px 0 14px}
 .card{background:var(--panel);border-radius:18px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--sh)}
@@ -342,7 +342,7 @@ function hero(lead,big,cap,mets){
 document.getElementById('qcomBanner').innerHTML=hero('Q-Commerce · all platforms',money(q.g),'gross MRP',
  [['Net (SP)',money(q.n)],['Discount',disc(q.g,q.n)],['Brands',q.brands.toLocaleString()],['Product types',q.types],['Avg OSA',q.osa+'%'],['Avg SP','₹'+q.sp]]);
 document.getElementById('platBanners').innerHTML=PK.map(([k,n])=>{const t=DATA.totals[k];
- const cells=[['Net (SP)',money(t.n)],['Discount',disc(t.g,t.n)],['Brands',t.brands],['Product types',t.types],['Avg OSA',t.osa+'%'],['Avg SP','₹'+t.sp]];
+ const cells=[['Net (SP)',money(t.n)],['Discount',disc(t.g,t.n)],['Brands',t.brands],['Prod Type',t.types],['Avg OSA',t.osa+'%'],['Avg SP','₹'+t.sp]];
  return `<div class="pban ${k}"><div class="pn">${n}</div><div class="big">${money(t.g)}</div><div class="cap2">gross MRP</div>
   <div class="mets">${cells.map(c=>`<div class="m"><div class="l">${c[0]}</div><div class="v">${c[1]}</div></div>`).join('')}</div></div>`;}).join('');
 
