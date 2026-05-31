@@ -11,6 +11,11 @@ PLATFORM_LABEL = {'blinkit': 'Blinkit', 'instamart': 'Instamart', 'zepto': 'Zept
 DEFAULT_SALES = {
     'blinkit': {'Kitchen & Dining Needs': 68.6, 'Cleaning Tools': 17,
                 'Bathroom Essentials': 16.6, 'Home Decor': 14, 'Home Improvement': 6.4},
+    'instamart': {'Bakeware & Bbq': 1.4, 'Barware': 1.1, 'Bathware & Laundry': 8.1,
+                  'Bottles Flasks Tiffins': 16.5, 'Cookware': 12.6, 'Cutlery & Ladles': 0.353,
+                  'Glasses Cups Mugs': 4.8, 'Jars Containers Holders': 6.5, 'Kitchen Cleaning': 3.4,
+                  'Kitchen Tools': 5.4, 'Plates Bowls Crockery': 5.7, 'Serveware': 1.2,
+                  'Storage & Organizers': 7.1},
 }.get(PLATFORM, {})
 SALES_KEY = f'{PLATFORM}_mrp_sales_v1'   # localStorage namespace (per platform, no collisions)
 IN_XLSX = f'{PLATFORM}_rca_combined.xlsx'
