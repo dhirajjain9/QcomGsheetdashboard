@@ -241,13 +241,13 @@ tbody tr{cursor:pointer}tbody tr:hover{background:var(--panel2)}
 </style></head>
 <body><div class="wrap">
 <header>
- <div><h1>Cross-Platform <span>Launch Brief</span></h1>
+ <div><h1>Cross Platform <span>Analysis</span></h1>
   <div class="sub">For a category head deciding what to launch — sized & compared across Blinkit · Instamart · Zepto on the only common axes (<b>product type</b> &amp; <b>brand</b>) · Apr 2026</div></div>
  <a class="back" href="platforms.html">← All platforms</a>
 </header>
 
 <div class="tabs" id="tabs">
- <button data-t="prod" class="on">📦 Product launch brief</button>
+ <button data-t="prod" class="on">📦 Product ReportCard</button>
  <button data-t="brand">🏷️ Brand report card</button>
 </div>
 
