@@ -272,7 +272,7 @@ h1{font-size:30px;font-weight:600;letter-spacing:-.022em;margin:0}h1 span{color:
 a.back{font-size:13px;color:var(--acc);text-decoration:none;padding:7px 15px;border-radius:980px;background:rgba(0,113,227,.08);font-weight:500}
 a.back:hover{background:rgba(0,113,227,.15)}
 /* hero total */
-.qtot{background:var(--panel);color:var(--ink);border:1px solid var(--hair2);border-radius:20px;padding:22px 26px;margin:0 0 14px;box-shadow:var(--sh)}
+.qtot{background:var(--panel);color:var(--ink);border:1.5px solid #c2c2cc;border-radius:20px;padding:22px 26px;margin:0 0 14px;box-shadow:var(--sh)}
 .qtot .lead{font-size:12px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
 .qtot .big{font-size:38px;font-weight:600;letter-spacing:-.03em;line-height:1}
 .qtot .cap{font-size:14px;color:var(--ink3);margin-left:10px;font-weight:400}
@@ -286,7 +286,7 @@ a.back:hover{background:rgba(0,113,227,.15)}
 /* platform context cards */
 .platrow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
 @media(max-width:760px){.platrow{grid-template-columns:1fr}.spot{grid-template-columns:1fr!important}.grid2{grid-template-columns:1fr!important}.qtot .met{padding:0 16px}}
-.pban{background:var(--panel);border:1px solid var(--hair2);border-radius:18px;padding:18px 20px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.pban{background:var(--panel);border:1.5px solid #c2c2cc;border-radius:18px;padding:18px 20px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
 .pban::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--pc)}
 .pban.B{--pc:var(--B)}.pban.I{--pc:var(--I)}.pban.Z{--pc:var(--Z)}
 .pban .pn{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--pc);display:flex;align-items:center;gap:7px}
@@ -439,7 +439,7 @@ function renderProduct(t){
  const r=TMAP[t];if(!r)return;curType=t;markSel('typeTbl',t);
  const pr=pres(r),tot=r.tot;
  document.getElementById('qtot').innerHTML=hero(`① ${r.t} · total size on Q-Commerce`,money(tot.g),'gross MRP',
-   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Brands',tot.b],['Avg SP','₹'+tot.sp],['Avg OSA',tot.o+'%'],['Platforms',r.p+'/3']]);
+   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Brands',tot.b],['Avg SP','₹'+tot.sp],['Avg OSA',tot.o+'%']]);
  const segs=pr.map(k=>({k,g:r[k].g})).sort((a,b)=>b.g-a.g);
  document.getElementById('spreadBar').innerHTML=segs.map(s=>{const pct=tot.g?s.g/tot.g*100:0;return `<div class="spread-seg" style="background:${COL[s.k]};flex:${s.g}" title="${NAME[s.k]} ${money(s.g)}">${pct>=8?Math.round(pct)+'%':''}</div>`;}).join('');
  document.getElementById('spreadLeg').innerHTML=segs.map(s=>`<span><span class="dotc" style="background:${COL[s.k]}"></span>${NAME[s.k]} ${money(s.g)} (${tot.g?Math.round(s.g/tot.g*100):0}%)</span>`).join('')+(absent(r).length?`<span style="color:#bbb">absent: ${absent(r).map(k=>NAME[k]).join(', ')}</span>`:'');
