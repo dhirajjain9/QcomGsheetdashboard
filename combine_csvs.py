@@ -6,16 +6,21 @@ import pandas as pd
 # Read the raw CSV exports committed to the repo, and write the combined
 # workbook alongside them. Paths are relative to this script's directory so it
 # works from a fresh clone.
+#
+# Platform-aware: set PLATFORM=instamart (or zepto) to read raw_csvs_<platform>/
+# and write <platform>_rca_combined.xlsx. Default 'blinkit' keeps the original
+# paths (raw_csvs/ -> blinkit_rca_combined.xlsx) so nothing changes for Blinkit.
+PLATFORM = os.environ.get("PLATFORM", "blinkit").lower()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, "raw_csvs")
-OUTPUT = os.path.join(BASE_DIR, "blinkit_rca_combined.xlsx")
+UPLOAD_DIR = os.path.join(BASE_DIR, "raw_csvs" if PLATFORM == "blinkit" else f"raw_csvs_{PLATFORM}")
+OUTPUT = os.path.join(BASE_DIR, f"{PLATFORM}_rca_combined.xlsx")
 
 
 def sub_category_from_filename(path):
     name = os.path.splitext(os.path.basename(path))[0]
-    # strip leading "<hash>-" and the "blinkitrcadownload_" prefix
+    # strip leading "<hash>-" and any "<platform>rcadownload_" prefix
     name = re.sub(r"^[0-9a-fA-F]+-", "", name)
-    name = re.sub(r"^blinkitrcadownload_", "", name)
+    name = re.sub(r"^[a-z]+rcadownload_", "", name)
     return name.replace("_", " ").strip()
 
 

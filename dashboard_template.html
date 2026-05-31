@@ -382,8 +382,12 @@ function brandAgg(){        // brand -> {metric value, display name} across ALL 
   return {m,disp};
 }
 
-document.getElementById('subt').textContent=`5 sub-categories · ${DATA.kpis.skus.toLocaleString()} SKUs · ${DATA.kpis.brands} brands · ${DATA.meta.prev.slice(0,7)} → ${DATA.meta.latest.slice(0,7)}`;
-document.getElementById('ft').textContent=`Generated ${DATA.meta.generated} · Source: Blinkit RCA exports · Sales proxy = Est. Category Share`;
+const PLAT_LABEL=(DATA.meta&&DATA.meta.platform_label)||'Blinkit';
+document.getElementById('subt').textContent=`${DATA.kpis.subcats} sub-categories · ${DATA.kpis.skus.toLocaleString()} SKUs · ${DATA.kpis.brands} brands · ${DATA.meta.prev.slice(0,7)} → ${DATA.meta.latest.slice(0,7)}`;
+document.getElementById('ft').textContent=`Generated ${DATA.meta.generated} · Source: ${PLAT_LABEL} RCA exports · Sales proxy = Est. Category Share`;
+// platform-aware page title + header
+document.title=`${PLAT_LABEL} RCA Dashboard`;
+{const _h1=document.querySelector('header h1'); if(_h1)_h1.innerHTML=`${PLAT_LABEL} RCA <span>Dashboard</span>`;}
 
 // KPIs
 const k=DATA.kpis;
@@ -612,9 +616,11 @@ function renderProductTypes(){
 }
 
 // ---- Sales input panel (with saved defaults + persistence) ----
-const SALES_KEY='blinkit_mrp_sales_v1';
-// Agreed per-sub-category MRP sales (₹ Cr) — pre-filled so the dashboard opens in ₹ mode
-const DEFAULT_SALES={'Kitchen & Dining Needs':68.6,'Cleaning Tools':17,'Bathroom Essentials':16.6,'Home Decor':14,'Home Improvement':6.4};
+// Platform-aware: key + pre-fill come from DATA.meta (so each platform's saved
+// MRP inputs are namespaced and don't collide). Blinkit literals are the fallback.
+const SALES_KEY=(DATA.meta&&DATA.meta.sales_key)||'blinkit_mrp_sales_v1';
+// Per-platform pre-filled MRP sales (₹ Cr) — opens in ₹ mode when present, else share-% mode
+const DEFAULT_SALES=(DATA.meta&&DATA.meta.default_sales)||{'Kitchen & Dining Needs':68.6,'Cleaning Tools':17,'Bathroom Essentials':16.6,'Home Decor':14,'Home Improvement':6.4};
 function loadSavedSales(){try{return JSON.parse(localStorage.getItem(SALES_KEY));}catch(e){return null;}}
 function saveSales(){
   const vals={}; $$('#salesInputs input').forEach(i=>{if(i.value!=='')vals[i.dataset.sub]=parseFloat(i.value);});

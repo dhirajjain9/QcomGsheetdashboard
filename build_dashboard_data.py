@@ -1,7 +1,22 @@
-import pandas as pd, json, numpy as np
+import os, pandas as pd, json, numpy as np
 from product_types import classify
 
-df = pd.read_excel('blinkit_rca_combined.xlsx')
+# Platform-aware: PLATFORM=instamart/zepto reads <platform>_rca_combined.xlsx and
+# writes <platform>_dashboard_data.json. Default 'blinkit' keeps the original
+# blinkit_rca_combined.xlsx -> dashboard_data.json so nothing changes for Blinkit.
+PLATFORM = os.environ.get('PLATFORM', 'blinkit').lower()
+PLATFORM_LABEL = {'blinkit': 'Blinkit', 'instamart': 'Instamart', 'zepto': 'Zepto'}.get(PLATFORM, PLATFORM.title())
+# Per-platform pre-filled MRP sales (₹ Cr). Blinkit = the agreed split; others
+# start empty (dashboard shows value-share % until the user enters totals).
+DEFAULT_SALES = {
+    'blinkit': {'Kitchen & Dining Needs': 68.6, 'Cleaning Tools': 17,
+                'Bathroom Essentials': 16.6, 'Home Decor': 14, 'Home Improvement': 6.4},
+}.get(PLATFORM, {})
+SALES_KEY = f'{PLATFORM}_mrp_sales_v1'   # localStorage namespace (per platform, no collisions)
+IN_XLSX = f'{PLATFORM}_rca_combined.xlsx'
+OUT_JSON = 'dashboard_data.json' if PLATFORM == 'blinkit' else f'{PLATFORM}_dashboard_data.json'
+
+df = pd.read_excel(IN_XLSX)
 num = ['SP','MRP','Wt. OSA %','Wt. Discount %','Est. Category Share',
        'Est. Category Share SP','Overall SOV','Organic SOV','Ad SOV','Wt. PPU (x100)']
 for c in num:
@@ -232,15 +247,17 @@ for pid in (set(ma.index) | set(mp.index)):
     })
 
 out = {
-    'meta': {'latest': LATEST, 'prev': PREV, 'generated': str(pd.Timestamp.now())[:16]},
+    'meta': {'latest': LATEST, 'prev': PREV, 'generated': str(pd.Timestamp.now())[:16],
+             'platform': PLATFORM, 'platform_label': PLATFORM_LABEL,
+             'sales_key': SALES_KEY, 'default_sales': DEFAULT_SALES},
     'sku_level': sku_level, 'sku_mom': sku_mom,
     'kpis': kpis, 'subcat': subcat, 'top_skus': top_skus, 'top_brands': top_brands,
     'sov_scatter': sov_scatter, 'gainers': gainers, 'losers': losers,
     'white_space_skus': white_space_skus, 'quad_pts': quad_pts, 'cat_ws': cat_ws,
     'subcats': SUBCATS,
 }
-with open('dashboard_data.json','w') as f:
+with open(OUT_JSON,'w') as f:
     json.dump(out, f)
-print('Data written. KPIs:', kpis)
+print(f'[{PLATFORM}] Data written to {OUT_JSON}. KPIs:', kpis)
 print('Sub-cats:', [s['name'] for s in subcat])
 print('White-space SKUs found:', len(white_space_skus))
