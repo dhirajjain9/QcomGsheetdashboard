@@ -293,9 +293,9 @@ a.back:hover{background:rgba(0,113,227,.15)}
 .pban .pn::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pc)}
 .pban .big{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:7px 0 0}
 .pban .cap2{font-size:11.5px;color:var(--ink3);margin-bottom:8px}
-.pban .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px;border-top:1px solid var(--hair);padding-top:11px;margin-top:9px}
-.pban .mets .m .l{font-size:9.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
-.pban .mets .m .v{font-size:13.5px;font-weight:600;color:var(--ink);margin-top:1px;white-space:nowrap}
+.pban .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 14px;border-top:1px solid var(--hair);padding-top:15px;margin-top:13px}
+.pban .mets .m .l{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
+.pban .mets .m .v{font-size:14.5px;font-weight:600;color:var(--ink);margin-top:3px;white-space:nowrap}
 /* sections + cards */
 .sec{font-size:22px;font-weight:600;letter-spacing:-.02em;margin:38px 0 14px}
 .card{background:var(--panel);border-radius:18px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--sh)}
