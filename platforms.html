@@ -34,6 +34,11 @@
   .stat .v{font-size:17px;font-weight:700;color:var(--acc)}
   .stat .l{font-size:11px;color:var(--mut)}
   .go{margin-top:16px;font-size:13px;font-weight:600;color:var(--acc)}
+  .compare{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;
+    text-decoration:none;color:inherit;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:18px 22px;transition:.15s;font-size:14px}
+  .compare:hover{border-color:var(--acc);transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,99,235,.10)}
+  .compare .arrow{color:var(--acc);font-weight:700;font-size:18px}
   footer{color:var(--mut);font-size:12px;margin-top:30px;text-align:center}
 </style>
 </head>
@@ -76,6 +81,10 @@
       <div class="go">Open Zepto dashboard →</div>
     </a>
   </div>
+  <a class="compare" href="compare.html">
+    <span><b>⇄ Compare across platforms</b> — product-type-level view of Blinkit vs Instamart vs Zepto (the only apples-to-apples axis)</span>
+    <span class="arrow">→</span>
+  </a>
   <footer>Each platform's shares are platform-relative; figures are not aggregated across platforms. Source: platform RCA exports · Apr 2026.</footer>
 </div>
 </body>
