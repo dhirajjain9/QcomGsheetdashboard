@@ -405,6 +405,9 @@ const pres=r=>['B','I','Z'].filter(k=>r[k]);const absent=r=>['B','I','Z'].filter
 const tc=s=>String(s).replace(/\b\w/g,c=>c.toUpperCase());
 const TYPES=DATA.typeRows,BRANDS=DATA.brandRows;
 const TMAP={},BMAP={};TYPES.forEach(r=>TMAP[r.t]=r);BRANDS.forEach(r=>BMAP[r.t]=r);
+// biggest under-indexed platform for a product type (share of product vs fair share), with untapped ₹
+function fairGap(r){const tot=r.tot.g||1;let best=null;for(const k of['B','I','Z']){const fair=DATA.qcom.g?DATA.totals[k].g/DATA.qcom.g:0;const g=r[k]?r[k].g:0;const idx=fair?(g/tot)/fair:0;const up=fair*tot-g;if(idx<0.7&&up>2e5&&(!best||up>best.up))best={k,up,idx};}return best;}
+TYPES.forEach(r=>r._gap=fairGap(r));
 const shareOf=(k,g)=>DATA.totals[k].g?(g/DATA.totals[k].g*100):0;
 
 // ===== CONTEXT BANNERS =====
@@ -431,7 +434,7 @@ function pcard(k,r,opts){
 
 // ===== PRODUCT TABLE + DETAIL =====
 let typeSort={k:'g',d:-1},brandSort={k:'g',d:-1};
-const tval=(r,k)=>k==='disc'?(r.tot.g?1-r.tot.n/r.tot.g:0):k==='c5'?(r.c5||0):(r.tot[k]||0);
+const tval=(r,k)=>k==='disc'?(r.tot.g?1-r.tot.n/r.tot.g:0):k==='c5'?(r.c5||0):k==='gap'?(r._gap?r._gap.up:0):(r.tot[k]||0);
 function headRow(cols,sort){return '<thead><tr>'+cols.map(c=>c[1]?`<th data-k="${c[1]}">${c[0]}${sort.k===c[1]?(sort.d<0?' ↓':' ↑'):''}</th>`:`<th>${c[0]}</th>`).join('')+'</tr></thead>';}
 function fillTypeTbl(qstr){
  let rs=TYPES.filter(r=>r.p>=1);
@@ -439,9 +442,9 @@ function fillTypeTbl(qstr){
  rs=rs.sort((a,b)=>typeSort.d*(tval(a,typeSort.k)-tval(b,typeSort.k)));
  if(!qstr)rs=rs.slice(0,40);
  document.getElementById('typeNote').textContent=qstr?`${rs.length} match`:`top 40 of ${TYPES.length} product types`;
- const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Brands','b'],['Top-5','c5']];
+ const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Brands','b'],['Top-5','c5'],['Opportunity','gap']];
  document.getElementById('typeTbl').innerHTML=headRow(cols,typeSort)+'<tbody>'+
-  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td><td>${r.c5}%</td></tr>`).join('')+'</tbody>';
+  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td><td>${r.c5}%</td><td>${r._gap?`<span class="dotc" style="background:${COL[r._gap.k]}" title="${NAME[r._gap.k]} under-indexed"></span>${money(r._gap.up)}`:'<span class="miss">–</span>'}</td></tr>`).join('')+'</tbody>';
  markSel('typeTbl',curType);
 }
 let curType,curBrand,tierChart;
