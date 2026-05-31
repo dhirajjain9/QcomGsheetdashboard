@@ -203,17 +203,17 @@ h1{font-size:30px;font-weight:600;letter-spacing:-.022em;margin:0}h1 span{color:
 a.back{font-size:13px;color:var(--acc);text-decoration:none;padding:7px 15px;border-radius:980px;background:rgba(0,113,227,.08);font-weight:500}
 a.back:hover{background:rgba(0,113,227,.15)}
 /* hero total */
-.qtot{background:var(--ink);color:#fff;border-radius:22px;padding:26px 30px;margin:0 0 14px;box-shadow:var(--sh)}
-.qtot .lead{font-size:12px;font-weight:600;color:#a1a1a6;text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
-.qtot .big{font-size:44px;font-weight:600;letter-spacing:-.03em;line-height:1}
-.qtot .cap{font-size:14px;color:#a1a1a6;margin-left:11px;font-weight:400}
-.qtot .mets{display:flex;flex-wrap:wrap;gap:14px 0;margin-top:22px;border-top:1px solid rgba(255,255,255,.13);padding-top:18px}
-.qtot .met{padding:0 24px;border-left:1px solid rgba(255,255,255,.13)}
+.qtot{background:var(--panel);color:var(--ink);border-radius:20px;padding:22px 26px;margin:0 0 14px;box-shadow:var(--sh)}
+.qtot .lead{font-size:12px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.qtot .big{font-size:38px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.qtot .cap{font-size:14px;color:var(--ink3);margin-left:10px;font-weight:400}
+.qtot .mets{display:flex;flex-wrap:wrap;gap:14px 0;margin-top:18px;border-top:1px solid var(--hair);padding-top:15px}
+.qtot .met{padding:0 22px;border-left:1px solid var(--hair)}
 .qtot .met:first-child{padding-left:0;border-left:0}
-.qtot .met .v{font-size:20px;font-weight:600;letter-spacing:-.01em}
-.qtot .met .l{font-size:12px;color:#a1a1a6;margin-top:3px}
-.qtot.detail{border-radius:20px;padding:22px 26px;background:linear-gradient(145deg,#26262b,#1d1d1f)}
-.qtot.detail .big{font-size:36px}
+.qtot .met .v{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.qtot .met .l{font-size:12px;color:var(--ink2);margin-top:3px}
+.qtot.detail{border-radius:18px;padding:20px 24px;background:#fbfbfd;border:1px solid var(--hair);box-shadow:none}
+.qtot.detail .big{font-size:32px}
 /* platform context cards */
 .platrow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
 @media(max-width:760px){.platrow{grid-template-columns:1fr}.spot{grid-template-columns:1fr!important}.grid2{grid-template-columns:1fr!important}.qtot .met{padding:0 16px}}
@@ -224,8 +224,9 @@ a.back:hover{background:rgba(0,113,227,.15)}
 .pban .pn::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--pc)}
 .pban .big{font-size:27px;font-weight:600;letter-spacing:-.02em;margin:8px 0 0}
 .pban .cap2{font-size:12px;color:var(--ink3);margin-bottom:10px}
-.pban .mets{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:12.5px;color:var(--ink2);border-top:1px solid var(--hair);padding-top:10px}
-.pban .mets b{color:var(--ink);font-weight:600}
+.pban .mets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 10px;border-top:1px solid var(--hair);padding-top:13px;margin-top:11px}
+.pban .mets .m .l{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.03em}
+.pban .mets .m .v{font-size:15px;font-weight:600;color:var(--ink);margin-top:2px}
 /* sections + cards */
 .sec{font-size:22px;font-weight:600;letter-spacing:-.02em;margin:38px 0 14px}
 .card{background:var(--panel);border-radius:18px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--sh)}
@@ -335,8 +336,9 @@ function hero(lead,big,cap,mets){
 document.getElementById('qcomBanner').innerHTML=hero('Q-Commerce · all platforms',money(q.g),'gross MRP',
  [['Net (SP)',money(q.n)],['Discount',disc(q.g,q.n)],['Brands',q.brands.toLocaleString()],['Product types',q.types],['Avg OSA',q.osa+'%'],['Avg SP','₹'+q.sp]]);
 document.getElementById('platBanners').innerHTML=PK.map(([k,n])=>{const t=DATA.totals[k];
+ const cells=[['Net (SP)',money(t.n)],['Discount',disc(t.g,t.n)],['Brands',t.brands],['Product types',t.types],['Avg OSA',t.osa+'%'],['Avg SP','₹'+t.sp]];
  return `<div class="pban ${k}"><div class="pn">${n}</div><div class="big">${money(t.g)}</div><div class="cap2">gross MRP</div>
-  <div class="mets"><span>net <b>${money(t.n)}</b></span><span>disc <b>${disc(t.g,t.n)}</b></span><span>brands <b>${t.brands}</b></span><span>types <b>${t.types}</b></span><span>OSA <b>${t.osa}%</b></span><span>SP <b>₹${t.sp}</b></span></div></div>`;}).join('');
+  <div class="mets">${cells.map(c=>`<div class="m"><div class="l">${c[0]}</div><div class="v">${c[1]}</div></div>`).join('')}</div></div>`;}).join('');
 
 // ===== shared card =====
 function pcard(k,r,opts){
