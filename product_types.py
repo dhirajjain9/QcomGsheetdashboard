@@ -30,7 +30,8 @@ RULES = [
     ("Broom", ["broom", "jhadu"]),
     ("Wiper", ["wiper", "sqeezee", "squeegee"]),
     ("Duster", ["duster"]),
-    ("Dustbin", ["dustbin", "dust bin", "trash", "garbage", "pedal bin"]),
+    ("Garbage / Trash Bag", ["garbage bag", "trash bag", "garbage roll", "bin bag", "dustbin bag", "garbage cover", "compostable bag", "biodegradable bag"]),
+    ("Dustbin", ["dustbin", "dust bin", "trash can", "trash bin", "garbage bin", "pedal bin"]),
     ("Cleaning Brush", ["cleaning brush", "tile brush", "bottle brush", "scrub brush", "cloth brush"]),
     ("Gloves", ["gloves", "glove"]),
     ("Cleaning Wipes", ["wipes", "wipe ", "tissue roll", "kitchen tissue"]),
@@ -64,7 +65,7 @@ RULES = [
     ("Laundry Basket", ["laundry basket", "laundry bag"]),
     ("Shoe Rack", ["shoe rack"]),
     ("Cloth Hanger", ["cloth hanger", "hanger set", "velvet hanger", " hanger"]),
-    ("Cloth Clip / Peg", ["cloth clip", "cloth peg", "clothes peg", "clip -", "clips", "seal clip", " peg "]),
+    ("Cloth Clip / Peg", ["cloth clip", "cloth peg", "clothes peg", "seal clip", "hanging clip", "clip", "clips"]),
     ("Cloth Drying Stand", ["cloth dryer", "drying stand", "cloth drying stand", "dryer stand", "cloth stand", "hang dryer", "hanging dryer"]),
     ("Cloth Rope / Line", ["cloth rope", "drying rope", "clothesline", "cloth line", "wire rope"]),
     ("Wardrobe/Cloth Organizer", ["wardrobe", "cloth organizer", "cloth organiser", "innerwear", "blouse", "saree cover", "saree bag", "coat cover", "blanket cover", "shirt cover", "garment cover", "jewellery organizer", "jewellery organiser", "jewellery storage", "jewellery case", "jewellery box"]),
@@ -103,34 +104,35 @@ RULES = [
     ("Juicer", ["juicer", "juice press", "salad spinner"]),
     ("Kitchen Scale", ["weighing scale", "kitchen scale", "food scale"]),
     ("Ice Tray / Pop Mould", ["ice tray", "ice pop", "ice cube", "ice pail", "popsicle"]),
-    ("Dough Press / Maker", ["dough press", "kitchen press", "puran maker", "puran machine", "muruku", "sev sancha", "sancha", "samosa", "samosha", "gujiya", "karanji", "kachori", "modak maker"]),
+    ("Dough Press / Maker", ["dough press", "kitchen press", "puran maker", "puran machine", "muruku", "sev sancha", "sancha", "paratha press", "roti press", "samosa", "samosha", "gujiya", "karanji", "kachori", "modak maker"]),
     ("Funnel", ["funnel"]),
     ("Baking Paper / Foil", ["bake & wrap", "bake and wrap", "parchment", "butter paper", "aluminium foil", "aluminum foil", "cling film", "cling wrap"]),
-    ("Idli / Steamer Maker", ["menduwada", "medu vada", "vada maker", "wada maker"]),
+    ("Idli / Steamer Maker", ["idli", "idli cooker", "menduwada", "medu vada", "vada maker", "wada maker", "steamer"]),
     ("Grill / Toaster Pan", ["grill pan", "grill toaster", "waffle toaster", "sandwich toaster", "gas toaster", "griller", "barbeque", "barbecue", "bbq", "tandoor"]),
     ("Milk Pan / Tope", ["milk pan", " tope", "patila", "bhagona", "tea pan", "sauce pot"]),
     ("Puja Item / Lota", ["lota", "kalash", "puja", "pooja", "urli", "haldi kumkum"]),
     # --- Kitchen & dining ---
     ("Pressure Cooker", ["pressure cooker"]),
-    ("Cookware / Pan", ["kadai", "kadhai", "handi ", "roaster", "frying pan", "fry pan", "tawa", "saucepan", "cookware", "wok", "skillet", "multi pan", "tadka pan", "mini pan"]),
+    ("Cookware / Pan", ["kadai", "kadhai", "handi", "roaster", "frying pan", "fry pan", "frypan", "tawa", "saucepan", "cookware", "wok", "skillet", "multi pan", "tadka pan", "mini pan", "dosa tawa"]),
     ("Casserole", ["casserole", "serving pot", "hot pot", "hot case"]),
     ("Lunch Box / Tiffin", ["lunch box", "lunchbox", "tiffin", "meal box", "clip carrier"]),
     ("Lunch Set", ["lunch set"]),
-    ("Thermal/Insulated Flask", ["thermal", "insulated", "flask", "tumbler", "vacuum"]),
+    ("Thermal/Insulated Flask", ["thermal", "insulated", "flask", "vacuum", "thermosteel", "thermos"]),
     ("Bottle Opener", ["bottle opener"]),
-    ("Oil Dispenser", ["oil dispenser", "oil bottle", "oil container"]),
+    ("Oil Dispenser", ["oil dispenser", "oil bottle", "oil container", "oil sprayer", "oil pourer"]),
     ("Bottle / Wine Holder", ["bottle holder", "wine holder", "wine rack"]),
     ("Water Bottle", ["bottle"]),
-    ("Drinking Glass", ["whiskey glass", "water glass", "shot glass", "glass set", "wine glass", "juice glass", "drinking glass"]),
+    ("Drinking Glass", ["whiskey glass", "whisky glass", "whisky", "water glass", "shot glass", "glass set", "wine glass", "juice glass", "drinking glass", "tumbler", "highball", "stemware", "champagne glass", "beer mug", "beer glass"]),
     ("Mug / Cup", ["mug", "cup", "kulhad", "kulhar"]),
     ("Bowl", ["bowl", "katori"]),
     ("Plate Stand / Rack", ["plate stand", "plate rack", "plate holder", "plate display"]),
     ("Dinner Set / Plate", ["dinner set", "dinner plate", "plate set", "quarter plate", "thali", "bhojan patra", "parat", "platter", "meal set", "kids meal", "chip n dip", "chip and dip", "opalware", "plate"]),
+    ("Baking Mould / Tray", ["baking tray", "baking sheet", "cake tin", "loaf pan", "muffin tray"]),
     ("Serving Tray", ["tray"]),
     ("Jar / Canister", ["jar", "canister"]),
     ("Storage Container", ["container", "containers", "dabba", "apple pot"]),
     ("Spice Box", ["spice box", "masala box", "masala dabba"]),
-    ("Cutlery Holder / Caddy", ["cutlery holder", "cutlery caddy", "utensil holder"]),
+    ("Cutlery Holder / Caddy", ["cutlery holder", "cutlery caddy", "cutlery stand", "cutlery box", "utensil holder", "spoon stand"]),
     ("Ladle / Skimmer", ["ladle", "skimmer", "cooking spoon"]),
     ("Cutlery (Spoon/Fork)", ["spoon", "fork", "cutlery", "chopstick", "server set", "cake knife"]),
     ("Knife", ["knife", "knives"]),
@@ -204,9 +206,26 @@ def classify(name):
         return "Other"
     for label, keys in RULES:
         for k in keys:
-            if k in n:
+            if _kw(k).search(n):
                 return label
     return "Other"
+
+
+# Word-boundary matcher (cached). A keyword matches as a whole word, allowing a
+# trailing plural ("s"/"es"), but NOT as a fragment inside a bigger word — so
+# "mug" no longer matches "Mughal", "clip" not "eclipse", "whisk" not "whisky",
+# "cup" not "cupcake", "diya" not "Desidiya", "rack" not "bracket", etc.
+# Boundaries are only enforced on the side where the keyword starts/ends with an
+# alphanumeric char (so " peg ", "tap (", "wd-40" keep their literal spacing).
+_KW_CACHE = {}
+def _kw(k):
+    p = _KW_CACHE.get(k)
+    if p is None:
+        left = r'(?<![a-z0-9])' if k[:1].isalnum() else ''
+        right = r'(?:e?s)?(?![a-z0-9])' if k[-1:].isalnum() else ''
+        p = re.compile(left + re.escape(k) + right)
+        _KW_CACHE[k] = p
+    return p
 
 
 if __name__ == "__main__":
