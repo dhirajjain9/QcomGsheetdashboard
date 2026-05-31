@@ -24,6 +24,9 @@ h1 span{color:var(--acc)}
 .platSwitch a{color:var(--mut);background:var(--panel)}
 .platSwitch a:hover{color:var(--txt);border-color:var(--acc)}
 .platSwitch .active{color:#fff;background:var(--acc);border-color:var(--acc);cursor:default}
+.platSwitch a.cmp{color:var(--acc);border-color:var(--acc)}
+.platSwitch a.cmp:hover{background:var(--acc);color:#fff}
+.platSwitch .sep{color:var(--line);margin:0 2px}
 .note{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--acc2);border-radius:8px;padding:10px 14px;color:var(--mut);font-size:12.5px;margin-bottom:24px}
 .note b{color:var(--txt)}
 h2{font-size:16px;font-weight:600;margin:30px 0 14px;display:flex;align-items:center;gap:9px}
@@ -403,7 +406,10 @@ document.title=`${PLAT_LABEL} · QcomDashboard-EverydayEssentials`;
  const PLATS=[{p:'blinkit',label:'Blinkit',href:'index.html'},{p:'instamart',label:'Instamart',href:'instamart.html'},{p:'zepto',label:'Zepto',href:'zepto.html'}];
  const ps=document.getElementById('platSwitch');
  if(ps)ps.innerHTML='<span class="lbl">Platform:</span>'+PLATS.map(x=>
-   x.p===cur?`<span class="active">${x.label}</span>`:`<a href="${x.href}">${x.label}</a>`).join('');
+   x.p===cur?`<span class="active">${x.label}</span>`:`<a href="${x.href}">${x.label}</a>`).join('')
+   +'<span class="sep">|</span>'
+   +'<a class="cmp" href="compare.html" title="Cross-platform comparison — product type & brand">⇄ Compare</a>'
+   +'<a href="platforms.html" title="All platforms">All ↗</a>';
  // per-platform tint so you always know which platform you're analysing
  const PTHEME={
    blinkit:{bg:'#faf6ee',nav:'rgba(250,246,238,.93)',chipBg:'#fef3c7',chipFg:'#b45309'},
