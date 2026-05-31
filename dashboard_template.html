@@ -614,7 +614,7 @@ function renderProductTypes(){
 // ---- Sales input panel (with saved defaults + persistence) ----
 const SALES_KEY='blinkit_mrp_sales_v1';
 // Agreed per-sub-category MRP sales (₹ Cr) — pre-filled so the dashboard opens in ₹ mode
-const DEFAULT_SALES={'Kitchen and Dining needs':68.6,'Cleaning Tools':17,'Bathroom Essentials':16.6,'Home Decor':14,'Home Improvement':6.4};
+const DEFAULT_SALES={'Kitchen & Dining Needs':68.6,'Cleaning Tools':17,'Bathroom Essentials':16.6,'Home Decor':14,'Home Improvement':6.4};
 function loadSavedSales(){try{return JSON.parse(localStorage.getItem(SALES_KEY));}catch(e){return null;}}
 function saveSales(){
   const vals={}; $$('#salesInputs input').forEach(i=>{if(i.value!=='')vals[i.dataset.sub]=parseFloat(i.value);});

@@ -12,9 +12,10 @@ Competitive Analytics) CSV exports for 5 home categories. Originally built in re
 
 ## Source data
 - 5 CSVs (same schema), one per sub-category, combined into
-  `blinkit_rca_combined.xlsx` with a **Sub Category** column derived from each
-  file name (`<hash>-blinkitrcadownload_<SubCategory>.csv`).
-- Sub-categories: Kitchen and Dining needs, Home Decor, Bathroom Essentials,
+  `blinkit_rca_combined.xlsx`. The **Sub Category** column is taken from each file's
+  own **Category** column (the canonical label); the filename
+  (`<hash>-blinkitrcadownload_<SubCategory>.csv`) is only a fallback.
+- Sub-categories: Kitchen & Dining Needs, Home Decor, Bathroom Essentials,
   Cleaning Tools, Home Improvement.
 - Two monthly snapshots: 2026-03-01 and 2026-04-01. **April-only is the permanent
   basis for all strategic views** (by decision); the Month-over-month section is the
@@ -25,7 +26,7 @@ Competitive Analytics) CSV exports for 5 home categories. Originally built in re
 | Column | Meaning | Notes |
 |---|---|---|
 | Date | Monthly snapshot | 2 months present |
-| Sub Category | Added by us, from filename | |
+| Sub Category | Added by us = the source **Category** column (filename fallback) | |
 | Category | Blinkit's own label | == sub-category here |
 | Product ID | SKU id | |
 | Item ID | secondary id | **empty** |
