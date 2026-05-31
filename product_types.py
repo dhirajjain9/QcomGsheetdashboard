@@ -64,7 +64,7 @@ RULES = [
     ("Candle", ["candle"]),
     ("Diya", ["diya"]),
     ("Reed Diffuser", ["diffuser", "oil diffuser", "kapoor dani"]),
-    ("Wall Clock", ["wall clock", "clock"]),
+    ("Wall Clock", ["wall clock", " clock", "table clock", "alarm clock"]),
     ("Wall Art / Print", ["art print", "wall art", "wall decor", "wall hanging", "painting", "poster"]),
     ("Wall Mirror", ["mirror"]),
     ("Showpiece / Figurine", ["showpiece", "figurine", "statue", "idol", "miniature", "globe", "decor plates", "table accent"]),
