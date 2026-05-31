@@ -46,9 +46,11 @@ def aggregate(sku, key_fn, sub_fn, disp_fn):
         k = key_fn(s)
         if k is None:
             continue
-        a = m.setdefault(k, {"disp": disp_fn(s), "g": 0.0, "n": 0.0, "k": 0, "sov": 0.0,
+        a = m.setdefault(k, {"disp": disp_fn(s), "g": 0.0, "n": 0.0, "k": 0, "sov": 0.0, "u": 0.0,
                              "spread": {}, "spS": 0.0, "spN": 0, "osaW": 0.0, "osaWN": 0.0})
         a["g"] += s["_g"]; a["n"] += s["_n"]; a["k"] += 1; a["sov"] += (s.get("sov") or 0)
+        if s.get("sp") and s["sp"] > 0:
+            a["u"] += s["_n"]/s["sp"]   # units = net SP revenue / SP
         sd = sub_fn(s)
         a["spread"][sd] = a["spread"].get(sd, 0.0) + s["_g"]
         if s.get("sp"):
@@ -61,6 +63,7 @@ def aggregate(sku, key_fn, sub_fn, disp_fn):
         top = max(a["spread"].items(), key=lambda x: x[1])[0] if a["spread"] else ""
         out[k] = {"disp": a["disp"], "g": round(a["g"]), "n": round(a["n"]), "k": a["k"],
                   "b": len(a["spread"]), "keys": set(a["spread"].keys()), "sovsum": a["sov"],
+                  "u": round(a["u"]),
                   "sp": round(a["spS"]/a["spN"]) if a["spN"] else 0,
                   "o": round(a["osaW"]/a["osaWN"], 1) if a["osaWN"] else 0, "top": top}
     return out
@@ -141,23 +144,25 @@ def build_rows(aggs, use_disp, with_extras=False):
                 label = aggs[k][kk]["disp"] if use_disp else kk
                 break
         row = {"t": label, "p": 0}
-        union, tg, tn, tk, oW, oWN, spS, spN = set(), 0, 0, 0, 0.0, 0.0, 0, 0
+        union, tg, tn, tk, tu, oW, oWN, spS, spN = set(), 0, 0, 0, 0, 0.0, 0.0, 0, 0
         for k in ("B", "I", "Z"):
             v = aggs[k].get(kk)
             if v:
                 row["p"] += 1
-                row[k] = {"g": v["g"], "n": v["n"], "k": v["k"], "b": v["b"], "sp": v["sp"],
+                row[k] = {"g": v["g"], "n": v["n"], "k": v["k"], "b": v["b"], "sp": v["sp"], "u": v["u"],
                           "o": v["o"], "top": v["top"], "sov": round(v["sovsum"]/(totals[k]["sov"] or 1)*100, 2)}
-                union |= v["keys"]; tg += v["g"]; tn += v["n"]; tk += v["k"]
+                union |= v["keys"]; tg += v["g"]; tn += v["n"]; tk += v["k"]; tu += v["u"]
                 if v["g"] > 0 and v["o"] is not None:
                     oW += v["o"]*v["g"]; oWN += v["g"]
                 if v["sp"] > 0:
                     spS += v["sp"]*v["k"]; spN += v["k"]
             else:
                 row[k] = None
-        row["tot"] = {"g": tg, "n": tn, "k": tk, "b": len(union),
+        row["tot"] = {"g": tg, "n": tn, "k": tk, "u": tu, "b": len(union),
                       "sp": round(spS/spN) if spN else 0, "o": round(oW/oWN, 1) if oWN else 0}
         if with_extras:
+            allg = sorted(TYPE_BRAND[kk].values(), reverse=True)
+            row["c5"] = round(sum(allg[:5])/(sum(allg) or 1)*100)   # top-5 brand concentration
             lead = sorted(TYPE_BRAND[kk].items(), key=lambda x: -x[1])[:4]
             row["lead"] = [[BRAND_DISP.get(bk, bk), round(g)] for bk, g in lead]
             row["tiers"] = sp_tiers(kk)
@@ -203,7 +208,7 @@ h1{font-size:30px;font-weight:600;letter-spacing:-.022em;margin:0}h1 span{color:
 a.back{font-size:13px;color:var(--acc);text-decoration:none;padding:7px 15px;border-radius:980px;background:rgba(0,113,227,.08);font-weight:500}
 a.back:hover{background:rgba(0,113,227,.15)}
 /* hero total */
-.qtot{background:var(--panel);color:var(--ink);border-radius:20px;padding:22px 26px;margin:0 0 14px;box-shadow:var(--sh)}
+.qtot{background:var(--panel);color:var(--ink);border:1px solid var(--hair2);border-radius:20px;padding:22px 26px;margin:0 0 14px;box-shadow:var(--sh)}
 .qtot .lead{font-size:12px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
 .qtot .big{font-size:38px;font-weight:600;letter-spacing:-.03em;line-height:1}
 .qtot .cap{font-size:14px;color:var(--ink3);margin-left:10px;font-weight:400}
@@ -217,7 +222,7 @@ a.back:hover{background:rgba(0,113,227,.15)}
 /* platform context cards */
 .platrow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
 @media(max-width:760px){.platrow{grid-template-columns:1fr}.spot{grid-template-columns:1fr!important}.grid2{grid-template-columns:1fr!important}.qtot .met{padding:0 16px}}
-.pban{background:var(--panel);border-radius:18px;padding:18px 20px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.pban{background:var(--panel);border:1px solid var(--hair2);border-radius:18px;padding:18px 20px 16px;box-shadow:var(--sh);position:relative;overflow:hidden}
 .pban::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--pc)}
 .pban.B{--pc:var(--B)}.pban.I{--pc:var(--I)}.pban.Z{--pc:var(--Z)}
 .pban .pn{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--pc);display:flex;align-items:center;gap:7px}
@@ -287,7 +292,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <div class="platrow" id="platBanners"></div>
 
 <!-- ===== PRODUCT ===== -->
-<div class="sec">📦 Product ReportCard</div>
+<div class="sec">Product ReportCard</div>
 <div class="card">
  <div class="controls"><input class="search" id="typeSearch" placeholder="search any product type…"><span class="tag" id="typeNote"></span></div>
  <div class="tableScroll"><table id="typeTbl"></table></div>
@@ -303,7 +308,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 </div>
 
 <!-- ===== BRAND ===== -->
-<div class="sec">🏷️ Brand ReportCard</div>
+<div class="sec">Brand ReportCard</div>
 <div class="card">
  <div class="controls"><input class="search" id="brandSearch" placeholder="search any brand…"><span class="tag" id="brandNote2"></span></div>
  <div class="tableScroll"><table id="brandTbl"></table></div>
@@ -318,7 +323,8 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 const DATA=__DATA__;
 const PK=[['B','Blinkit'],['I','Instamart'],['Z','Zepto']];
 const NAME={B:'Blinkit',I:'Instamart',Z:'Zepto'},COL={B:'#ea9e0b',I:'#ea580c',Z:'#7c3aed'};
-const money=v=>v==null?'–':v>=1e7?'₹'+(v/1e7).toFixed(2)+'Cr':v>=1e5?'₹'+(v/1e5).toFixed(1)+'L':v>=1e3?'₹'+(v/1e3).toFixed(1)+'K':'₹'+Math.round(v);
+const money=v=>v==null?'–':v>=1e7?'₹'+(v/1e7).toFixed(1)+'Cr':v>=1e5?'₹'+(v/1e5).toFixed(1)+'L':v>=1e3?'₹'+(v/1e3).toFixed(1)+'K':'₹'+Math.round(v);
+const unitsFmt=v=>v==null?'–':v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':''+Math.round(v);
 const disc=(g,n)=>(g>0&&n!=null)?Math.round((1-n/g)*100)+'%':'–';
 const pres=r=>['B','I','Z'].filter(k=>r[k]);const absent=r=>['B','I','Z'].filter(k=>!r[k]);
 const tc=s=>String(s).replace(/\b\w/g,c=>c.toUpperCase());
@@ -349,12 +355,18 @@ function pcard(k,r,opts){
 }
 
 // ===== PRODUCT TABLE + DETAIL =====
+let typeSort={k:'g',d:-1},brandSort={k:'g',d:-1};
+const tval=(r,k)=>k==='disc'?(r.tot.g?1-r.tot.n/r.tot.g:0):k==='c5'?(r.c5||0):(r.tot[k]||0);
+function headRow(cols,sort){return '<thead><tr>'+cols.map(c=>c[1]?`<th data-k="${c[1]}">${c[0]}${sort.k===c[1]?(sort.d<0?' ↓':' ↑'):''}</th>`:`<th>${c[0]}</th>`).join('')+'</tr></thead>';}
 function fillTypeTbl(qstr){
  let rs=TYPES.filter(r=>r.p>=1);
- if(qstr)rs=rs.filter(r=>r.t.toLowerCase().includes(qstr)); else rs=rs.slice(0,40);
+ if(qstr)rs=rs.filter(r=>r.t.toLowerCase().includes(qstr));
+ rs=rs.sort((a,b)=>typeSort.d*(tval(a,typeSort.k)-tval(b,typeSort.k)));
+ if(!qstr)rs=rs.slice(0,40);
  document.getElementById('typeNote').textContent=qstr?`${rs.length} match`:`top 40 of ${TYPES.length} product types`;
- document.getElementById('typeTbl').innerHTML=`<thead><tr><th>Product Type</th><th>Gross</th><th>Net</th><th>Discount</th><th>Avg SP</th><th>OSA</th><th>On</th></tr></thead><tbody>`+
-  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.p}/3</td></tr>`).join('')+`</tbody>`;
+ const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Brands','b'],['Top-5','c5']];
+ document.getElementById('typeTbl').innerHTML=headRow(cols,typeSort)+'<tbody>'+
+  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td><td>${r.c5}%</td></tr>`).join('')+'</tbody>';
  markSel('typeTbl',curType);
 }
 let curType,curBrand,tierChart;
@@ -390,10 +402,13 @@ function renderTiers(r){
 // ===== BRAND TABLE + DETAIL =====
 function fillBrandTbl(qstr){
  let rs=BRANDS.filter(r=>r.p>=1);
- if(qstr)rs=rs.filter(r=>r.t.toLowerCase().includes(qstr)).slice(0,80); else rs=rs.slice(0,40);
+ if(qstr)rs=rs.filter(r=>r.t.toLowerCase().includes(qstr));
+ rs=rs.sort((a,b)=>brandSort.d*(tval(a,brandSort.k)-tval(b,brandSort.k)));
+ rs=rs.slice(0,qstr?80:40);
  document.getElementById('brandNote2').textContent=qstr?`${rs.length} match`:`top 40 of ${BRANDS.length} brands`;
- document.getElementById('brandTbl').innerHTML=`<thead><tr><th>Brand</th><th>Gross</th><th>Net</th><th>Discount</th><th>Avg SP</th><th>OSA</th><th>On</th></tr></thead><tbody>`+
-  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.p}/3</td></tr>`).join('')+`</tbody>`;
+ const cols=[['Brand',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Product types','b']];
+ document.getElementById('brandTbl').innerHTML=headRow(cols,brandSort)+'<tbody>'+
+  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td></tr>`).join('')+'</tbody>';
  markSel('brandTbl',curBrand);
 }
 function renderBrand(t){
@@ -432,8 +447,14 @@ function renderDiag(r,bench){
 function markSel(id,t){document.querySelectorAll('#'+id+' tbody tr').forEach(tr=>tr.classList.toggle('sel',tr.dataset.t===t));}
 document.getElementById('typeSearch').addEventListener('input',e=>fillTypeTbl(e.target.value.toLowerCase().trim()));
 document.getElementById('brandSearch').addEventListener('input',e=>fillBrandTbl(e.target.value.toLowerCase().trim()));
-document.getElementById('typeTbl').addEventListener('click',e=>{const tr=e.target.closest('tr[data-t]');if(tr){renderProduct(tr.dataset.t);document.getElementById('prodDetail').scrollIntoView({behavior:'smooth',block:'start'});}});
-document.getElementById('brandTbl').addEventListener('click',e=>{const tr=e.target.closest('tr[data-t]');if(tr){renderBrand(tr.dataset.t);document.getElementById('brandDetail').scrollIntoView({behavior:'smooth',block:'start'});}});
+document.getElementById('typeTbl').addEventListener('click',e=>{
+ const th=e.target.closest('th[data-k]');
+ if(th){const k=th.dataset.k;if(typeSort.k===k)typeSort.d*=-1;else{typeSort.k=k;typeSort.d=-1;}fillTypeTbl(document.getElementById('typeSearch').value.toLowerCase().trim());return;}
+ const tr=e.target.closest('tr[data-t]');if(tr){renderProduct(tr.dataset.t);document.getElementById('prodDetail').scrollIntoView({behavior:'smooth',block:'start'});}});
+document.getElementById('brandTbl').addEventListener('click',e=>{
+ const th=e.target.closest('th[data-k]');
+ if(th){const k=th.dataset.k;if(brandSort.k===k)brandSort.d*=-1;else{brandSort.k=k;brandSort.d=-1;}fillBrandTbl(document.getElementById('brandSearch').value.toLowerCase().trim());return;}
+ const tr=e.target.closest('tr[data-t]');if(tr){renderBrand(tr.dataset.t);document.getElementById('brandDetail').scrollIntoView({behavior:'smooth',block:'start'});}});
 
 fillTypeTbl(''); fillBrandTbl('');
 renderProduct(TYPES[0].t); renderBrand(BRANDS[0].t);
