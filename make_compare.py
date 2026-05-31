@@ -57,8 +57,7 @@ def aggregate(sku, key_fn, sub_fn, disp_fn):
         if s.get("sp"):
             a["spS"] += s["sp"]; a["spN"] += 1
         if s.get("osa") is not None:
-            w = s["_g"] or 1e-6
-            a["osaW"] += s["osa"]*w; a["osaWN"] += w
+            a["osaW"] += s["osa"]; a["osaWN"] += 1   # simple mean (matches platform dashboards)
     out = {}
     for k, a in m.items():
         top = max(a["spread"].items(), key=lambda x: x[1])[0] if a["spread"] else ""
@@ -156,8 +155,8 @@ for name, f, key in PLATS:
                    "types": len(type_aggs[key]), "brands": len(brand_aggs[key]),
                    "sov": sum((s.get("sov") or 0) for s in sku),
                    "n": round(sum(s["_n"] for s in sku)),
-                   "osa": round(sum(s["osa"]*(s["_g"] or 0) for s in sku if s.get("osa") is not None)
-                                / (sum((s["_g"] or 0) for s in sku if s.get("osa") is not None) or 1), 1),
+                   "osa": round(sum(s["osa"] for s in sku if s.get("osa") is not None)
+                                / (sum(1 for s in sku if s.get("osa") is not None) or 1), 1),
                    "sp": round(sum(s["sp"] for s in sku if s.get("sp"))
                                / (sum(1 for s in sku if s.get("sp")) or 1))}
 
@@ -216,8 +215,8 @@ def build_rows(aggs, use_disp, with_extras=False):
                 row[k] = {"g": v["g"], "n": v["n"], "k": v["k"], "b": v["b"], "sp": v["sp"], "u": v["u"],
                           "o": v["o"], "top": v["top"], "sov": round(v["sovsum"]/(totals[k]["sov"] or 1)*100, 2)}
                 union |= v["keys"]; tg += v["g"]; tn += v["n"]; tk += v["k"]; tu += v["u"]
-                if v["g"] > 0 and v["o"] is not None:
-                    oW += v["o"]*v["g"]; oWN += v["g"]
+                if v["o"] is not None:
+                    oW += v["o"]*v["k"]; oWN += v["k"]   # SKU-weighted = simple mean across the type's SKUs
                 if v["sp"] > 0:
                     spS += v["sp"]*v["k"]; spN += v["k"]
             else:
@@ -245,7 +244,7 @@ tg = sum(totals[k]["g"] for k in ("B", "I", "Z"))
 tn = sum(totals[k]["n"] for k in ("B", "I", "Z"))
 tk = sum(totals[k]["k"] for k in ("B", "I", "Z"))
 qcom = {"g": tg, "n": tn, "k": tk, "brands": len(allb), "types": len(type_rows),
-        "osa": round(sum(totals[k]["osa"]*totals[k]["g"] for k in ("B", "I", "Z"))/(tg or 1), 1),
+        "osa": round(sum(totals[k]["osa"]*totals[k]["k"] for k in ("B", "I", "Z"))/(tk or 1), 1),
         "sp": round(sum(totals[k]["sp"]*totals[k]["k"] for k in ("B", "I", "Z"))/(tk or 1))}
 DATA = {"totals": totals, "qcom": qcom, "typeRows": type_rows, "brandRows": brand_rows}
 
