@@ -400,7 +400,7 @@ document.title=`${PLAT_LABEL} RCA Dashboard`;
 {const _h1=document.querySelector('header h1'); if(_h1)_h1.innerHTML=`${PLAT_LABEL} RCA <span>Dashboard</span>`;}
 // platform switcher (Blinkit / Instamart) — current platform is non-clickable
 {const cur=(DATA.meta&&DATA.meta.platform)||'blinkit';
- const PLATS=[{p:'blinkit',label:'Blinkit',href:'index.html'},{p:'instamart',label:'Instamart',href:'instamart.html'}];
+ const PLATS=[{p:'blinkit',label:'Blinkit',href:'index.html'},{p:'instamart',label:'Instamart',href:'instamart.html'},{p:'zepto',label:'Zepto',href:'zepto.html'}];
  const ps=document.getElementById('platSwitch');
  if(ps)ps.innerHTML='<span class="lbl">Platform:</span>'+PLATS.map(x=>
    x.p===cur?`<span class="active">${x.label}</span>`:`<a href="${x.href}">${x.label}</a>`).join('');
@@ -408,6 +408,7 @@ document.title=`${PLAT_LABEL} RCA Dashboard`;
  const PTHEME={
    blinkit:{bg:'#faf6ee',nav:'rgba(250,246,238,.93)',chipBg:'#fef3c7',chipFg:'#b45309'},
    instamart:{bg:'#fdf0e7',nav:'rgba(253,240,231,.93)',chipBg:'#ffe6cc',chipFg:'#ea580c'},
+   zepto:{bg:'#f6f1fb',nav:'rgba(246,241,251,.93)',chipBg:'#ece2fb',chipFg:'#7c3aed'},
  };
  const t=PTHEME[cur]||PTHEME.blinkit, rs=document.documentElement.style;
  rs.setProperty('--bg',t.bg); rs.setProperty('--navbg',t.nav);
