@@ -276,13 +276,12 @@ a.back:hover{background:rgba(0,113,227,.15)}
 .qtot .lead{font-size:12px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
 .qtot .big{font-size:38px;font-weight:600;letter-spacing:-.03em;line-height:1}
 .qtot .cap{font-size:14px;color:var(--ink3);margin-left:10px;font-weight:400}
-.qtot .mets{display:flex;flex-wrap:wrap;gap:14px 0;margin-top:18px;border-top:1px solid var(--hair);padding-top:15px}
-.qtot .met{padding:0 22px;border-left:1px solid var(--hair)}
+.qtot .mets{display:flex;flex-wrap:wrap;margin-top:18px;border-top:1px solid var(--hair);padding-top:15px}
+.qtot .met{flex:1;min-width:92px;padding:0 18px;border-left:1px solid var(--hair)}
 .qtot .met:first-child{padding-left:0;border-left:0}
 .qtot .met .v{font-size:18px;font-weight:600;letter-spacing:-.01em}
 .qtot .met .l{font-size:12px;color:var(--ink2);margin-top:3px}
-.qtot.detail{border-radius:18px;padding:20px 24px;background:#fbfbfd;border:1px solid var(--hair);box-shadow:none}
-.qtot.detail .big{font-size:32px}
+.qtot.detail{border-radius:20px;padding:22px 26px;background:var(--panel);border:1.5px solid #c2c2cc;box-shadow:var(--sh)}
 /* platform context cards */
 .platrow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
 @media(max-width:760px){.platrow{grid-template-columns:1fr}.spot{grid-template-columns:1fr!important}.grid2{grid-template-columns:1fr!important}.qtot .met{padding:0 16px}}
@@ -526,7 +525,7 @@ function renderBrand(t){
  const weak=pr.length>1?pr.reduce((a,k)=>shareOf(k,r[k].g)<shareOf(a,r[a].g)?k:a):null;
  const badges={[bench]:'<span class="badge bg-grn">strongest</span>'};if(weak&&weak!==bench)badges[weak]='<span class="badge bg-amb">weakest</span>';
  document.getElementById('bqtot').innerHTML=hero(`① ${r.t} · across Q-Commerce`,money(tot.g),'gross MRP',
-   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Product types',tot.b],['Avg SP','₹'+tot.sp],['Avg OSA',tot.o+'%'],['Platforms',r.p+'/3']]);
+   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Product types',tot.b],['Avg SP','₹'+tot.sp],['Avg OSA',tot.o+'%']]);
  document.getElementById('brandSpot').innerHTML=PK.map(([k])=>pcard(k,r[k],{bigKey:'g',bigLbl:'gross sales (MRP)',fmtBig:v=>money(v),badges,
    rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`<b>${shareOf(k,x.g).toFixed(2)}%</b>`],['SKUs',x=>x.k],['Product types',x=>x.b],['Avg SP',x=>'₹'+x.sp],['OSA',x=>`${x.o}%`],['SOV (visibility)',x=>`${x.sov}%`],['Top type',x=>x.top||'–']]})).join('');
  let s=`Strongest on <b>${NAME[bench]}</b> — ${money(r[bench].g)} (<b>${shareOf(bench,r[bench].g).toFixed(1)}%</b> of ${NAME[bench]}), led by <b>${r[bench].top}</b>. `;
