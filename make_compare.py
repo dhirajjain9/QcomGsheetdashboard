@@ -377,6 +377,9 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
  <div class="card"><div class="step">④ All attributes across platforms</div><h3>Platform scorecard</h3><div class="h3sub">Gross, net, discount, share, assortment, price & availability.</div><div class="spot" id="prodSpot"></div></div>
  <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Each platform's <b>own</b> price-tier mix on the <b>same shared ₹ tiers</b> — read independently (the gross on each card shows its true size, so a small platform never looks like it "leads"). Bar = % of that platform's gross.</div><div class="spot" id="tierCards"></div></div>
  <div class="card"><div class="step">⑥ Opportunity to launch</div><h3>Where the opening is — per platform</h3><div class="h3sub">Founder's Launchpad scoring computed within each platform: opportunity score (0–100), white-space signal, availability gap & the attack price band.</div><div class="spot" id="oppSpot"></div></div>
+ <div class="card"><div class="step">⑦ Cross-platform opportunity</div><h3>Penetration vs fair share — where a platform is under-developed</h3>
+  <div class="h3sub">Each platform's share of <i>this product</i> benchmarked to its <b>fair share</b> (its overall share of Q-Commerce gross). Far below fair share ⇒ the product is under-developed there ⇒ untapped ₹ for that platform.</div>
+  <div id="fairHead"></div><div class="spot" id="fairCards"></div></div>
 </div>
 
 <!-- ===== BRAND ===== -->
@@ -466,6 +469,26 @@ function renderProduct(t){
     <div class="row"><span class="k">White space</span><span>${o.ws}</span></div>
     <div class="row"><span class="k">Availability gap</span><span>${o.gap}%</span></div>
     <div class="row"><span class="k">Attack band</span><span>${o.band?('₹'+o.band[0]+'–'+o.band[1]):'–'}</span></div></div>`;}).join('');
+ renderFair(r);
+}
+// ⑦ penetration vs fair share (a platform's share of this product vs its overall Q-Commerce share)
+function renderFair(r){
+ const tot=r.tot.g||1;
+ const data=PK.map(([k,n])=>{const fair=DATA.qcom.g?DATA.totals[k].g/DATA.qcom.g:0; const g=r[k]?r[k].g:0;
+   return {k,n,fair,actual:g/tot,idx:fair?(g/tot)/fair:0,upside:fair*tot-g,present:!!r[k]};});
+ document.getElementById('fairCards').innerHTML=data.map(d=>{
+   const col=!d.present?'#ff3b30':d.idx>=1.25?'#34c759':d.idx>=0.8?'#86868b':d.idx>=0.6?'#ff9500':'#ff3b30';
+   const verdict=!d.present?'Not listed':d.idx>=1.25?'Over-developed':d.idx>=0.8?'On par':d.idx>=0.6?'Slightly under':'Under-indexed';
+   const up=(d.upside>2e5&&d.idx<1)?`<div class="row"><span class="k">To fair share</span><span style="color:${col};font-weight:600">+${money(d.upside)}</span></div>`:'';
+   return `<div class="pcard ${d.k}"><div class="pn">${d.n}</div><div class="big" style="color:${col}">${d.present?d.idx.toFixed(2)+'×':'—'}</div><div class="biglbl">actual ÷ fair share</div>
+     <div class="row"><span class="k">Actual share</span><span>${(d.actual*100).toFixed(1)}%</span></div>
+     <div class="row"><span class="k">Fair share</span><span>${(d.fair*100).toFixed(1)}%</span></div>
+     <div class="row"><span class="k">Verdict</span><span style="color:${col};font-weight:600">${verdict}</span></div>${up}</div>`;}).join('');
+ const opp=data.filter(d=>d.idx<0.7&&d.upside>2e5).sort((a,b)=>b.upside-a.upside)[0];
+ const el=document.getElementById('fairHead');
+ if(opp){el.className='insight';el.style.marginBottom='14px';
+   el.innerHTML=`💡 <b>Biggest cross-platform opportunity:</b> <b>${opp.n}</b> is under-developed here — only <b>${(opp.actual*100).toFixed(1)}%</b> of this product${opp.present?'':' (not even listed)'} vs a <b>${(opp.fair*100).toFixed(0)}%</b> fair share → about <b>${money(opp.upside)}</b> to capture at parity. <span style="color:var(--ink3);font-weight:400">May also reflect the category being thinly listed there — worth a look.</span>`;}
+ else{el.className='insight';el.style.marginBottom='14px';el.innerHTML=`✓ No platform is materially under-developed on this product — every platform is at or above its fair share.`;}
 }
 function renderTiers(r){
  const T=r.tiers,host=document.getElementById('tierCards');
