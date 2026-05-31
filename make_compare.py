@@ -375,7 +375,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
   <div class="card"><div class="step">③ Who leads</div><h3>Top brands</h3><div class="h3sub">Across Q-Commerce (combined) and each platform's #1.</div><div id="leadQcom" style="margin-bottom:10px"></div><div id="leadPlat" class="leadrow"></div></div>
  </div>
  <div class="card"><div class="step">④ All attributes across platforms</div><h3>Platform scorecard</h3><div class="h3sub">Gross, net, discount, share, assortment, price & availability.</div><div class="spot" id="prodSpot"></div></div>
- <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Each platform's <b>own</b> price-tier mix on the <b>same shared ₹ tiers</b> — read independently (the gross on each card shows its true size, so a small platform never looks like it "leads"). Bar = % of that platform's gross.</div><div class="spot" id="tierCards"></div><div class="verdict" id="tierVerdict"></div></div>
+ <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Each platform's <b>own</b> price-tier mix on the <b>same shared ₹ tiers</b> — read independently (the gross on each card shows its true size, so a small platform never looks like it "leads"). Bar = % of that platform's gross.</div><div class="spot" id="tierCards"></div></div>
  <div class="card"><div class="step">⑥ Opportunity to launch</div><h3>Where the opening is — per platform</h3><div class="h3sub">Founder's Launchpad scoring computed within each platform: opportunity score (0–100), white-space signal, availability gap & the attack price band.</div><div class="spot" id="oppSpot"></div></div>
 </div>
 
@@ -468,8 +468,8 @@ function renderProduct(t){
     <div class="row"><span class="k">Attack band</span><span>${o.band?('₹'+o.band[0]+'–'+o.band[1]):'–'}</span></div></div>`;}).join('');
 }
 function renderTiers(r){
- const T=r.tiers,host=document.getElementById('tierCards'),v=document.getElementById('tierVerdict');
- if(!T){host.innerHTML='';v.className='verdict vary';v.innerHTML='Not enough price points across platforms to tier this product.';return;}
+ const T=r.tiers,host=document.getElementById('tierCards');
+ if(!T){host.innerHTML='<div class="h3sub">Not enough price points across platforms to tier this product.</div>';return;}
  const lab=i=>`₹${T.edges[i]}–${T.edges[i+1]}`, pr=pres(r);
  const topT={};pr.forEach(k=>{const a=T.g[k];let mi=0;a.forEach((x,i)=>{if(x>a[mi])mi=i;});topT[k]=mi;});
  // one card per platform: its own SP-tier mix on the same shared tiers, with its real gross shown
@@ -479,9 +479,6 @@ function renderTiers(r){
    const rows=arr.map((x,i)=>{const pct=Math.round(x/tot*100);
      return `<div class="trow${i===topT[k]?' peak':''}"><span class="tl">${lab(i)}</span><span class="tbar"><i style="width:${pct}%;background:${COL[k]}"></i></span><span class="tp">${pct}%</span></div>`;}).join('');
    return `<div class="pcard ${k}"><div class="pn">${n}</div><div class="big">${money(r[k].g)}</div><div class="biglbl">gross · price-tier mix ↓</div><div class="tiers">${rows}</div></div>`;}).join('');
- const used=[...new Set(pr.map(k=>topT[k]))];
- if(used.length===1){v.className='verdict uniform';v.innerHTML=`✅ <b>One SP strategy can work.</b> Each platform's gross peaks in the same tier (<b>${lab(used[0])}</b>).`;}
- else{v.className='verdict vary';v.innerHTML=`⚠️ <b>Tailor pricing by platform.</b> Peak tier differs: `+pr.map(k=>`<span style="color:${COL[k]}">●</span> ${NAME[k]} <b>${lab(topT[k])}</b>`).join(' · ')+`.`;}
 }
 
 // ===== BRAND TABLE + DETAIL =====
