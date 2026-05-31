@@ -65,6 +65,8 @@ nav.snav .snavPlat::before{content:"";width:8px;height:8px;border-radius:50%;bac
 nav.snav a{color:var(--mut);text-decoration:none;font-size:12px;padding:5px 11px;border-radius:7px;border:1px solid transparent;white-space:nowrap}
 nav.snav a:hover{color:var(--txt);background:var(--panel2)}
 nav.snav a.active{color:#fff;background:var(--acc);font-weight:600}
+nav.snav a.snavCmp{color:var(--acc);border-color:var(--acc);font-weight:600;margin-right:4px}
+nav.snav a.snavCmp:hover{background:var(--acc);color:#fff}
 th.sortable{cursor:pointer;user-select:none}
 th.sortable:hover{color:var(--txt)}
 th .ind{opacity:.45;font-size:9px;margin-left:2px}
@@ -97,6 +99,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 
 <nav class="snav" id="snav">
   <span class="snavPlat" id="snavPlat"></span>
+  <a class="snavCmp" href="compare.html" title="Cross-platform comparison — product type & brand">⇄ Cross Platform</a>
   <a href="#sec-sales">₹ Sales</a>
   <a href="#sec-overall">Overall</a>
   <a href="#sec-market">Market</a>
@@ -1018,7 +1021,7 @@ function makeSortable(tableSel){
 
 // section nav: smooth scroll + active highlight
 (function(){
-  const links=[...$$('#snav a')];
+  const links=[...$$('#snav a[href^="#"]')];  // section anchors only (exclude the Cross Platform page link)
   links.forEach(a=>a.addEventListener('click',e=>{e.preventDefault();const el=document.querySelector(a.getAttribute('href'));el&&el.scrollIntoView({behavior:'smooth'});}));
   const map={}; links.forEach(a=>map[a.getAttribute('href').slice(1)]=a);
   const obs=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting){links.forEach(l=>l.classList.remove('active'));map[en.target.id]&&map[en.target.id].classList.add('active');}});},{rootMargin:'-20% 0px -70% 0px'});
