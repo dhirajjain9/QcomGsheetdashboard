@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blinkit RCA Dashboard — GobbleCube</title>
+<title>QcomDashboard-EverydayEssentials</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
@@ -396,7 +396,7 @@ const PLAT_LABEL=(DATA.meta&&DATA.meta.platform_label)||'Blinkit';
 document.getElementById('subt').textContent=`${DATA.kpis.subcats} sub-categories · ${DATA.kpis.skus.toLocaleString()} SKUs · ${DATA.kpis.brands} brands · ${DATA.meta.prev.slice(0,7)} → ${DATA.meta.latest.slice(0,7)}`;
 document.getElementById('ft').textContent=`Generated ${DATA.meta.generated} · Source: ${PLAT_LABEL} RCA exports · Sales proxy = Est. Category Share`;
 // platform-aware page title + header
-document.title=`${PLAT_LABEL} RCA Dashboard`;
+document.title=`${PLAT_LABEL} · QcomDashboard-EverydayEssentials`;
 {const _h1=document.querySelector('header h1'); if(_h1)_h1.innerHTML=`${PLAT_LABEL} RCA <span>Dashboard</span>`;}
 // platform switcher (Blinkit / Instamart) — current platform is non-clickable
 {const cur=(DATA.meta&&DATA.meta.platform)||'blinkit';
