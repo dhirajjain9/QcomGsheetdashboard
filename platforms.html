@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quick-Commerce RCA — Choose a platform</title>
+<style>
+  :root{
+    --bg:#faf6ee; --panel:#ffffff; --panel2:#f4efe4; --line:#e7dfd1;
+    --txt:#1f2630; --mut:#6b7280; --acc:#2563eb; --acc2:#0891b2;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+  .wrap{max-width:860px;width:100%}
+  h1{font-size:30px;font-weight:700;letter-spacing:-.4px;margin:0 0 6px}
+  h1 span{color:var(--acc)}
+  .sub{color:var(--mut);font-size:14px;margin:0 0 32px}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:640px){.cards{grid-template-columns:1fr}}
+  .card{display:block;text-decoration:none;color:inherit;background:var(--panel);
+    border:1px solid var(--line);border-radius:16px;padding:26px 24px;transition:.15s;
+    box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .card:hover{border-color:var(--acc);transform:translateY(-3px);box-shadow:0 8px 24px rgba(37,99,235,.12)}
+  .badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+    padding:4px 9px;border-radius:6px;margin-bottom:14px}
+  .b-blinkit{background:#fef3c7;color:#b45309}
+  .b-instamart{background:#fee2e2;color:#be123c}
+  .card h2{font-size:21px;margin:0 0 6px;font-weight:700}
+  .card p{color:var(--mut);font-size:13px;margin:0 0 16px;line-height:1.5}
+  .stats{display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+  .stat .v{font-size:17px;font-weight:700;color:var(--acc)}
+  .stat .l{font-size:11px;color:var(--mut)}
+  .go{margin-top:16px;font-size:13px;font-weight:600;color:var(--acc)}
+  footer{color:var(--mut);font-size:12px;margin-top:30px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Quick-Commerce <span>RCA Dashboard</span></h1>
+  <p class="sub">Choose a platform to explore its retail competitive analytics — market structure, brands, product-type opportunities, white spaces, availability and price bands. Each platform is analysed on its own data.</p>
+  <div class="cards">
+    <a class="card" href="index.html">
+      <span class="badge b-blinkit">Blinkit</span>
+      <h2>Blinkit</h2>
+      <p>5 home sub-categories — Kitchen &amp; Dining, Home Decor, Bathroom, Cleaning, Home Improvement.</p>
+      <div class="stats">
+        <div class="stat"><div class="v">₹122.6 Cr</div><div class="l">Gross MRP</div></div>
+        <div class="stat"><div class="v">~2,990</div><div class="l">SKUs</div></div>
+        <div class="stat"><div class="v">5</div><div class="l">sub-categories</div></div>
+      </div>
+      <div class="go">Open Blinkit dashboard →</div>
+    </a>
+    <a class="card" href="instamart.html">
+      <span class="badge b-instamart">Instamart</span>
+      <h2>Instamart</h2>
+      <p>14 kitchenware &amp; home sub-categories — bottles, cookware, storage, crockery, cleaning and more.</p>
+      <div class="stats">
+        <div class="stat"><div class="v">₹86.65 Cr</div><div class="l">Gross MRP</div></div>
+        <div class="stat"><div class="v">~7,570</div><div class="l">SKUs</div></div>
+        <div class="stat"><div class="v">14</div><div class="l">sub-categories</div></div>
+      </div>
+      <div class="go">Open Instamart dashboard →</div>
+    </a>
+  </div>
+  <footer>Each platform's shares are platform-relative; figures are not aggregated across platforms. Source: platform RCA exports · Apr 2026.</footer>
+</div>
+</body>
+</html>

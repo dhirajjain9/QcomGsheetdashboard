@@ -18,6 +18,12 @@ header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap
 h1{font-size:26px;font-weight:700;letter-spacing:-.3px}
 h1 span{color:var(--acc)}
 .sub{color:var(--mut);font-size:13px;margin-bottom:22px}
+.platSwitch{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.platSwitch .lbl{color:var(--mut);font-size:11px;margin-right:2px}
+.platSwitch a,.platSwitch span{font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:8px;border:1px solid var(--line);text-decoration:none;cursor:pointer}
+.platSwitch a{color:var(--mut);background:var(--panel)}
+.platSwitch a:hover{color:var(--txt);border-color:var(--acc)}
+.platSwitch .active{color:#fff;background:var(--acc);border-color:var(--acc);cursor:default}
 .note{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--acc2);border-radius:8px;padding:10px 14px;color:var(--mut);font-size:12.5px;margin-bottom:24px}
 .note b{color:var(--txt)}
 h2{font-size:16px;font-weight:600;margin:30px 0 14px;display:flex;align-items:center;gap:9px}
@@ -81,6 +87,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
     <h1>Blinkit RCA <span>Dashboard</span></h1>
     <div class="sub" id="subt"></div>
   </div>
+  <div class="platSwitch" id="platSwitch"></div>
 </header>
 
 <nav class="snav" id="snav">
@@ -388,6 +395,12 @@ document.getElementById('ft').textContent=`Generated ${DATA.meta.generated} · S
 // platform-aware page title + header
 document.title=`${PLAT_LABEL} RCA Dashboard`;
 {const _h1=document.querySelector('header h1'); if(_h1)_h1.innerHTML=`${PLAT_LABEL} RCA <span>Dashboard</span>`;}
+// platform switcher (Blinkit / Instamart) — current platform is non-clickable
+{const cur=(DATA.meta&&DATA.meta.platform)||'blinkit';
+ const PLATS=[{p:'blinkit',label:'Blinkit',href:'index.html'},{p:'instamart',label:'Instamart',href:'instamart.html'}];
+ const ps=document.getElementById('platSwitch');
+ if(ps)ps.innerHTML='<span class="lbl">Platform:</span>'+PLATS.map(x=>
+   x.p===cur?`<span class="active">${x.label}</span>`:`<a href="${x.href}">${x.label}</a>`).join('');}
 
 // KPIs
 const k=DATA.kpis;
