@@ -109,7 +109,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 
 <div class="note">
   <b>Reading the numbers:</b> the source exports carry no absolute units/revenue (those columns are blank).
-  <b>Market share</b> here = <b>Est. Category Share</b> (each SKU's % of its sub-category's sales — sums to 100% per sub-category), the dataset's sales proxy.
+  <b>Market share</b> = a brand's <b>Est. Category Share</b> (its % of a sub-category's sales — sums to 100% per sub-category). For a single category it's the true share; across <b>All categories</b> it's a <b>category-size-weighted average</b> over only the categories the brand actually sells in (bigger categories count more; absent ones don't dilute).
   <b>SOV</b> = Share of Voice (visibility on the app). <b>OSA</b> = On-Shelf Availability. <b>Disc</b> = weighted discount depth.
   <br><span style="color:var(--acc2)">✦ Interactive — click any chart bar, scatter point, or table row to drill into a brand, product type, or SKU. Click table headers to sort; use the nav bar to jump between sections.</span>
 </div>
@@ -175,7 +175,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap xtall"><canvas id="cSov"></canvas></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>Brand leaderboard</h3><div class="h3sub">Share, voice, footprint &amp; month-over-month momentum</div>
-  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">OSA</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num" title="Brand's Est. Category Share. Single category = true share (brands sum to 100%). All categories = category-size-weighted average over only the categories the brand sells in — bigger categories weigh more, absent ones don't dilute. For a ₹-weighted whole-universe share, use '% of Total'.">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">OSA</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- PRODUCT TYPES -->
@@ -481,15 +481,28 @@ function renderSku(cat){
 let brandChart;
 const _deltaMap={}; DATA.top_brands.forEach(b=>_deltaMap[b.brand.toLowerCase()]=b.delta);
 function scopedBrands(){
-  const rows=scopeRows(), m={}; let totCsp=0,totSov=0;
-  rows.forEach(s=>{const k=s.b.toLowerCase(); if(!m[k])m[k]={brand:s.b,csp:0,sov:0,osa:0,osaN:0,disc:0,discN:0,skus:0,subs:new Set(),v:0};
-    const a=m[k]; a.csp+=(s.csp||0); a.sov+=(s.sov||0); if(s.osa!=null){a.osa+=s.osa;a.osaN++;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} a.skus++; a.subs.add(s.s); a.v+=skuVal(s);
-    totCsp+=(s.csp||0); totSov+=(s.sov||0);});
+  const rows=scopeRows(), sales=salesActive();
+  // category size weight: gross ₹ when sales entered, else SKU count.
+  // Used to weight a brand's cross-category market share by how big each category is.
+  const catW={}; rows.forEach(s=>{catW[s.s]=(catW[s.s]||0)+(sales?(s._gross||0):1);});
+  const m={}; let totSov=0;
+  rows.forEach(s=>{const k=s.b.toLowerCase(); if(!m[k])m[k]={brand:s.b,cspByCat:{},sovByCat:{},osa:0,osaN:0,disc:0,discN:0,skus:0,subs:new Set(),v:0};
+    const a=m[k]; a.cspByCat[s.s]=(a.cspByCat[s.s]||0)+(s.csp||0); a.sovByCat[s.s]=(a.sovByCat[s.s]||0)+(s.sov||0);
+    if(s.osa!=null){a.osa+=s.osa;a.osaN++;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} a.skus++; a.subs.add(s.s); a.v+=skuVal(s);
+    totSov+=(s.sov||0);});
   const all=sel.value==='ALL';
-  return Object.values(m).map(a=>({brand:a.brand,
-    share_pct: totCsp?a.csp/totCsp*100:0, sov_pct: totSov?a.sov/totSov*100:0,
-    osa:a.osaN?a.osa/a.osaN:0, disc:a.discN?a.disc/a.discN:0, skus:a.skus, subcats:a.subs.size, v:a.v,
-    delta: all?(_deltaMap[a.brand.toLowerCase()]??null):null}));
+  return Object.values(m).map(a=>{
+    // Market share = category-size-weighted average of the brand's per-category value-share
+    // (Est. Category Share SP, which sums to 100% within a category), over ONLY the
+    // categories the brand is present in. Single-category scope => that category's true share.
+    let nS=0,nV=0,den=0;
+    a.subs.forEach(c=>{const w=catW[c]||0; nS+=(a.cspByCat[c]||0)*w; nV+=(a.sovByCat[c]||0)*w; den+=w;});
+    return {brand:a.brand,
+      share_pct: den?nS/den:0,
+      sov_pct: den?nV/den:(totSov?(Object.values(a.sovByCat).reduce((x,y)=>x+y,0))/totSov*100:0),
+      osa:a.osaN?a.osa/a.osaN:0, disc:a.discN?a.disc/a.discN:0, skus:a.skus, subcats:a.subs.size, v:a.v,
+      delta: all?(_deltaMap[a.brand.toLowerCase()]??null):null};
+  });
 }
 function brandOrdered(){
   const sales=salesActive(); const list=scopedBrands();
