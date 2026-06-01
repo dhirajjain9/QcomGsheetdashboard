@@ -151,6 +151,13 @@ REVIEW_TYPES = {"Pad Lock", "Water/Shower Filter", "Faucet / Tap", "Health Fauce
 REVIEW_STD = {"Pad Lock": "IS 729 — confirm QCO", "Water/Shower Filter": "verify (water purifier rules)",
               "Kitchen Scale": "Legal Metrology + verify", "Faucet / Tap": "verify (plumbing)",
               "Knife": "forged cutlery — outside IS 14756 sheet-utensils QCO; verify"}
+# Sensor / automatic homeware (touchless dustbin, automatic soap/fragrance dispenser): the
+# finished product isn't named in a QCO, but it's battery-electronic (EEE) — so any built-in
+# Li-ion battery / charging adaptor falls under CRS, plus RoHS/E-waste. Flag Conditional, not
+# Mandatory (no product-level mark) and not Exempt (the manual majority stays Exempt).
+EEE_AUTO_TYPES = {"Dustbin", "Soap Dispenser", "Air Freshener / Fragrance"}
+_SENSOR_TOK = ("sensor", "touchless", "automatic", "motion", "infrared", "auto-open", "auto open", "smart")
+_EEE_NOTE = "EEE (sensor/auto) — verify battery & adaptor CRS (IS 16046 / IS 13252) + RoHS"
 # Regulated metals (SS & aluminium — the utensils QCO). NOTE: cast iron / copper /
 # brass are NOT in this QCO, so they live in _OTHER.
 _SS_AL = ("stainless steel", "stainless", " steel", "steel ", "s.s", "ss ", "aluminium",
@@ -193,6 +200,7 @@ def sku_attrs(name, pt):
     else:
         mat = "Unknown"
     insulated = any(w in n for w in ("insulated", "vacuum", "thermosteel", "thermos", "flask"))
+    eee_auto = pt in EEE_AUTO_TYPES and any(w in n for w in _SENSOR_TOK)
     std = None
     if pt == "Pressure Cooker" or "pressure cooker" in n:
         std = "IS 2347"
@@ -204,7 +212,9 @@ def sku_attrs(name, pt):
         std = "IS 302 / CRS"
     elif mat == "Steel/Aluminium" and pt in UTENSIL_TYPES:
         std = "IS 14756 / IS 1660"
-    if std:
+    if eee_auto:
+        flag, std = "Conditional", _EEE_NOTE   # overrides a stray IS 302 / Exempt call
+    elif std:
         flag = "Mandatory"
     elif (mat == "Unknown" and pt in UTENSIL_TYPES) or pt in REVIEW_TYPES:
         flag, std = "Conditional", (REVIEW_STD.get(pt) or "verify material")

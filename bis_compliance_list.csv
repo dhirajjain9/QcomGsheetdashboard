@@ -67,6 +67,7 @@ Idli / Steamer Maker,Unknown,,Conditional,verify material,7
 Ladle / Skimmer,Unknown,,Conditional,verify material,7
 Hand Blender / Mixer,Unknown,Manual,Conditional,verify material,6
 Spatula / Turner,Unknown,,Conditional,verify material,6
+Dustbin,Any,,Conditional,EEE (sensor/auto) — verify battery & adaptor CRS (IS 16046 / IS 13252) + RoHS,5
 Plate Stand / Rack,Unknown,,Conditional,verify material,4
 Sauce Pan / Appe Pan,Unknown,,Conditional,verify material,4
 Tong / Pakad,Unknown,,Conditional,verify material,4
@@ -93,7 +94,7 @@ Serving Tray,Non-metal,,Exempt,,162
 Umbrella,Any,,Exempt,,161
 Table Linen / Mat,Any,,Exempt,,152
 Chopper / Peeler / Grater,Any,Manual,Exempt,,147
-Dustbin,Any,,Exempt,,147
+Dustbin,Any,,Exempt,,142
 Wall Hook,Any,,Exempt,,134
 Cloth Hanger,Any,,Exempt,,132
 Laundry Basket,Any,,Exempt,,128
