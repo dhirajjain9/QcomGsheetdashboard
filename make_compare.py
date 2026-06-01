@@ -195,6 +195,52 @@ def sp_tiers(type_):
     return {"edges": edges, "g": {k: [round(x) for x in gross[k]] for k in ("B", "I", "Z")}}
 
 
+# ---- BIS compliance mapping (researched against QCOs/CRS in force, 2024-25) ----
+# status: mandatory (ISI/CRS now) · conditional (material/electric dependent) · review · exempt
+BIS_RULES = {
+    "Pressure Cooker": ("mandatory", "ISI", "IS 2347", "Domestic Pressure Cooker QCO 2020"),
+    "Gas Stove": ("mandatory", "ISI", "IS 4246", "LPG domestic gas stove QCO"),
+    "Induction Cooktop": ("mandatory", "ISI/CRS", "IS 302", "Household electrical appliances QCO 2025"),
+    "Hand Blender / Mixer": ("mandatory", "ISI", "IS 302-2-14", "Electric kitchen machines"),
+    "Juicer": ("mandatory", "ISI", "IS 302", "Electrical appliance safety"),
+    "Thermal/Insulated Flask": ("mandatory", "ISI", "IS 17526", "SS vacuum flask/bottle QCO 2023"),
+    "Cookware / Pan": ("mandatory", "ISI", "IS 14756 / IS 1660", "SS & aluminium utensils QCO 2024"),
+    "Milk Pan / Tope": ("mandatory", "ISI", "IS 14756 / IS 1660", "SS/aluminium utensils QCO 2024"),
+    "Sauce Pan / Appe Pan": ("mandatory", "ISI", "IS 14756 / IS 1660", "SS/aluminium utensils QCO 2024"),
+    "Dinner Set / Plate": ("conditional", "ISI", "IS 14756", "Mandatory if stainless-steel; glass/ceramic/melamine exempt"),
+    "Bowl": ("conditional", "ISI", "IS 14756", "Mandatory if stainless-steel"),
+    "Mug / Cup": ("conditional", "ISI", "IS 14756", "SS mugs covered; ceramic exempt"),
+    "Drinking Glass": ("conditional", "ISI", "IS 14756", "SS tumblers covered; glass exempt"),
+    "Cutlery (Spoon/Fork)": ("conditional", "ISI", "IS 14756", "SS cutlery covered"),
+    "Ladle / Skimmer": ("conditional", "ISI", "IS 14756", "SS covered"),
+    "Tong / Pakad": ("conditional", "ISI", "IS 14756", "SS covered"),
+    "Spatula / Turner": ("conditional", "ISI", "IS 14756", "SS covered"),
+    "Colander / Strainer": ("conditional", "ISI", "IS 14756", "SS covered"),
+    "Serving Tray": ("conditional", "ISI", "IS 14756", "SS trays covered; melamine/wood exempt"),
+    "Jar / Canister": ("conditional", "ISI", "IS 14756", "SS storage covered; glass/plastic exempt"),
+    "Storage Container": ("conditional", "ISI", "IS 14756", "SS containers covered; plastic exempt"),
+    "Casserole": ("conditional", "ISI", "IS 14756 / IS 17526", "SS / insulated casseroles covered"),
+    "Idli / Steamer Maker": ("conditional", "ISI", "IS 14756 / IS 1660", "SS/aluminium covered"),
+    "Knife": ("conditional", "ISI", "IS 14756", "Kitchen knives if SS — verify"),
+    "Water Bottle": ("conditional", "ISI", "IS 17526", "Mandatory if SS/insulated; plastic bottles — verify"),
+    "Teapot / Kettle": ("conditional", "ISI", "IS 302-2-15", "Mandatory if electric kettle"),
+    "Coffee Maker": ("conditional", "ISI", "IS 302", "Mandatory if electric"),
+    "Grill / Toaster Pan": ("conditional", "ISI", "IS 302", "Mandatory if electric toaster/grill"),
+    "Milk Boiler": ("conditional", "ISI", "IS 302 / IS 14756", "Electric: IS 302; steel pan: IS 14756"),
+    "Kitchen Scale": ("review", "—", "—", "Electronic scales: Legal Metrology + possible BIS — verify"),
+    "Pad Lock": ("review", "ISI", "IS 729", "Padlock standard exists — confirm QCO status"),
+    "Water/Shower Filter": ("review", "—", "—", "Some water purifiers under BIS — verify by type"),
+    "Faucet / Tap": ("review", "—", "—", "Plumbing fittings — verify"),
+}
+
+
+def bis_of(pt):
+    if pt in BIS_RULES:
+        s, sc, std, note = BIS_RULES[pt]
+        return {"s": s, "sc": sc, "std": std, "note": note}
+    return {"s": "exempt", "sc": "—", "std": "—", "note": "No known BIS mandate (decor / cleaning / textile / plastic ware)"}
+
+
 def build_rows(aggs, use_disp, with_extras=False):
     keys = set()
     for k in ("B", "I", "Z"):
