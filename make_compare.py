@@ -227,6 +227,7 @@ def sku_attrs(name, pt):
 type_aggs, brand_aggs, totals, OPP = {}, {}, {}, {}
 BRAND_DISP = {}
 TYPE_BRAND = defaultdict(lambda: defaultdict(float))
+BRAND_TYPES = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))  # bk -> pt -> platform -> gross
 TYPE_SP = defaultdict(lambda: {"B": [], "I": [], "Z": []})
 BIS_COMBOS = defaultdict(int)   # (product type, material, operation, flag, standard) -> #SKUs
 
@@ -237,6 +238,7 @@ for name, f, key in PLATS:
         bk = s["b"].lower(); BRAND_DISP.setdefault(bk, s["b"])
         if s["pt"] != "Other":
             TYPE_BRAND[s["pt"]][bk] += s["_g"]
+            BRAND_TYPES[bk][s["pt"]][key] += s["_g"]
             if s.get("sp") and s["sp"] > 0:
                 TYPE_SP[s["pt"]][key].append((s["sp"], s["_g"]))
             at = sku_attrs(s["n"], s["pt"])
@@ -337,6 +339,17 @@ def build_rows(aggs, use_disp, with_extras=False):
 
 type_rows = build_rows(type_aggs, use_disp=False, with_extras=True)
 brand_rows = build_rows(brand_aggs, use_disp=True)
+# brand -> top product types (combined across platforms) + each platform's #1 type
+for row in brand_rows:
+    bk = row["t"].lower()
+    pts = BRAND_TYPES.get(bk, {})
+    combined = sorted(((pt, sum(pv.values())) for pt, pv in pts.items()), key=lambda x: -x[1])
+    row["topTypes"] = [[pt, round(g)] for pt, g in combined[:5]]
+    plat_top = {}
+    for k in ("B", "I", "Z"):
+        best = max(((pt, pv.get(k, 0)) for pt, pv in pts.items()), key=lambda x: x[1], default=(None, 0))
+        plat_top[k] = best[0] if best[1] > 0 else None
+    row["platTop"] = plat_top
 allb = set()
 for k in ("B", "I", "Z"):
     allb |= set(brand_aggs[k])
@@ -554,7 +567,8 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <div id="brandDetail">
  <div class="qtot detail" id="bqtot"></div>
  <div class="card"><div class="step">② Attributes — total & platform-wise</div><h3>Scorecard</h3><div class="h3sub">Sales, realisation, assortment, price, availability & visibility per platform.</div><div class="spot" id="brandSpot"></div><div class="insight" id="brandInsight"></div></div>
- <div class="card"><div class="step">③ Why it isn't scaling — gap diagnosis</div><h3>What's holding it back, platform by platform</h3><div class="h3sub">Benchmarked to the brand's strongest platform. Root cause = distribution, assortment (SKUs), availability (OSA), visibility (SOV) or competition.</div><div id="brandDiag"></div></div>
+ <div class="card"><div class="step">③ Who leads — where the brand sells</div><h3>Top product types across Q-Commerce</h3><div class="h3sub">The brand's biggest product types, combined across all three platforms, with each one's share of the brand.</div><div class="brank" id="brandTypes"></div><div style="margin-top:16px"><div class="step" style="margin-bottom:9px">Platform leaders · top type</div><div class="plead" id="brandPlatTop"></div></div></div>
+ <div class="card"><div class="step">④ Why it isn't scaling — gap diagnosis</div><h3>What's holding it back, platform by platform</h3><div class="h3sub">Benchmarked to the brand's strongest platform. Root cause = distribution, assortment (SKUs), availability (OSA), visibility (SOV) or competition.</div><div id="brandDiag"></div></div>
 </div>
 
 <!-- ===== BIS COMPLIANCE ===== -->
@@ -707,6 +721,9 @@ function renderBrand(t){
    [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Product types',tot.b],['Avg SP','₹'+tot.sp],['Wt. OSA%',tot.o+'%']]);
  document.getElementById('brandSpot').innerHTML=PK.map(([k])=>pcard(k,r[k],{bigKey:'g',bigLbl:'gross sales (MRP)',fmtBig:v=>money(v),badges,
    rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`<b>${shareOf(k,x.g).toFixed(2)}%</b>`],['SKUs',x=>x.k],['Product types',x=>x.b],['Avg SP',x=>'₹'+x.sp],['Wt. OSA%',x=>`${x.o}%`],['SOV (visibility)',x=>`${x.sov}%`],['Top type',x=>x.top||'–']]})).join('');
+ const tt=r.topTypes||[],tmx=tt[0]?tt[0][1]:1;
+ document.getElementById('brandTypes').innerHTML=tt.length?tt.map((b,i)=>`<div class="r"><span class="rk">${i+1}</span><div class="nb"><div class="bn">${b[0]}</div><div class="mini"><i style="width:${Math.max(4,b[1]/tmx*100)}%"></i></div></div><div class="bv">${money(b[1])}<span class="bvp">${tot.g?(b[1]/tot.g*100).toFixed(1):0}%</span></div></div>`).join(''):'<span class="miss">No classified product types.</span>';
+ document.getElementById('brandPlatTop').innerHTML=PK.map(([k])=>`<div class="pl" style="--pc:${COL[k]}"><div class="h"><span class="dotc" style="background:${COL[k]}"></span>${NAME[k]} · top type</div><div class="v">${r.platTop&&r.platTop[k]?r.platTop[k]:'<span class="miss">absent</span>'}</div></div>`).join('');
  let s=`Strongest on <b>${NAME[bench]}</b> — ${money(r[bench].g)} (<b>${shareOf(bench,r[bench].g).toFixed(1)}%</b> of ${NAME[bench]}), led by <b>${r[bench].top}</b>. `;
  const ab=absent(r);if(ab.length)s+=`<b>Absent on ${ab.map(k=>NAME[k]).join(' & ')}</b>.`;
  document.getElementById('brandInsight').innerHTML='💡 '+s;
