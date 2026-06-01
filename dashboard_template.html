@@ -116,7 +116,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <div class="note">
   <b>Reading the numbers:</b> the source exports carry no absolute units/revenue (those columns are blank).
   <b>Market share</b> = a brand's <b>Est. Category Share</b> (its % of a sub-category's sales — sums to 100% per sub-category). For a single category it's the true share; across <b>All categories</b> it's a <b>category-size-weighted average</b> over only the categories the brand actually sells in (bigger categories count more; absent ones don't dilute).
-  <b>SOV</b> = Share of Voice (visibility on the app). <b>OSA</b> = On-Shelf Availability. <b>Disc</b> = weighted discount depth.
+  <b>SOV</b> = Share of Voice (visibility on the app). <b>Wt. OSA%</b> = On-Shelf Availability. <b>Disc</b> = weighted discount depth.
   <br><span style="color:var(--acc2)">✦ Interactive — click any chart bar, scatter point, or table row to drill into a brand, product type, or SKU. Click table headers to sort; use the nav bar to jump between sections.</span>
 </div>
 
@@ -170,7 +170,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <div class="grid g2">
   <div class="card"><h3>Top 12 products by category share</h3><div class="h3sub">Latest month, selected sub-category</div><div class="cwrap tall"><canvas id="cTopSku"></canvas></div></div>
   <div class="card"><h3>Detail</h3><div class="h3sub">Share · price · availability · discount</div>
-    <div style="max-height:340px;overflow:auto"><table id="tSku"><thead><tr><th>Product</th><th>Brand</th><th class="num">Share%</th><th class="num skuSalesCol" style="display:none">Sales</th><th class="num">SP</th><th class="num">OSA</th><th class="num">Disc</th></tr></thead><tbody></tbody></table></div>
+    <div style="max-height:340px;overflow:auto"><table id="tSku"><thead><tr><th>Product</th><th>Brand</th><th class="num">Share%</th><th class="num skuSalesCol" style="display:none">Sales</th><th class="num">SP</th><th class="num">Wt. OSA%</th><th class="num">Disc</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 
@@ -181,7 +181,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap xtall"><canvas id="cSov"></canvas></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>Brand leaderboard</h3><div class="h3sub">Share, voice, footprint &amp; month-over-month momentum</div>
-  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num" title="Brand's Est. Category Share. Single category = true share (brands sum to 100%). All categories = category-size-weighted average over only the categories the brand sells in — bigger categories weigh more, absent ones don't dilute. For a ₹-weighted whole-universe share, use '% of Total'.">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">OSA</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num" title="Brand's Est. Category Share. Single category = true share (brands sum to 100%). All categories = category-size-weighted average over only the categories the brand sells in — bigger categories weigh more, absent ones don't dilute. For a ₹-weighted whole-universe share, use '% of Total'.">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">Wt. OSA%</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- PRODUCT TYPES -->
@@ -191,7 +191,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
   <div class="card"><h3>Sales split</h3><div class="h3sub">Composition across the leading product types</div><div style="height:520px;overflow-y:auto"><div id="ptDonutWrap" style="position:relative;height:520px"><canvas id="cPtDonut"></canvas></div></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>Product-type detail</h3><div class="h3sub">Top 25 types — footprint, pricing, availability &amp; sales</div>
-  <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Rev/SKU</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:360px;overflow:auto"><table id="tPt"><thead><tr><th>Product Type</th><th class="num">SKUs</th><th class="num">Brands</th><th class="num">Rev/SKU</th><th class="num">Avg SP</th><th class="num">Wt. OSA%</th><th class="num ptSalesCol" style="display:none">Sales</th><th class="num ptShareCol" style="display:none">% of total</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- ===== FOUNDER'S LAUNCHPAD ===== -->
@@ -267,13 +267,13 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- AVAILABILITY / STOCKOUTS -->
 <h2 id="sec-avail">Availability &amp; stockout loss <span class="tag" id="availScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
 <div class="note" style="border-left-color:var(--org)">
-  <b>OSA</b> = on-shelf availability (% of time in stock). Where demand (Share of Voice) is high but OSA is low, sales are being lost to stockouts. <b>Est. lost</b> is a rough estimate assuming a <b>75% target availability</b> (capped at 2× current sales). Scope follows the Top-SKUs selector above.
+  <b>Wt. OSA%</b> = on-shelf availability (% of time in stock). Where demand (Share of Voice) is high but OSA is low, sales are being lost to stockouts. <b>Est. lost</b> is a rough estimate assuming a <b>75% target availability</b> (capped at 2× current sales). Scope follows the Top-SKUs selector above.
 </div>
 <div class="kpis" id="availKpis"></div>
 <div class="grid g2" style="margin-top:16px">
   <div class="card"><h3>Demand vs availability</h3><div class="h3sub"><b>x</b> = Share of Voice (demand →), <b>y</b> = on-shelf availability. Bubble = sales/share. <b style="color:var(--red)">Bottom-right = high demand, low stock → stockout loss.</b></div><div class="cwrap xtall"><canvas id="cAvailMap"></canvas></div></div>
   <div class="card"><h3>Biggest stockout losses</h3><div class="h3sub">SKUs with real demand but low availability — ranked by estimated sales lost</div>
-    <div style="max-height:480px;overflow:auto"><table id="tAvail"><thead><tr><th>Product</th><th>Brand</th><th class="num">SOV</th><th class="num">OSA</th><th class="num availSalesCol" style="display:none">Sales</th><th class="num availLostCol" style="display:none">Est. lost</th></tr></thead><tbody></tbody></table></div>
+    <div style="max-height:480px;overflow:auto"><table id="tAvail"><thead><tr><th>Product</th><th>Brand</th><th class="num">SOV</th><th class="num">Wt. OSA%</th><th class="num availSalesCol" style="display:none">Sales</th><th class="num availLostCol" style="display:none">Est. lost</th></tr></thead><tbody></tbody></table></div>
   </div>
 </div>
 
@@ -291,7 +291,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </div>
 <div class="grid g2" style="margin-top:16px">
   <div class="card"><h3 style="color:var(--grn)">＋ New entrants</h3><div class="h3sub">New in April — by April value-share</div>
-    <div style="max-height:340px;overflow:auto"><table id="tMomNew"><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Apr share</th><th class="num">OSA</th><th class="num">SP</th></tr></thead><tbody></tbody></table></div></div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomNew"><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Apr share</th><th class="num">Wt. OSA%</th><th class="num">SP</th></tr></thead><tbody></tbody></table></div></div>
   <div class="card"><h3 style="color:var(--red)">－ Exited SKUs</h3><div class="h3sub">In March, gone in April — by March value-share</div>
     <div style="max-height:340px;overflow:auto"><table id="tMomExit"><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Mar share</th><th class="num">Last OSA</th></tr></thead><tbody></tbody></table></div></div>
 </div>
@@ -376,6 +376,11 @@ function computeSales(){
   });
 }
 const skuVal=s=>metric==='gross'?(s._gross||0):metric==='units'?(s._units||0):(s._net||0);
+// OSA is reported as a demand-weighted ("Wt. OSA%") average — weight = modeled gross
+// (stable, independent of the Net/Gross/Units toggle). Epsilon keeps it a flat mean
+// when a scope has no modeled gross at all.
+const osaWt=s=>(s._gross||0)||1e-9;
+const wOsa=rows=>{let w=0,d=0;rows.forEach(s=>{if(s.osa!=null){const x=osaWt(s);w+=s.osa*x;d+=x;}});return d?w/d:0;};
 function compMetric(csp,sp,mrp,sub){   // metric value for rows not on sku_level (white space)
   const a=subAgg[sub]; if(!a||!csp||!sp||!mrp)return 0;
   const net=(csp/a.shareSum)*a.Tsp, units=net/sp, gross=units*mrp;
@@ -428,7 +433,7 @@ document.title=`${PLAT_LABEL} · QcomDashboard-EverydayEssentials`;
 // KPIs
 const k=DATA.kpis;
 const kdefs=[['SKUs tracked',k.skus.toLocaleString(),C.acc],['Brands',k.brands,C.acc2],['Sub-categories',k.subcats,C.pur],
-['Avg availability',k.avg_osa+'%',C.grn],['Avg discount',k.avg_disc+'%',C.org],['Avg selling price','₹'+fmt(k.avg_sp,0)],['Period',k.months,C.acc2]];
+['Wt. OSA%',k.avg_osa+'%',C.grn],['Avg discount',k.avg_disc+'%',C.org],['Avg selling price','₹'+fmt(k.avg_sp,0)],['Period',k.months,C.acc2]];
 $('#kpis').innerHTML=kdefs.map(d=>`<div class="kpi"><div class="v" style="color:${d[2]||C.txt}">${d[1]}</div><div class="l">${d[0]}</div></div>`).join('');
 
 // dropdowns
@@ -459,7 +464,7 @@ function renderConcChart(){
   if(concChart)concChart.destroy();
   concChart=new Chart($('#cConc'),{data:{labels:order,datasets:[
     {type:'bar',label:'Top-5 brand share %',data:rows.map(x=>x.top5_conc),backgroundColor:C.acc2,borderRadius:6,order:2,yAxisID:'y'},
-    {type:'line',label:'Avg availability %',data:rows.map(x=>x.avg_osa),borderColor:C.grn,backgroundColor:C.grn,borderWidth:3,pointRadius:4,pointBackgroundColor:C.grn,tension:.3,order:0,yAxisID:'y'}]},
+    {type:'line',label:'Wt. OSA %',data:rows.map(x=>x.avg_osa),borderColor:C.grn,backgroundColor:C.grn,borderWidth:3,pointRadius:4,pointBackgroundColor:C.grn,tension:.3,order:0,yAxisID:'y'}]},
     options:{plugins:{legend:{position:'top'}},scales:{y:{grid:{color:C.line},min:0,max:100,title:{display:true,text:'%'}},x:{grid:{display:false},ticks:{maxRotation:20}}}}});
 }
 
@@ -497,7 +502,7 @@ function scopedBrands(){
   const m={}; let totSov=0;
   rows.forEach(s=>{const k=s.b.toLowerCase(); if(!m[k])m[k]={brand:s.b,cspByCat:{},sovByCat:{},osa:0,osaN:0,disc:0,discN:0,skus:0,subs:new Set(),v:0};
     const a=m[k]; a.cspByCat[s.s]=(a.cspByCat[s.s]||0)+(s.csp||0); a.sovByCat[s.s]=(a.sovByCat[s.s]||0)+(s.sov||0);
-    if(s.osa!=null){a.osa+=s.osa;a.osaN++;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} a.skus++; a.subs.add(s.s); a.v+=skuVal(s);
+    if(s.osa!=null){const w=osaWt(s);a.osa+=s.osa*w;a.osaN+=w;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} a.skus++; a.subs.add(s.s); a.v+=skuVal(s);
     totSov+=(s.sov||0);});
   const all=sel.value==='ALL';
   return Object.values(m).map(a=>{
@@ -633,7 +638,7 @@ function renderProductTypes(){
   const agg={};
   scopeRows().forEach(s=>{const t=s.pt; if(!agg[t])agg[t]={skus:0,brands:new Set(),sp:0,spn:0,osa:0,osan:0,val:0,csp:0};
     const a=agg[t]; a.skus++; a.brands.add(s.b.toLowerCase());
-    if(s.sp){a.sp+=s.sp;a.spn++;} if(s.osa!=null){a.osa+=s.osa;a.osan++;} a.val+=skuVal(s); a.csp+=(s.csp||0);});
+    if(s.sp){a.sp+=s.sp;a.spn++;} if(s.osa!=null){const w=osaWt(s);a.osa+=s.osa*w;a.osan+=w;} a.val+=skuVal(s); a.csp+=(s.csp||0);});
   let arr=Object.entries(agg).map(([t,a])=>({t,skus:a.skus,brands:a.brands.size,sp:a.spn?a.sp/a.spn:0,osa:a.osan?a.osa/a.osan:0,val:a.val,csp:a.csp}));
   const key=sales?'val':'skus';
   arr.sort((a,b)=>b[key]-a[key]);
@@ -715,10 +720,10 @@ function renderAvailability(){
   const sales=salesActive(), rows=scopeRows();
   $('#availScopeLbl').textContent='· '+scopeLabel();
   const withOsa=rows.filter(s=>s.osa!=null);
-  const avgOsa=withOsa.length?withOsa.reduce((a,s)=>a+s.osa,0)/withOsa.length:0;
+  const avgOsa=wOsa(rows);
   const lowPct=withOsa.length?withOsa.filter(s=>s.osa<40).length/withOsa.length*100:0;
   const totalLost=rows.reduce((a,s)=>a+lostOf(s),0);
-  const kp=[['Avg availability',fmt(avgOsa,0)+'%',C.grn],['SKUs below 40% OSA',fmt(lowPct,0)+'%',C.red],
+  const kp=[['Wt. OSA%',fmt(avgOsa,0)+'%',C.grn],['SKUs below 40% OSA',fmt(lowPct,0)+'%',C.red],
     ['Est. sales lost to stockouts',sales?valFmt(totalLost):'– (enter ₹)',C.org]];
   $('#availKpis').innerHTML=kp.map(k=>`<div class="kpi"><div class="v" style="color:${k[2]}">${k[1]}</div><div class="l">${k[0]}</div></div>`).join('');
   // map: top 150 by demand (SOV)
@@ -884,10 +889,10 @@ function showBrand(key){
   if(!rows.length)return;
   const sales=salesActive(), subs=[...new Set(rows.map(s=>s.s))];
   const stats=[['SKUs',rows.length],['Sub-categories',subs.length],['Avg SP','₹'+fmt(avgOf(rows,s=>s.sp),0)],
-    ['Avg OSA',fmt(avgOf(rows,s=>s.osa),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
+    ['Wt. OSA%',fmt(wOsa(rows),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
   if(sales)stats.push([metricShort(),valFmt(rows.reduce((a,s)=>a+skuVal(s),0))]);
   const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp));
-  const body=statBox(stats)+`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">OSA</th><th class="num">Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num">${fmt(s.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  const body=statBox(stats)+`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">Wt. OSA%</th><th class="num">Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num">${fmt(s.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   openModal(rows[0].b,subs.join(' · '),body);
 }
 // churn drill-down: only the brand's SKUs within a product type (or scope), for the relevant month
@@ -916,7 +921,7 @@ function showPriceBandSkus(lo,hi,lbl){
   rows.sort((a,b)=> sales ? (skuVal(b)-skuVal(a)) : (a.ppu-b.ppu));
   const stats=[['Product type',priceTypeVal],['Value tier',lbl+'/unit'],['SKUs',rows.length],['Scope',scopeLabel()]];
   const body=statBox(stats)
-    +`<div style="max-height:50vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th class="num">SP</th><th class="num">₹/unit</th><th class="num">Pack</th><th>Grammage</th><th class="num">OSA</th>${sales?`<th class="num">${metricShort()}</th>`:`<th class="num">Share%</th>`}</tr></thead><tbody>`
+    +`<div style="max-height:50vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th class="num">SP</th><th class="num">₹/unit</th><th class="num">Pack</th><th>Grammage</th><th class="num">Wt. OSA%</th>${sales?`<th class="num">${metricShort()}</th>`:`<th class="num">Share%</th>`}</tr></thead><tbody>`
     +rows.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num">₹${fmt(s.ppu,0)}</td><td class="num">${fmt(s.pack,1)}</td><td class="tag">${s.gram||'–'}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num" style="color:var(--acc)">${sales?valFmt(skuVal(s)):fmt(s.csp,2)+'%'}</td></tr>`).join('')
     +`</tbody></table></div>`;
   openModal(`${priceTypeVal} · ${lbl}/unit`, `${rows.length} SKUs in this value tier · ${scopeLabel()}`, body);
@@ -929,7 +934,7 @@ function showType(pt,mode){
   if(!rows.length)return;
   const sales=salesActive(), brands=new Set(rows.map(s=>s.b.toLowerCase()));
   const stats=[['SKUs',rows.length],['Brands',brands.size],['Avg SP','₹'+fmt(avgOf(rows,s=>s.sp),0)],
-    ['Avg OSA',fmt(avgOf(rows,s=>s.osa),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
+    ['Wt. OSA%',fmt(wOsa(rows),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
   if(sales)stats.push([metricShort(),valFmt(rows.reduce((a,s)=>a+skuVal(s),0))]);
   // share within this product type (sums to 100%): by ₹ when totals entered, else by value-share
   const typeTotal = sales ? rows.reduce((a,s)=>a+skuVal(s),0) : rows.reduce((a,s)=>a+(s.csp||0),0);
@@ -940,14 +945,14 @@ function showType(pt,mode){
   if(mode==='brand'){
     const bm={};
     rows.forEach(s=>{const k=s.b.toLowerCase(); if(!bm[k])bm[k]={brand:s.b,skus:0,sov:0,csp:0,osa:0,osaN:0,disc:0,discN:0,sp:0,spN:0,v:0};
-      const a=bm[k]; a.skus++; a.sov+=(s.sov||0); a.csp+=(s.csp||0); if(s.osa!=null){a.osa+=s.osa;a.osaN++;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} if(s.sp){a.sp+=s.sp;a.spN++;} a.v+=skuVal(s);});
+      const a=bm[k]; a.skus++; a.sov+=(s.sov||0); a.csp+=(s.csp||0); if(s.osa!=null){const w=osaWt(s);a.osa+=s.osa*w;a.osaN+=w;} if(s.disc!=null){a.disc+=s.disc;a.discN++;} if(s.sp){a.sp+=s.sp;a.spN++;} a.v+=skuVal(s);});
     let barr=Object.values(bm).map(a=>({brand:a.brand,skus:a.skus,sov:a.sov,csp:a.csp,osa:a.osaN?a.osa/a.osaN:0,disc:a.discN?a.disc/a.discN:0,sp:a.spN?a.sp/a.spN:0,v:a.v}));
     const brAvgPerSku=typeTotal/Math.max(1,rows.length);
     barr.sort((a,b)=>sales?(b.v-a.v):(b.csp-a.csp));
-    tableHtml=`<div class="hint">${barr.length} brands in this product type · % of type = brand's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Brand</th><th class="num">SKUs</th><th class="num">Demand(SOV)</th><th class="num">% of type</th><th class="num">Rev/SKU</th><th class="num">Avg SP</th><th class="num">Avg OSA</th><th class="num">Avg Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${barr.map(b=>`<tr><td>${b.brand}</td><td class="num">${b.skus}</td><td class="num">${fmt(b.sov,1)}</td><td class="num">${pctOf(sales?b.v:b.csp)}</td>${revSkuCell((sales?b.v:b.csp)/Math.max(1,b.skus),brAvgPerSku)}<td class="num">₹${fmt(b.sp,0)}</td><td class="num" style="color:${b.osa<40?C.red:C.grn}">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+    tableHtml=`<div class="hint">${barr.length} brands in this product type · % of type = brand's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Brand</th><th class="num">SKUs</th><th class="num">Demand(SOV)</th><th class="num">% of type</th><th class="num">Rev/SKU</th><th class="num">Avg SP</th><th class="num">Wt. OSA%</th><th class="num">Avg Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${barr.map(b=>`<tr><td>${b.brand}</td><td class="num">${b.skus}</td><td class="num">${fmt(b.sov,1)}</td><td class="num">${pctOf(sales?b.v:b.csp)}</td>${revSkuCell((sales?b.v:b.csp)/Math.max(1,b.skus),brAvgPerSku)}<td class="num">₹${fmt(b.sp,0)}</td><td class="num" style="color:${b.osa<40?C.red:C.grn}">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   } else {
     const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,40);
-    tableHtml=`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs · % of type = SKU's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">% of type</th><th class="num">SP</th><th class="num">OSA</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.s}</td><td class="num">${pctOf(sales?skuVal(s):s.csp)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+    tableHtml=`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs · % of type = SKU's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">% of type</th><th class="num">SP</th><th class="num">Wt. OSA%</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.s}</td><td class="num">${pctOf(sales?skuVal(s):s.csp)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   }
   openModal(pt,brands.size+' brands · '+rows.length+' SKUs',statBox(stats)+toggle+tableHtml);
 }
@@ -956,7 +961,7 @@ function showSku(name,sub){
   if(!s)return;
   const sales=salesActive();
   const stats=[['Brand',s.b],['Product type',s.pt],['Value share',fmt(s.csp,2)+'%'],['SP','₹'+fmt(s.sp,0)],
-    ['MRP','₹'+fmt(s.mrp,0)],['Discount',fmt(s.disc,0)+'%'],['OSA',fmt(s.osa,0)+'%'],['SOV',s.sov!=null?fmt(s.sov,2)+'%':'–']];
+    ['MRP','₹'+fmt(s.mrp,0)],['Discount',fmt(s.disc,0)+'%'],['Wt. OSA%',fmt(s.osa,0)+'%'],['SOV',s.sov!=null?fmt(s.sov,2)+'%':'–']];
   if(sales)stats.push(['Net ₹',money(s._net||0)],['Gross ₹',money(s._gross||0)],['Units',fmt(s._units||0,0)]);
   let body=statBox(stats);
   if(s.osa<40)body+=`<div class="hint" style="color:var(--red)">Low on-shelf availability (${fmt(s.osa,0)}%) — likely losing sales to stockouts.</div>`;
@@ -1049,7 +1054,7 @@ function lpTypeAgg(){
     const a=map[t],w=(s.csp||0);a.skus++;a.csp+=w;a.val+=skuVal(s);
     const bk=s.b.toLowerCase();if(!a.brands[bk])a.brands[bk]={csp:0,osov:0,asov:0};
     a.brands[bk].csp+=w;a.brands[bk].osov+=(s.osov||0);a.brands[bk].asov+=(s.asov||0);
-    if(s.osa!=null){const ww=w||1e-4;a.osaW+=s.osa*ww;a.osaWN+=ww;}
+    if(s.osa!=null){const ww=osaWt(s);a.osaW+=s.osa*ww;a.osaWN+=ww;}
     if(s.sp){a.spSum+=s.sp;a.spN++;}if(s.disc!=null){a.discSum+=s.disc;a.discN++;}});
   const W=lpWeights();
   let arr=Object.values(map).map(a=>{
@@ -1099,7 +1104,7 @@ function lpCompetitors(rows){
   const sales=salesActive(); const map={};
   rows.forEach(s=>{const k=s.b.toLowerCase();if(!map[k])map[k]={b:s.b,csp:0,val:0,osaW:0,osaWN:0,asov:0,osov:0,skus:0};
     const a=map[k],w=(s.csp||0);a.csp+=w;a.val+=skuVal(s);a.skus++;
-    if(s.osa!=null){const ww=w||1e-4;a.osaW+=s.osa*ww;a.osaWN+=ww;}a.asov+=(s.asov||0);a.osov+=(s.osov||0);});
+    if(s.osa!=null){const ww=osaWt(s);a.osaW+=s.osa*ww;a.osaWN+=ww;}a.asov+=(s.asov||0);a.osov+=(s.osov||0);});
   let arr=Object.values(map).map(a=>{const wOSA=a.osaWN?a.osaW/a.osaWN:0,adRel=(a.asov+a.osov)>0?a.asov/(a.asov+a.osov):0;
     return {...a,avgOSA:wOSA,adRel,size:sales?a.val:a.csp};});
   arr.sort((x,y)=>y.size-x.size);
@@ -1155,10 +1160,10 @@ function renderLpType(){
   const tbl=$('#tLpComp');
   if(lpCompMode==='sku'){
     const skus=[...rows].sort((a,b)=>csales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,30);
-    tbl.innerHTML=`<thead><tr><th>Product</th><th>Brand</th><th class="num">${csales?metricShort():'Share%'}</th><th class="num">SP</th><th class="num">OSA</th></tr></thead><tbody>${skus.map(s=>`<tr><td title="${s.n}">${s.n.slice(0,32)}</td><td>${s.b}</td><td class="num" style="color:var(--acc)">${csales?valFmt(skuVal(s)):fmt(s.csp,2)+'%'}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td></tr>`).join('')}</tbody>`;
+    tbl.innerHTML=`<thead><tr><th>Product</th><th>Brand</th><th class="num">${csales?metricShort():'Share%'}</th><th class="num">SP</th><th class="num">Wt. OSA%</th></tr></thead><tbody>${skus.map(s=>`<tr><td title="${s.n}">${s.n.slice(0,32)}</td><td>${s.b}</td><td class="num" style="color:var(--acc)">${csales?valFmt(skuVal(s)):fmt(s.csp,2)+'%'}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td></tr>`).join('')}</tbody>`;
   } else {
     const comp=lpCompetitors(rows);
-    tbl.innerHTML=`<thead><tr><th>Brand</th><th class="num">${csales?'Sales':'Share'}</th><th class="num">OSA</th><th class="num">Ad-rel.</th><th class="num">SKUs</th><th>Vulnerability</th></tr></thead><tbody>${comp.slice(0,15).map(c=>{const fc=c.flag==='Out-of-stock leader'?C.red:c.flag==='Renting visibility'?C.org:c.flag==='Low availability'?C.acc:C.mut;return `<tr><td>${c.b}</td><td class="num" style="color:var(--acc)">${csales?money(c.val):fmt(c.csp,2)+'%'}</td><td class="num" style="color:${c.avgOSA<40?C.red:C.grn}">${fmt(c.avgOSA,0)}</td><td class="num">${Math.round(c.adRel*100)}%</td><td class="num">${c.skus}</td><td style="color:${fc};font-size:11px">${c.flag||'—'}</td></tr>`;}).join('')}</tbody>`;
+    tbl.innerHTML=`<thead><tr><th>Brand</th><th class="num">${csales?'Sales':'Share'}</th><th class="num">Wt. OSA%</th><th class="num">Ad-rel.</th><th class="num">SKUs</th><th>Vulnerability</th></tr></thead><tbody>${comp.slice(0,15).map(c=>{const fc=c.flag==='Out-of-stock leader'?C.red:c.flag==='Renting visibility'?C.org:c.flag==='Low availability'?C.acc:C.mut;return `<tr><td>${c.b}</td><td class="num" style="color:var(--acc)">${csales?money(c.val):fmt(c.csp,2)+'%'}</td><td class="num" style="color:${c.avgOSA<40?C.red:C.grn}">${fmt(c.avgOSA,0)}</td><td class="num">${Math.round(c.adRel*100)}%</td><td class="num">${c.skus}</td><td style="color:${fc};font-size:11px">${c.flag||'—'}</td></tr>`;}).join('')}</tbody>`;
   }
 }
 function renderLpShort(){

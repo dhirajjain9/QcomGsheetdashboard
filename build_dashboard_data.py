@@ -47,12 +47,51 @@ prv = df[df['Date'] == PREV].copy()
 def r(x, n=2):
     return None if pd.isna(x) else round(float(x), n)
 
+# Per-row demand weight = modeled gross MRP (replicates the dashboard's sales model
+# with the default per-sub-cat MRP totals). Lets OSA be a demand-weighted ("Wt.")
+# average instead of a flat mean, matching the Cross-Platform view.
+def _add_weight(frame):
+    frame = frame.copy()
+    frame['_w'] = 0.0
+    for s in SUBCATS:
+        m = (frame['Sub Category'] == s)
+        sub = frame[m & (frame['Est. Category Share SP'] > 0)
+                      & (frame['SP'] > 0) & (frame['MRP'] > 0)]
+        shareSum = sub['Est. Category Share SP'].sum()
+        T = DEFAULT_SALES.get(s, 0)
+        if T > 0 and shareSum > 0:
+            denom = ((sub['Est. Category Share SP'] / shareSum) * (sub['MRP'] / sub['SP'])).sum()
+            if denom > 0:
+                Tsp = T / denom
+                gross = (sub['Est. Category Share SP'] / shareSum) * Tsp / sub['SP'] * sub['MRP']
+                frame.loc[sub.index, '_w'] = gross
+                continue
+        # fallback (no default sales for this sub-cat): weight by value share
+        frame.loc[sub.index, '_w'] = sub['Est. Category Share SP'].fillna(0)
+    return frame
+
+cur = _add_weight(cur)
+prv = _add_weight(prv)
+
+def wmean(frame, col, wcol='_w'):
+    v = frame[col]; w = frame[wcol]
+    mask = v.notna() & (w > 0)
+    if mask.any() and w[mask].sum() > 0:
+        return float((v[mask] * w[mask]).sum() / w[mask].sum())
+    return float(v[v.notna()].mean()) if v.notna().any() else None
+
+def wmean_by(frame, by, col, wcol='_w'):
+    d = frame.dropna(subset=[col]).copy()
+    d['_wv'] = d[col] * d[wcol]
+    g = d.groupby(by).agg(_wv=('_wv', 'sum'), _w=(wcol, 'sum'))
+    return (g['_wv'] / g['_w'].replace(0, np.nan)).fillna(d.groupby(by)[col].mean())
+
 # ---------- KPIs ----------
 kpis = {
     'skus': int(cur['Product ID'].nunique()),
     'brands': int(cur['BrandKey'].nunique()),
     'subcats': len(SUBCATS),
-    'avg_osa': r(cur['Wt. OSA %'].mean(), 1),
+    'avg_osa': r(wmean(cur, 'Wt. OSA %'), 1),
     'avg_disc': r(cur['Wt. Discount %'].mean(), 1),
     'avg_sp': r(cur['SP'].mean(), 0),
     'months': f"{PREV[:7]} → {LATEST[:7]}",
@@ -71,7 +110,7 @@ for s in SUBCATS:
         'name': s,
         'skus': int(c['Product ID'].nunique()),
         'brands': int(c['BrandKey'].nunique()),
-        'avg_osa': r(c['Wt. OSA %'].mean(), 1),
+        'avg_osa': r(wmean(c, 'Wt. OSA %'), 1),
         'avg_disc': r(c['Wt. Discount %'].mean(), 1),
         'avg_sp': r(c['SP'].mean(), 0),
         'top5_conc': r(top5, 1),
@@ -110,6 +149,7 @@ def brand_table(frame):
 
 bcur = brand_table(cur)
 bprv = brand_table(prv)
+osa_w = wmean_by(cur, 'BrandKey', 'Wt. OSA %')   # demand-weighted OSA per brand
 # normalise share/sov to % of total tracked points in the period (5 sub-cats => 500 share pts, 1000 sov pts)
 tot_share = cur['Est. Category Share'].sum()
 tot_sov = cur['Overall SOV'].sum()
@@ -124,7 +164,7 @@ for k, row in bcur.sort_values('cat_share', ascending=False).head(20).iterrows()
         'brand': brand_disp[k],
         'share_pct': r(row.share_pct, 2),
         'sov_pct': r(row.sov_pct, 2),
-        'osa': r(row.osa, 0),
+        'osa': r(osa_w.get(k, row.osa), 0),
         'disc': r(row.disc, 0),
         'skus': int(row.skus),
         'subcats': int(row.subcats),
@@ -135,7 +175,7 @@ for k, row in bcur.sort_values('cat_share', ascending=False).head(20).iterrows()
 sov_scatter = []
 for k, row in bcur.sort_values('cat_share', ascending=False).head(30).iterrows():
     sov_scatter.append({'brand': brand_disp[k], 'x': r(row.sov_pct,2),
-                        'y': r(row.share_pct,2), 'osa': r(row.osa,0)})
+                        'y': r(row.share_pct,2), 'osa': r(osa_w.get(k, row.osa),0)})
 
 # ---------- Market-share momentum (MoM) by sub-category brand leaders ----------
 momentum = []

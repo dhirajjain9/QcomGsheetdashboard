@@ -57,7 +57,8 @@ def aggregate(sku, key_fn, sub_fn, disp_fn):
         if s.get("sp"):
             a["spS"] += s["sp"]; a["spN"] += 1
         if s.get("osa") is not None:
-            a["osaW"] += s["osa"]; a["osaWN"] += 1   # simple mean (matches platform dashboards)
+            w = s["_g"] or 1e-6
+            a["osaW"] += s["osa"]*w; a["osaWN"] += w   # gross-weighted (demand-weighted) OSA
     out = {}
     for k, a in m.items():
         top = max(a["spread"].items(), key=lambda x: x[1])[0] if a["spread"] else ""
@@ -250,8 +251,8 @@ for name, f, key in PLATS:
                    "types": len(type_aggs[key]), "brands": len(brand_aggs[key]),
                    "sov": sum((s.get("sov") or 0) for s in sku),
                    "n": round(sum(s["_n"] for s in sku)),
-                   "osa": round(sum(s["osa"] for s in sku if s.get("osa") is not None)
-                                / (sum(1 for s in sku if s.get("osa") is not None) or 1), 1),
+                   "osa": round(sum(s["osa"]*(s["_g"] or 1e-6) for s in sku if s.get("osa") is not None)
+                                / (sum((s["_g"] or 1e-6) for s in sku if s.get("osa") is not None) or 1), 1),
                    "sp": round(sum(s["sp"] for s in sku if s.get("sp"))
                                / (sum(1 for s in sku if s.get("sp")) or 1))}
 
@@ -314,7 +315,8 @@ def build_rows(aggs, use_disp, with_extras=False):
                           "o": v["o"], "top": v["top"], "sov": round(v["sovsum"]/(totals[k]["sov"] or 1)*100, 2)}
                 union |= v["keys"]; tg += v["g"]; tn += v["n"]; tk += v["k"]; tu += v["u"]
                 if v["o"] is not None:
-                    oW += v["o"]*v["k"]; oWN += v["k"]   # SKU-weighted = simple mean across the type's SKUs
+                    ow = v["g"] or 1e-6
+                    oW += v["o"]*ow; oWN += ow   # gross-weighted across platforms (demand-weighted)
                 if v["sp"] > 0:
                     spS += v["sp"]*v["k"]; spN += v["k"]
             else:
@@ -342,7 +344,7 @@ tg = sum(totals[k]["g"] for k in ("B", "I", "Z"))
 tn = sum(totals[k]["n"] for k in ("B", "I", "Z"))
 tk = sum(totals[k]["k"] for k in ("B", "I", "Z"))
 qcom = {"g": tg, "n": tn, "k": tk, "brands": len(allb), "types": len(type_rows),
-        "osa": round(sum(totals[k]["osa"]*totals[k]["k"] for k in ("B", "I", "Z"))/(tk or 1), 1),
+        "osa": round(sum(totals[k]["osa"]*totals[k]["g"] for k in ("B", "I", "Z"))/(sum(totals[k]["g"] for k in ("B", "I", "Z")) or 1), 1),
         "sp": round(sum(totals[k]["sp"]*totals[k]["k"] for k in ("B", "I", "Z"))/(tk or 1))}
 # exhaustive unique BIS rows — but collapse a dimension where it doesn't affect the flag:
 # operation only shows for appliance-capable types; material only for utensils (3 buckets).
@@ -593,9 +595,9 @@ function hero(lead,big,cap,mets){
   <div class="mets">${mets.map(m=>`<div class="met"><div class="v">${m[1]}</div><div class="l">${m[0]}</div></div>`).join('')}</div>`;
 }
 document.getElementById('qcomBanner').innerHTML=hero('Q-Commerce · all platforms',money(q.g),'gross MRP',
- [['Net (SP)',money(q.n)],['Discount',disc(q.g,q.n)],['Brands',q.brands.toLocaleString()],['Product types',q.types],['Avg OSA',q.osa+'%'],['Avg SP','₹'+q.sp]]);
+ [['Net (SP)',money(q.n)],['Discount',disc(q.g,q.n)],['Brands',q.brands.toLocaleString()],['Product types',q.types],['Wt. OSA%',q.osa+'%'],['Avg SP','₹'+q.sp]]);
 document.getElementById('platBanners').innerHTML=PK.map(([k,n])=>{const t=DATA.totals[k];
- const cells=[['Net (SP)',money(t.n)],['Discount',disc(t.g,t.n)],['Brands',t.brands],['Prod Type',t.types],['Avg OSA',t.osa+'%'],['Avg SP','₹'+t.sp]];
+ const cells=[['Net (SP)',money(t.n)],['Discount',disc(t.g,t.n)],['Brands',t.brands],['Prod Type',t.types],['Wt. OSA%',t.osa+'%'],['Avg SP','₹'+t.sp]];
  return `<div class="pban ${k}"><div class="pn">${n}</div><div class="big">${money(t.g)}</div><div class="cap2">gross MRP</div>
   <div class="mets">${cells.map(c=>`<div class="m"><div class="l">${c[0]}</div><div class="v">${c[1]}</div></div>`).join('')}</div></div>`;}).join('');
 
@@ -617,7 +619,7 @@ function fillTypeTbl(qstr){
  rs=rs.sort((a,b)=>typeSort.d*(tval(a,typeSort.k)-tval(b,typeSort.k)));
  if(!qstr)rs=rs.slice(0,40);
  document.getElementById('typeNote').textContent=qstr?`${rs.length} match`:`top 40 of ${TYPES.length} product types`;
- const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Brands','b'],['Top-5','c5']];
+ const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['Wt. OSA%','o'],['Brands','b'],['Top-5','c5']];
  document.getElementById('typeTbl').innerHTML=headRow(cols,typeSort)+'<tbody>'+
   rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td><td class="c5cell" title="see the top 5 brands">${r.c5}%</td></tr>`).join('')+'</tbody>';
  markSel('typeTbl',curType);
@@ -627,7 +629,7 @@ function renderProduct(t){
  const r=TMAP[t];if(!r)return;curType=t;markSel('typeTbl',t);
  const pr=pres(r),tot=r.tot;
  document.getElementById('qtot').innerHTML=hero(`① ${r.t} · total size on Q-Commerce`,money(tot.g),'gross MRP',
-   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Brands',tot.b],['Avg SP','₹'+tot.sp],['Avg OSA',tot.o+'%']]);
+   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Brands',tot.b],['Avg SP','₹'+tot.sp],['Wt. OSA%',tot.o+'%']]);
  const segs=pr.map(k=>({k,g:r[k].g})).sort((a,b)=>b.g-a.g);
  document.getElementById('spreadBar').innerHTML=segs.map(s=>{const pct=tot.g?s.g/tot.g*100:0;return `<div class="row"><div class="nm"><span class="dotc" style="background:${COL[s.k]}"></span>${NAME[s.k]}</div><div class="track"><i style="width:${pct}%;background:${COL[s.k]}"></i></div><div class="val"><b>${money(s.g)}</b> <span class="pct">${pct<1?pct.toFixed(1):Math.round(pct)}%</span></div></div>`;}).join('')+(absent(r).length?`<div class="absent">Absent on ${absent(r).map(k=>NAME[k]).join(', ')}</div>`:'');
  const lead=r.lead||[],lmax=lead[0]?lead[0][1]:1;
@@ -636,7 +638,7 @@ function renderProduct(t){
  document.getElementById('leadPlat').innerHTML=PK.map(([k])=>`<div class="pl" style="--pc:${COL[k]}"><div class="h"><span class="dotc" style="background:${COL[k]}"></span>${NAME[k]}</div><div class="v">${r[k]?(r[k].top||'–'):'<span class="miss">absent</span>'}</div></div>`).join('');
  const strong=pr.reduce((a,k)=>r[k].g>r[a].g?k:a);
  document.getElementById('prodSpot').innerHTML=PK.map(([k])=>pcard(k,r[k],{bigKey:'g',bigLbl:'gross sales (MRP)',fmtBig:v=>money(v),badges:{[strong]:'<span class="badge bg-grn">biggest</span>'},
-   rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`${shareOf(k,x.g).toFixed(2)}%`],['SKUs',x=>x.k],['Brands',x=>x.b],['Avg SP',x=>'₹'+x.sp],['OSA',x=>`<b style="color:${x.o<40?'var(--red)':'var(--grn)'}">${x.o}%</b>`],['Top brand',x=>x.top||'–']]})).join('');
+   rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`${shareOf(k,x.g).toFixed(2)}%`],['SKUs',x=>x.k],['Brands',x=>x.b],['Avg SP',x=>'₹'+x.sp],['Wt. OSA%',x=>`<b style="color:${x.o<40?'var(--red)':'var(--grn)'}">${x.o}%</b>`],['Top brand',x=>x.top||'–']]})).join('');
  renderTiers(r);
  // ⑥ opportunity cards (per platform)
  const RC={'Prime white space':'#34c759','Rented crown':'#0a84c2','Organic fortress':'#ff3b30','Crowded shelf':'#ff9500','Open & contested':'#86868b'};
@@ -690,7 +692,7 @@ function fillBrandTbl(qstr){
  rs=rs.sort((a,b)=>brandSort.d*(tval(a,brandSort.k)-tval(b,brandSort.k)));
  rs=rs.slice(0,qstr?80:40);
  document.getElementById('brandNote2').textContent=qstr?`${rs.length} match`:`top 40 of ${BRANDS.length} brands`;
- const cols=[['Brand',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Product types','b']];
+ const cols=[['Brand',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['Wt. OSA%','o'],['Product types','b']];
  document.getElementById('brandTbl').innerHTML=headRow(cols,brandSort)+'<tbody>'+
   rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td></tr>`).join('')+'</tbody>';
  markSel('brandTbl',curBrand);
@@ -702,9 +704,9 @@ function renderBrand(t){
  const weak=pr.length>1?pr.reduce((a,k)=>shareOf(k,r[k].g)<shareOf(a,r[a].g)?k:a):null;
  const badges={[bench]:'<span class="badge bg-grn">strongest</span>'};if(weak&&weak!==bench)badges[weak]='<span class="badge bg-amb">weakest</span>';
  document.getElementById('bqtot').innerHTML=hero(`① ${r.t} · across Q-Commerce`,money(tot.g),'gross MRP',
-   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Product types',tot.b],['Avg SP','₹'+tot.sp],['Avg OSA',tot.o+'%']]);
+   [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Product types',tot.b],['Avg SP','₹'+tot.sp],['Wt. OSA%',tot.o+'%']]);
  document.getElementById('brandSpot').innerHTML=PK.map(([k])=>pcard(k,r[k],{bigKey:'g',bigLbl:'gross sales (MRP)',fmtBig:v=>money(v),badges,
-   rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`<b>${shareOf(k,x.g).toFixed(2)}%</b>`],['SKUs',x=>x.k],['Product types',x=>x.b],['Avg SP',x=>'₹'+x.sp],['OSA',x=>`${x.o}%`],['SOV (visibility)',x=>`${x.sov}%`],['Top type',x=>x.top||'–']]})).join('');
+   rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`<b>${shareOf(k,x.g).toFixed(2)}%</b>`],['SKUs',x=>x.k],['Product types',x=>x.b],['Avg SP',x=>'₹'+x.sp],['Wt. OSA%',x=>`${x.o}%`],['SOV (visibility)',x=>`${x.sov}%`],['Top type',x=>x.top||'–']]})).join('');
  let s=`Strongest on <b>${NAME[bench]}</b> — ${money(r[bench].g)} (<b>${shareOf(bench,r[bench].g).toFixed(1)}%</b> of ${NAME[bench]}), led by <b>${r[bench].top}</b>. `;
  const ab=absent(r);if(ab.length)s+=`<b>Absent on ${ab.map(k=>NAME[k]).join(' & ')}</b>.`;
  document.getElementById('brandInsight').innerHTML='💡 '+s;
