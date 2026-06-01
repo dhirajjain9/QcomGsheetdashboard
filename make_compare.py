@@ -141,14 +141,16 @@ UTENSIL_TYPES = {
     "Bowl", "Mug / Cup", "Drinking Glass", "Cutlery (Spoon/Fork)", "Ladle / Skimmer", "Tong / Pakad",
     "Spatula / Turner", "Colander / Strainer", "Serving Tray", "Jar / Canister", "Storage Container",
     "Idli / Steamer Maker", "Jug", "Spice Box", "Plate Stand / Rack", "Butter / Serving Dish",
-    "Cake Stand", "Knife", "Lunch Box / Tiffin", "Tea Infuser", "Rice / Food Server",
+    "Cake Stand", "Lunch Box / Tiffin", "Tea Infuser", "Rice / Food Server",
     "Hand Blender / Mixer",
 }
 # Types we cannot auto-clear: a standard may apply depending on exact build / use.
+# Knives are forged cutlery, outside the IS 14756 sheet-utensils QCO → Conditional, not Mandatory.
 REVIEW_TYPES = {"Pad Lock", "Water/Shower Filter", "Faucet / Tap", "Health Faucet",
-                "Kitchen Scale", "TDS / Water Tester", "Gas Lighter"}
+                "Kitchen Scale", "TDS / Water Tester", "Gas Lighter", "Knife"}
 REVIEW_STD = {"Pad Lock": "IS 729 — confirm QCO", "Water/Shower Filter": "verify (water purifier rules)",
-              "Kitchen Scale": "Legal Metrology + verify", "Faucet / Tap": "verify (plumbing)"}
+              "Kitchen Scale": "Legal Metrology + verify", "Faucet / Tap": "verify (plumbing)",
+              "Knife": "forged cutlery — outside IS 14756 sheet-utensils QCO; verify"}
 # Regulated metals (SS & aluminium — the utensils QCO). NOTE: cast iron / copper /
 # brass are NOT in this QCO, so they live in _OTHER.
 _SS_AL = ("stainless steel", "stainless", " steel", "steel ", "s.s", "ss ", "aluminium",

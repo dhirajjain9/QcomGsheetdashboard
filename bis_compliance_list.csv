@@ -11,7 +11,6 @@ Dinner Set / Plate,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,230
 Pressure Cooker,Any,Manual,Mandatory,IS 2347,186
 Casserole,Steel/Aluminium,Manual,Mandatory,IS 14756 / IS 1660,170
 Mug / Cup,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,123
-Knife,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,70
 Colander / Strainer,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,65
 Gas Stove,Any,,Mandatory,IS 4246,59
 Milk Pan / Tope,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,52
@@ -48,6 +47,7 @@ Storage Container,Unknown,Manual,Conditional,verify material,341
 Mug / Cup,Unknown,,Conditional,verify material,312
 Cookware / Pan,Unknown,,Conditional,verify material,219
 Bowl,Unknown,,Conditional,verify material,153
+Knife,Any,,Conditional,forged cutlery — outside IS 14756 sheet-utensils QCO; verify,142
 Lunch Box / Tiffin,Unknown,Manual,Conditional,verify material,141
 Drinking Glass,Unknown,,Conditional,verify material,122
 Faucet / Tap,Any,,Conditional,verify (plumbing),120
@@ -56,7 +56,6 @@ Casserole,Unknown,Manual,Conditional,verify material,96
 Jar / Canister,Unknown,,Conditional,verify material,91
 Cutlery (Spoon/Fork),Unknown,,Conditional,verify material,74
 Serving Tray,Unknown,,Conditional,verify material,74
-Knife,Unknown,,Conditional,verify material,64
 Pad Lock,Any,,Conditional,IS 729 — confirm QCO,60
 Health Faucet,Any,,Conditional,verify material,36
 Gas Lighter,Any,Manual,Conditional,verify material,26
@@ -200,7 +199,6 @@ Plunger,Any,,Exempt,,9
 Teapot / Kettle,Any,Manual,Exempt,,9
 Floor Drainer / Trap,Any,,Exempt,,8
 Ice Cream Scoop,Any,,Exempt,,8
-Knife,Non-metal,,Exempt,,8
 Medicine / First Aid Box,Any,,Exempt,,8
 Bathroom Accessory Set,Any,,Exempt,,7
 Rice / Food Server,Non-metal,,Exempt,,7
