@@ -456,14 +456,14 @@ input.search:focus{border-color:var(--acc);box-shadow:0 0 0 4px rgba(0,113,227,.
 .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
 /* ② platform-wise spread — aligned rows */
 .spread{display:flex;flex-direction:column;gap:13px;margin-top:8px}
-.spread .row{display:grid;grid-template-columns:104px 1fr 132px;align-items:center;gap:14px}
+.spread .row{display:grid;grid-template-columns:84px 1fr 116px;align-items:center;gap:11px}
 .spread .nm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
 .spread .track{height:10px;background:var(--hair);border-radius:6px;overflow:hidden}
 .spread .track i{display:block;height:100%;border-radius:6px;min-width:3px;transition:width .3s ease}
 .spread .val{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
 .spread .val b{font-weight:700}
 .spread .val .pct{display:inline-block;min-width:38px;color:var(--ink3);font-weight:600}
-.spread .absent{font-size:12px;color:var(--ink3);margin-top:3px;padding-left:118px}
+.spread .absent{font-size:12px;color:var(--ink3);margin-top:3px;padding-left:95px}
 /* ③ who leads — ranked list + platform leader tiles */
 .blbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:600;margin:0 0 11px}
 .blbl.mt{margin-top:18px}
@@ -484,7 +484,11 @@ tbody tr:hover .c5cell{text-decoration-color:var(--acc);color:var(--acc)}
 .plead .pl{border:1px solid var(--hair);border-top:3px solid var(--pc,#ccc);border-radius:12px;padding:11px 13px;background:#fbfbfd}
 .plead .pl .h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3);font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:6px}
 .plead .pl .v{font-weight:600;font-size:13.5px;text-transform:capitalize;line-height:1.3}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
+.gcol{display:flex;flex-direction:column;gap:14px}
+.pl-card{flex:1;display:flex;flex-direction:column}
+.pl-card .plead.v{flex:1;grid-template-columns:1fr;grid-auto-rows:1fr}
+.plead.v .pl{border-top:0;border-left:3px solid var(--pc,#ccc);display:flex;flex-direction:column;justify-content:center}
 #leadCard{display:flex;flex-direction:column}
 #leadCard .brank{flex:1;justify-content:space-between;gap:16px}
 #leadCard .leadfoot{margin-top:16px}
@@ -525,10 +529,12 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <div id="prodDetail">
  <div class="qtot detail" id="qtot"></div>
  <div class="grid2">
-  <div class="card"><div class="step">② Platform-wise spread</div><h3>Where the demand sits</h3><div class="h3sub">Share of this product's total Q-Commerce gross by platform.</div><div class="spread" id="spreadBar"></div></div>
+  <div class="gcol">
+   <div class="card"><div class="step">② Platform-wise spread</div><h3>Where the demand sits</h3><div class="h3sub">Share of this product's total Q-Commerce gross by platform.</div><div class="spread" id="spreadBar"></div></div>
+   <div class="card pl-card"><div class="blbl" style="margin-bottom:13px">Platform leaders · brand #1</div><div class="plead v" id="leadPlat"></div></div>
+  </div>
   <div class="card" id="leadCard"><div class="step">③ Who leads</div><h3>Top 5 brands</h3><div class="h3sub">Biggest brands across Q-Commerce by gross, with each one's share of this category.</div><div class="brank" id="leadQcom"></div><div class="leadfoot" id="leadFoot"></div></div>
  </div>
- <div class="card"><div class="blbl" style="margin-bottom:13px">Platform leaders · brand #1</div><div class="plead" id="leadPlat"></div></div>
  <div class="card"><div class="step">④ All attributes across platforms</div><h3>Platform scorecard</h3><div class="h3sub">Gross, net, discount, share, assortment, price & availability.</div><div class="spot" id="prodSpot"></div></div>
  <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Each platform's <b>own</b> price-tier mix on the <b>same shared ₹ tiers</b> — read independently (the gross on each card shows its true size, so a small platform never looks like it "leads"). Bar = % of that platform's gross.</div><div class="spot" id="tierCards"></div></div>
  <div class="card"><div class="step">⑥ Opportunity to launch</div><h3>Where the opening is — per platform</h3><div class="h3sub">Founder's Launchpad scoring computed within each platform: opportunity score (0–100), white-space signal, availability gap & the attack price band.</div><div class="spot" id="oppSpot"></div></div>
