@@ -131,10 +131,91 @@ def opp_for_platform(sku):
     return out
 
 
+# ---- BIS compliance (SKU-level: driven by material + electrical + named product) ----
+# Product type is too coarse for BIS (a plastic dustbin is exempt, a steel one isn't),
+# so we judge each SKU from its name, then roll up to unique rows / % BIS exposure.
+# Utensils & kitchen tableware: SS / aluminium versions fall under the 2024 utensils QCO
+# (IS 14756 / IS 1660). "Hand Blender / Mixer" here = manual SS whisks & hand-mixers.
+UTENSIL_TYPES = {
+    "Cookware / Pan", "Milk Pan / Tope", "Sauce Pan / Appe Pan", "Casserole", "Dinner Set / Plate",
+    "Bowl", "Mug / Cup", "Drinking Glass", "Cutlery (Spoon/Fork)", "Ladle / Skimmer", "Tong / Pakad",
+    "Spatula / Turner", "Colander / Strainer", "Serving Tray", "Jar / Canister", "Storage Container",
+    "Idli / Steamer Maker", "Jug", "Spice Box", "Plate Stand / Rack", "Butter / Serving Dish",
+    "Cake Stand", "Knife", "Lunch Box / Tiffin", "Tea Infuser", "Rice / Food Server",
+    "Hand Blender / Mixer",
+}
+# Types we cannot auto-clear: a standard may apply depending on exact build / use.
+REVIEW_TYPES = {"Pad Lock", "Water/Shower Filter", "Faucet / Tap", "Health Faucet",
+                "Kitchen Scale", "TDS / Water Tester", "Gas Lighter"}
+REVIEW_STD = {"Pad Lock": "IS 729 — confirm QCO", "Water/Shower Filter": "verify (water purifier rules)",
+              "Kitchen Scale": "Legal Metrology + verify", "Faucet / Tap": "verify (plumbing)"}
+# Regulated metals (SS & aluminium — the utensils QCO). NOTE: cast iron / copper /
+# brass are NOT in this QCO, so they live in _OTHER.
+_SS_AL = ("stainless steel", "stainless", " steel", "steel ", "s.s", "ss ", "aluminium",
+          "aluminum", "hard anodised", "hard anodized", "anodised", "anodized")
+# Genuinely electrical appliances only (scan showed toaster=gas, juicer/kettle mostly
+# manual, "induction" usually = induction-base cookware). Induction Cooktop handled by type.
+# Strong tokens are always electric; bare "electric " is electric UNLESS it's a care phrase
+# ("electric & gas oven safe", "induction base") that describes compatibility, not the product.
+_ELEC_STRONG = ("mixer grinder", "food processor", " otg", "air fryer", "induction cooktop",
+                "induction cook top", "induction stove", "microwave oven", "electric kettle",
+                "electric chopper", "electric whisk", "electric beater", "electric hand blender",
+                "hand mixer", "immersion blender", "rice cooker", "egg boiler", "sandwich maker",
+                "electric grill", "electric tandoor", "electric cooker")
+_ELEC_CARE = ("oven safe", "oven-safe", "& gas", "and gas", "gas safe", "gas & electric",
+              "induction friendly", "induction base", "induction bottom", "induction compatible",
+              "induction & gas")
+# Insulated-bottle QCO (IS 17526) is for vacuum bottles/flasks only — not insulated
+# lunch boxes / casseroles / vacuum storage bags (those fall to utensils QCO or stay exempt).
+FLASK_TYPES = {"Thermal/Insulated Flask", "Water Bottle", "Shaker / Sipper", "Jug"}
+# Non-regulated materials (everything that ISN'T SS/aluminium)
+_OTHER = ("glass", "borosilicate", "opalware", "opal ware", "crystal", "ceramic", "bone china",
+          "stoneware", "porcelain", "plastic", "polypropylene", "tritan", "copolymer", "acrylic",
+          "pvc", "abs", "nylon", "polyester", "melamine", "silicone", "wood", "wooden", "mdf",
+          "bamboo", "cane", "rattan", "copper", "brass", "bronze", "cast iron", "iron", "clay",
+          "terracotta", "marble", "granite stone", "stone", "jute", "cotton", "fabric", "felt",
+          "leather", "resin", "polyresin", "enamel", "paper", "foam", "rubber", "fiber", "fibre")
+
+
+def sku_attrs(name, pt):
+    """Lowest-common-identifier for BIS is the SKU: material × manual/electric, plus
+    named-product QCO overrides (cooker, stove, flask)."""
+    n = str(name).lower()
+    elec = (pt == "Induction Cooktop" or any(w in n for w in _ELEC_STRONG)
+            or ("electric " in n and not any(c in n for c in _ELEC_CARE)))
+    op = "Electric" if elec else "Manual"
+    if any(m in n for m in _SS_AL):
+        mat = "Steel/Aluminium"
+    elif any(m in n for m in _OTHER):
+        mat = "Plastic/Non-metal"
+    else:
+        mat = "Unknown"
+    insulated = any(w in n for w in ("insulated", "vacuum", "thermosteel", "thermos", "flask"))
+    std = None
+    if pt == "Pressure Cooker" or "pressure cooker" in n:
+        std = "IS 2347"
+    elif pt == "Gas Stove":
+        std = "IS 4246"
+    elif pt == "Thermal/Insulated Flask" or (pt in FLASK_TYPES and insulated):
+        std = "IS 17526"
+    elif elec:
+        std = "IS 302 / CRS"
+    elif mat == "Steel/Aluminium" and pt in UTENSIL_TYPES:
+        std = "IS 14756 / IS 1660"
+    if std:
+        flag = "Mandatory"
+    elif (mat == "Unknown" and pt in UTENSIL_TYPES) or pt in REVIEW_TYPES:
+        flag, std = "Conditional", (REVIEW_STD.get(pt) or "verify material")
+    else:
+        flag = "Exempt"
+    return {"mat": mat, "op": op, "flag": flag, "std": std or "—"}
+
+
 type_aggs, brand_aggs, totals, OPP = {}, {}, {}, {}
 BRAND_DISP = {}
 TYPE_BRAND = defaultdict(lambda: defaultdict(float))
 TYPE_SP = defaultdict(lambda: {"B": [], "I": [], "Z": []})
+BIS_COMBOS = defaultdict(int)   # (product type, material, operation, flag, standard) -> #SKUs
 
 for name, f, key in PLATS:
     d = json.load(open(f))
@@ -145,6 +226,8 @@ for name, f, key in PLATS:
             TYPE_BRAND[s["pt"]][bk] += s["_g"]
             if s.get("sp") and s["sp"] > 0:
                 TYPE_SP[s["pt"]][key].append((s["sp"], s["_g"]))
+            at = sku_attrs(s["n"], s["pt"])
+            BIS_COMBOS[(s["pt"], at["mat"], at["op"], at["flag"], at["std"])] += 1
     OPP[key] = opp_for_platform(sku)
     type_aggs[key] = aggregate(sku, lambda s: s["pt"] if s["pt"] != "Other" else None,
                                lambda s: s["b"].lower(), lambda s: s["pt"])
@@ -195,50 +278,7 @@ def sp_tiers(type_):
     return {"edges": edges, "g": {k: [round(x) for x in gross[k]] for k in ("B", "I", "Z")}}
 
 
-# ---- BIS compliance mapping (researched against QCOs/CRS in force, 2024-25) ----
-# status: mandatory (ISI/CRS now) · conditional (material/electric dependent) · review · exempt
-BIS_RULES = {
-    "Pressure Cooker": ("mandatory", "ISI", "IS 2347", "Domestic Pressure Cooker QCO 2020"),
-    "Gas Stove": ("mandatory", "ISI", "IS 4246", "LPG domestic gas stove QCO"),
-    "Induction Cooktop": ("mandatory", "ISI/CRS", "IS 302", "Household electrical appliances QCO 2025"),
-    "Hand Blender / Mixer": ("mandatory", "ISI", "IS 302-2-14", "Electric kitchen machines"),
-    "Juicer": ("mandatory", "ISI", "IS 302", "Electrical appliance safety"),
-    "Thermal/Insulated Flask": ("mandatory", "ISI", "IS 17526", "SS vacuum flask/bottle QCO 2023"),
-    "Cookware / Pan": ("mandatory", "ISI", "IS 14756 / IS 1660", "SS & aluminium utensils QCO 2024"),
-    "Milk Pan / Tope": ("mandatory", "ISI", "IS 14756 / IS 1660", "SS/aluminium utensils QCO 2024"),
-    "Sauce Pan / Appe Pan": ("mandatory", "ISI", "IS 14756 / IS 1660", "SS/aluminium utensils QCO 2024"),
-    "Dinner Set / Plate": ("conditional", "ISI", "IS 14756", "Mandatory if stainless-steel; glass/ceramic/melamine exempt"),
-    "Bowl": ("conditional", "ISI", "IS 14756", "Mandatory if stainless-steel"),
-    "Mug / Cup": ("conditional", "ISI", "IS 14756", "SS mugs covered; ceramic exempt"),
-    "Drinking Glass": ("conditional", "ISI", "IS 14756", "SS tumblers covered; glass exempt"),
-    "Cutlery (Spoon/Fork)": ("conditional", "ISI", "IS 14756", "SS cutlery covered"),
-    "Ladle / Skimmer": ("conditional", "ISI", "IS 14756", "SS covered"),
-    "Tong / Pakad": ("conditional", "ISI", "IS 14756", "SS covered"),
-    "Spatula / Turner": ("conditional", "ISI", "IS 14756", "SS covered"),
-    "Colander / Strainer": ("conditional", "ISI", "IS 14756", "SS covered"),
-    "Serving Tray": ("conditional", "ISI", "IS 14756", "SS trays covered; melamine/wood exempt"),
-    "Jar / Canister": ("conditional", "ISI", "IS 14756", "SS storage covered; glass/plastic exempt"),
-    "Storage Container": ("conditional", "ISI", "IS 14756", "SS containers covered; plastic exempt"),
-    "Casserole": ("conditional", "ISI", "IS 14756 / IS 17526", "SS / insulated casseroles covered"),
-    "Idli / Steamer Maker": ("conditional", "ISI", "IS 14756 / IS 1660", "SS/aluminium covered"),
-    "Knife": ("conditional", "ISI", "IS 14756", "Kitchen knives if SS — verify"),
-    "Water Bottle": ("conditional", "ISI", "IS 17526", "Mandatory if SS/insulated; plastic bottles — verify"),
-    "Teapot / Kettle": ("conditional", "ISI", "IS 302-2-15", "Mandatory if electric kettle"),
-    "Coffee Maker": ("conditional", "ISI", "IS 302", "Mandatory if electric"),
-    "Grill / Toaster Pan": ("conditional", "ISI", "IS 302", "Mandatory if electric toaster/grill"),
-    "Milk Boiler": ("conditional", "ISI", "IS 302 / IS 14756", "Electric: IS 302; steel pan: IS 14756"),
-    "Kitchen Scale": ("review", "—", "—", "Electronic scales: Legal Metrology + possible BIS — verify"),
-    "Pad Lock": ("review", "ISI", "IS 729", "Padlock standard exists — confirm QCO status"),
-    "Water/Shower Filter": ("review", "—", "—", "Some water purifiers under BIS — verify by type"),
-    "Faucet / Tap": ("review", "—", "—", "Plumbing fittings — verify"),
-}
-
-
-def bis_of(pt):
-    if pt in BIS_RULES:
-        s, sc, std, note = BIS_RULES[pt]
-        return {"s": s, "sc": sc, "std": std, "note": note}
-    return {"s": "exempt", "sc": "—", "std": "—", "note": "No known BIS mandate (decor / cleaning / textile / plastic ware)"}
+# (BIS compliance classifier is defined above, before the platform loop.)
 
 
 def build_rows(aggs, use_disp, with_extras=False):
@@ -292,7 +332,31 @@ tk = sum(totals[k]["k"] for k in ("B", "I", "Z"))
 qcom = {"g": tg, "n": tn, "k": tk, "brands": len(allb), "types": len(type_rows),
         "osa": round(sum(totals[k]["osa"]*totals[k]["k"] for k in ("B", "I", "Z"))/(tk or 1), 1),
         "sp": round(sum(totals[k]["sp"]*totals[k]["k"] for k in ("B", "I", "Z"))/(tk or 1))}
-DATA = {"totals": totals, "qcom": qcom, "typeRows": type_rows, "brandRows": brand_rows}
+# exhaustive unique BIS rows — but collapse a dimension where it doesn't affect the flag:
+# operation only shows for appliance-capable types; material only for utensils (3 buckets).
+ELEC_TYPES = {pt for (pt, mat, op, flag, std) in BIS_COMBOS if op == "Electric"}
+
+
+def _matbucket(pt, mat):
+    if pt not in UTENSIL_TYPES:
+        return "—"
+    return "Steel/Aluminium" if mat == "Steel/Aluminium" else ("Unknown" if mat == "Unknown" else "Non-metal")
+
+
+collapsed = defaultdict(int)
+for (pt, mat, op, flag, std), cnt in BIS_COMBOS.items():
+    dmat = _matbucket(pt, mat)
+    dop = op if pt in ELEC_TYPES else "—"
+    collapsed[(pt, dmat, dop, flag, std)] += cnt
+_ford = {"Mandatory": 0, "Conditional": 1, "Exempt": 2}
+bis_rows = [{"pt": pt, "mat": mat, "op": op, "flag": flag, "std": std, "n": cnt}
+            for (pt, mat, op, flag, std), cnt in collapsed.items()]
+bis_rows.sort(key=lambda r: (_ford[r["flag"]], -r["n"], r["pt"]))
+bis_summary = {"Mandatory": [0, 0], "Conditional": [0, 0], "Exempt": [0, 0]}  # [#rows, #SKUs]
+for r in bis_rows:
+    bis_summary[r["flag"]][0] += 1; bis_summary[r["flag"]][1] += r["n"]
+DATA = {"totals": totals, "qcom": qcom, "typeRows": type_rows, "brandRows": brand_rows,
+        "bisRows": bis_rows, "bisSummary": bis_summary}
 
 HTML = r"""<!doctype html>
 <html lang="en"><head>
@@ -350,6 +414,10 @@ a.back:hover{background:rgba(0,113,227,.15)}
 .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 input.search{border:1px solid var(--hair2);border-radius:980px;padding:10px 17px;font-size:14px;min-width:300px;background:var(--panel);color:var(--ink);outline:none}
 input.search:focus{border-color:var(--acc);box-shadow:0 0 0 4px rgba(0,113,227,.15)}
+.seg{display:inline-flex;border:1px solid var(--hair2);border-radius:980px;overflow:hidden}
+.seg button{border:0;background:var(--panel);color:var(--ink2);padding:8px 16px;font-size:13px;cursor:pointer;font-weight:500;border-right:1px solid var(--hair)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:#fff;font-weight:600}
 .tag{font-size:12.5px;color:var(--ink2)}
 .qtot.detail{margin:0 0 14px}
 /* scorecard */
@@ -437,6 +505,20 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
  <div class="qtot detail" id="bqtot"></div>
  <div class="card"><div class="step">② Attributes — total & platform-wise</div><h3>Scorecard</h3><div class="h3sub">Sales, realisation, assortment, price, availability & visibility per platform.</div><div class="spot" id="brandSpot"></div><div class="insight" id="brandInsight"></div></div>
  <div class="card"><div class="step">③ Why it isn't scaling — gap diagnosis</div><h3>What's holding it back, platform by platform</h3><div class="h3sub">Benchmarked to the brand's strongest platform. Root cause = distribution, assortment (SKUs), availability (OSA), visibility (SOV) or competition.</div><div id="brandDiag"></div></div>
+</div>
+
+<!-- ===== BIS COMPLIANCE ===== -->
+<div class="sec">BIS Compliance</div>
+<div class="card">
+ <div class="h3sub">BIS applicability is decided at the <b>SKU level</b> — by <b>material</b> (stainless-steel/aluminium vs plastic/glass/ceramic) and <b>manual vs electric</b>, plus a few named products (pressure cooker, gas stove, insulated flask). Below is the exhaustive list of unique <b>Product type × Material × Operation</b> rows with a confident flag. <b>Mandatory</b> = certification required to sell · <b>Conditional</b> = depends on the actual material/spec, verify · <b>Exempt</b> = no current BIS mandate.</div>
+ <div id="bisSummary" class="platrow" style="grid-template-columns:repeat(3,1fr)"></div>
+ <div class="controls" style="margin-top:14px">
+  <div class="seg" id="bisFilter">
+   <button data-f="all" class="on">All</button><button data-f="Mandatory">Mandatory</button><button data-f="Conditional">Conditional</button><button data-f="Exempt">Exempt</button>
+  </div>
+  <input class="search" id="bisSearch" placeholder="search product type / standard…"><span class="tag" id="bisNote"></span>
+ </div>
+ <div class="tableScroll" style="max-height:520px"><table id="bisTbl"></table></div>
 </div>
 
 <script>
@@ -609,8 +691,52 @@ document.getElementById('brandTbl').addEventListener('click',e=>{
  if(th){const k=th.dataset.k;if(brandSort.k===k)brandSort.d*=-1;else{brandSort.k=k;brandSort.d=-1;}fillBrandTbl(document.getElementById('brandSearch').value.toLowerCase().trim());return;}
  const tr=e.target.closest('tr[data-t]');if(tr){renderBrand(tr.dataset.t);document.getElementById('brandDetail').scrollIntoView({behavior:'smooth',block:'start'});}});
 
+// ===== BIS COMPLIANCE =====
+const BIS=DATA.bisRows,BSUM=DATA.bisSummary;
+const FLAGMETA={Mandatory:{c:'var(--red)',d:'Certification needed to sell'},Conditional:{c:'var(--amb)',d:'Depends on material / spec — verify'},Exempt:{c:'var(--grn)',d:'No current BIS mandate'}};
+const flagBadge=f=>`<span class="badge" style="background:${FLAGMETA[f].c};color:#fff">${f}</span>`;
+let bisF='all';
+function renderBisSummary(){
+ const order=['Mandatory','Conditional','Exempt'];
+ const totSku=order.reduce((a,f)=>a+(BSUM[f]?BSUM[f][1]:0),0)||1;
+ document.getElementById('bisSummary').innerHTML=order.map(f=>{
+  const [rows,sk]=BSUM[f]||[0,0];const m=FLAGMETA[f];
+  return `<div class="qtot detail" style="cursor:pointer" data-bf="${f}">
+   <div class="met" style="border-left:3px solid ${m.c};padding-left:12px">
+    <div class="l" style="color:${m.c};font-weight:600">${f}</div>
+    <div class="v" style="font-size:30px">${sk.toLocaleString()}<span style="font-size:14px;color:var(--ink3)"> SKUs</span></div>
+    <div class="l">${rows} unique rows · ${Math.round(sk/totSku*100)}% of classified SKUs</div>
+    <div class="l" style="margin-top:4px;color:var(--ink2)">${m.d}</div>
+   </div></div>`;
+ }).join('');
+}
+function fillBisTbl(qstr){
+ let rs=BIS.slice();
+ if(bisF!=='all')rs=rs.filter(r=>r.flag===bisF);
+ if(qstr)rs=rs.filter(r=>(r.pt+' '+r.mat+' '+r.std+' '+r.op).toLowerCase().includes(qstr));
+ const tot=rs.reduce((a,r)=>a+r.n,0);
+ document.getElementById('bisNote').textContent=`${rs.length} rows · ${tot.toLocaleString()} SKUs`;
+ const head='<thead><tr><th>Product Type</th><th>Material</th><th>Operation</th><th>BIS</th><th>IS Standard / Note</th><th style="text-align:right">SKUs</th></tr></thead>';
+ document.getElementById('bisTbl').innerHTML=head+'<tbody>'+
+  rs.map(r=>`<tr><td><b>${r.pt}</b></td><td>${r.mat==='—'?'<span class="miss">any</span>':r.mat}</td><td>${r.op==='—'?'<span class="miss">–</span>':r.op}</td><td>${flagBadge(r.flag)}</td><td>${r.std==='—'?'<span class="miss">–</span>':r.std}</td><td style="text-align:right">${r.n.toLocaleString()}</td></tr>`).join('')+'</tbody>';
+}
+document.getElementById('bisFilter').addEventListener('click',e=>{
+ const b=e.target.closest('button[data-f]');if(!b)return;
+ bisF=b.dataset.f;document.querySelectorAll('#bisFilter button').forEach(x=>x.classList.toggle('on',x===b));
+ fillBisTbl(document.getElementById('bisSearch').value.toLowerCase().trim());
+});
+document.getElementById('bisSearch').addEventListener('input',e=>fillBisTbl(e.target.value.toLowerCase().trim()));
+document.getElementById('bisSummary').addEventListener('click',e=>{
+ const c=e.target.closest('[data-bf]');if(!c)return;
+ bisF=c.dataset.bf;
+ document.querySelectorAll('#bisFilter button').forEach(x=>x.classList.toggle('on',x.dataset.f===bisF));
+ document.getElementById('bisSearch').value='';fillBisTbl('');
+ document.getElementById('bisTbl').scrollIntoView({behavior:'smooth',block:'nearest'});
+});
+
 fillTypeTbl(''); fillBrandTbl('');
 renderProduct(TYPES[0].t); renderBrand(BRANDS[0].t);
+renderBisSummary(); fillBisTbl('');
 </script>
 </div></body></html>
 """

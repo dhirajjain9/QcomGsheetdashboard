@@ -1,0 +1,238 @@
+Product Type,Material,Operation,BIS Flag,IS Standard / Note,# SKUs (across 3 platforms)
+Lunch Box / Tiffin,Steel/Aluminium,Manual,Mandatory,IS 14756 / IS 1660,541
+Thermal/Insulated Flask,Any,,Mandatory,IS 17526,464
+Drinking Glass,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,421
+Cookware / Pan,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,340
+Jar / Canister,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,279
+Storage Container,Steel/Aluminium,Manual,Mandatory,IS 14756 / IS 1660,269
+Bowl,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,258
+Cutlery (Spoon/Fork),Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,234
+Dinner Set / Plate,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,230
+Pressure Cooker,Any,Manual,Mandatory,IS 2347,186
+Casserole,Steel/Aluminium,Manual,Mandatory,IS 14756 / IS 1660,170
+Mug / Cup,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,123
+Knife,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,70
+Colander / Strainer,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,65
+Gas Stove,Any,,Mandatory,IS 4246,59
+Milk Pan / Tope,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,52
+Ladle / Skimmer,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,51
+Idli / Steamer Maker,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,41
+Induction Cooktop,Any,Electric,Mandatory,IS 302 / CRS,40
+Tong / Pakad,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,38
+Jug,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,32
+Serving Tray,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,31
+Spatula / Turner,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,27
+Hand Blender / Mixer,Steel/Aluminium,Manual,Mandatory,IS 14756 / IS 1660,25
+Sauce Pan / Appe Pan,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,19
+Rice / Food Server,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,12
+Spice Box,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,11
+Gas Lighter,Any,Electric,Mandatory,IS 302 / CRS,5
+Tea Infuser,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,5
+Butter / Serving Dish,Steel/Aluminium,,Mandatory,IS 14756 / IS 1660,3
+Lunch Box / Tiffin,Steel/Aluminium,Electric,Mandatory,IS 302 / CRS,3
+Reed Diffuser,Any,Electric,Mandatory,IS 302 / CRS,3
+Teapot / Kettle,Any,Electric,Mandatory,IS 302 / CRS,2
+USB / Pen Drive,Any,Electric,Mandatory,IS 302 / CRS,2
+Baking Mould / Tray,Any,Electric,Mandatory,IS 302 / CRS,1
+Baking Paper / Foil,Any,Electric,Mandatory,IS 302 / CRS,1
+Candle,Any,Electric,Mandatory,IS 302 / CRS,1
+Casserole,Unknown,Electric,Mandatory,IS 302 / CRS,1
+Chopper / Peeler / Grater,Any,Electric,Mandatory,IS 302 / CRS,1
+Dehumidifier,Any,Electric,Mandatory,IS 302 / CRS,1
+Hand Blender / Mixer,Non-metal,Electric,Mandatory,IS 302 / CRS,1
+Juicer,Any,Electric,Mandatory,IS 302 / CRS,1
+Lunch Box / Tiffin,Unknown,Electric,Mandatory,IS 302 / CRS,1
+Pressure Cooker,Any,Electric,Mandatory,IS 2347,1
+Storage Container,Steel/Aluminium,Electric,Mandatory,IS 302 / CRS,1
+Storage Container,Unknown,Manual,Conditional,verify material,341
+Mug / Cup,Unknown,,Conditional,verify material,312
+Cookware / Pan,Unknown,,Conditional,verify material,219
+Bowl,Unknown,,Conditional,verify material,153
+Lunch Box / Tiffin,Unknown,Manual,Conditional,verify material,141
+Drinking Glass,Unknown,,Conditional,verify material,122
+Faucet / Tap,Any,,Conditional,verify (plumbing),120
+Dinner Set / Plate,Unknown,,Conditional,verify material,115
+Casserole,Unknown,Manual,Conditional,verify material,96
+Jar / Canister,Unknown,,Conditional,verify material,91
+Cutlery (Spoon/Fork),Unknown,,Conditional,verify material,74
+Serving Tray,Unknown,,Conditional,verify material,74
+Knife,Unknown,,Conditional,verify material,64
+Pad Lock,Any,,Conditional,IS 729 — confirm QCO,60
+Health Faucet,Any,,Conditional,verify material,36
+Gas Lighter,Any,Manual,Conditional,verify material,26
+Milk Pan / Tope,Unknown,,Conditional,verify material,25
+Colander / Strainer,Unknown,,Conditional,verify material,19
+Water/Shower Filter,Any,,Conditional,verify (water purifier rules),15
+Rice / Food Server,Unknown,,Conditional,verify material,13
+Idli / Steamer Maker,Unknown,,Conditional,verify material,7
+Ladle / Skimmer,Unknown,,Conditional,verify material,7
+Hand Blender / Mixer,Unknown,Manual,Conditional,verify material,6
+Spatula / Turner,Unknown,,Conditional,verify material,6
+Plate Stand / Rack,Unknown,,Conditional,verify material,4
+Sauce Pan / Appe Pan,Unknown,,Conditional,verify material,4
+Tong / Pakad,Unknown,,Conditional,verify material,4
+TDS / Water Tester,Any,,Conditional,verify material,2
+Butter / Serving Dish,Unknown,,Conditional,verify material,1
+Cake Stand,Unknown,,Conditional,verify material,1
+Jug,Unknown,,Conditional,verify material,1
+Kitchen Scale,Any,,Conditional,Legal Metrology + verify,1
+Spice Box,Unknown,,Conditional,verify material,1
+Water Bottle,Any,,Exempt,,714
+Wall Art / Print,Any,,Exempt,,652
+Mug / Cup,Non-metal,,Exempt,,565
+Storage Container,Non-metal,Manual,Exempt,,365
+Storage Box / Organizer,Any,,Exempt,,348
+Bowl,Non-metal,,Exempt,,299
+Showpiece / Figurine,Any,,Exempt,,269
+Dinner Set / Plate,Non-metal,,Exempt,,268
+Glassware,Any,,Exempt,,194
+Bucket,Any,,Exempt,,192
+Bath/Hand/Face Towel,Any,,Exempt,,184
+Scented Candle,Any,,Exempt,,182
+Garbage / Trash Bag,Any,,Exempt,,163
+Serving Tray,Non-metal,,Exempt,,162
+Umbrella,Any,,Exempt,,161
+Table Linen / Mat,Any,,Exempt,,152
+Chopper / Peeler / Grater,Any,Manual,Exempt,,147
+Dustbin,Any,,Exempt,,147
+Wall Hook,Any,,Exempt,,134
+Cloth Hanger,Any,,Exempt,,132
+Laundry Basket,Any,,Exempt,,128
+Baking Mould / Tray,Any,Manual,Exempt,,121
+Jar / Canister,Non-metal,,Exempt,,120
+Drinking Glass,Non-metal,,Exempt,,119
+Mop / Refill,Any,,Exempt,,119
+Broom,Any,,Exempt,,115
+Storage Bag / Pouch,Any,,Exempt,,114
+Label / Sticker,Any,,Exempt,,113
+Shelf / Rack,Any,,Exempt,,108
+Cloth Clip / Peg,Any,,Exempt,,107
+Ice Tray / Pop Mould,Any,,Exempt,,106
+Wardrobe/Cloth Organizer,Any,,Exempt,,104
+Reed Diffuser,Any,Manual,Exempt,,100
+Oil Dispenser,Any,,Exempt,,99
+Bar Tool / Corkscrew,Any,,Exempt,,97
+Cookware / Pan,Non-metal,,Exempt,,95
+Sponge / Scrub,Any,,Exempt,,95
+Chopping Board,Any,,Exempt,,90
+Diya,Any,,Exempt,,87
+Shower Curtain,Any,,Exempt,,87
+USB / Pen Drive,Any,Manual,Exempt,,86
+Soap Dispenser,Any,,Exempt,,82
+Raincoat / Rain Gear,Any,,Exempt,,79
+Wiper,Any,,Exempt,,79
+Lunch Box / Tiffin,Non-metal,Manual,Exempt,,74
+Furniture,Any,,Exempt,,73
+Spin Mop,Any,,Exempt,,73
+Shopping / Lunch Bag,Any,,Exempt,,71
+Soap Case / Dish,Any,,Exempt,,68
+Tea Light Candle,Any,,Exempt,,67
+Toilet Brush,Any,,Exempt,,67
+Candle / Diya Holder,Any,,Exempt,,64
+Cleaning Brush,Any,,Exempt,,62
+Artificial Plant / Flower,Any,,Exempt,,58
+Grill / Toaster Pan,Any,,Exempt,,58
+Air Freshener / Fragrance,Any,,Exempt,,50
+Bath Stool / Stool,Any,,Exempt,,50
+Spatula / Turner,Non-metal,,Exempt,,50
+Candle,Any,Manual,Exempt,,49
+Microfiber/Cleaning Cloth,Any,,Exempt,,48
+Shaker / Sipper,Any,,Exempt,,48
+Wall Clock,Any,,Exempt,,47
+Wall Mirror,Any,,Exempt,,45
+Basket (Multipurpose),Any,,Exempt,,44
+Vase / Pot,Any,,Exempt,,44
+Cleaning Wipes,Any,,Exempt,,42
+Cutlery (Spoon/Fork),Non-metal,,Exempt,,40
+Kitchen Cloth / Apron,Any,,Exempt,,40
+Gloves,Any,,Exempt,,38
+All-Purpose Cleaner,Any,,Exempt,,35
+Door Lock / Hardware,Any,,Exempt,,35
+Dustpan,Any,,Exempt,,35
+Duster,Any,,Exempt,,34
+Bathroom Set,Any,,Exempt,,33
+Rolling Pin / Roti Maker,Any,,Exempt,,32
+Spice Box,Non-metal,,Exempt,,28
+Cloth Drying Stand,Any,,Exempt,,27
+Cutlery Holder / Caddy,Any,,Exempt,,27
+Lemon Squeezer,Any,,Exempt,,26
+Bottle Opener,Any,,Exempt,,25
+Casserole,Non-metal,Manual,Exempt,,25
+Garden Hose / Nozzle,Any,,Exempt,,23
+Jug,Non-metal,,Exempt,,23
+Paint / Primer,Any,,Exempt,,23
+Door Stopper / Strip,Any,,Exempt,,22
+Masher,Any,,Exempt,,22
+Puja Item / Lota,Any,,Exempt,,21
+Cylinder Trolley,Any,,Exempt,,20
+Fridge Magnet,Any,,Exempt,,20
+Key Holder,Any,,Exempt,,20
+Salt & Pepper / Cruet,Any,,Exempt,,20
+Ladder,Any,,Exempt,,19
+Sauce Pan / Appe Pan,Non-metal,,Exempt,,18
+Toothbrush Holder,Any,,Exempt,,18
+Dough Press / Maker,Any,,Exempt,,17
+Gift Box / Hamper,Any,,Exempt,,17
+Ladle / Skimmer,Non-metal,,Exempt,,16
+Shoe Rack,Any,,Exempt,,16
+Toilet Roll Holder,Any,,Exempt,,16
+Bread / Roti Box,Any,,Exempt,,15
+Can / Jar Opener,Any,,Exempt,,14
+Kitchen Scissors,Any,,Exempt,,14
+Colander / Strainer,Non-metal,,Exempt,,13
+Floor Cloth / Pocha,Any,,Exempt,,13
+Photo Frame,Any,,Exempt,,13
+Bathrobe,Any,,Exempt,,12
+Drinking Straw,Any,,Exempt,,12
+Trivet / Pot Holder,Any,,Exempt,,12
+Washing Machine Accessory,Any,,Exempt,,12
+Water Dispenser Pump,Any,,Exempt,,12
+Cloth Rope / Line,Any,,Exempt,,11
+Juicer,Any,Manual,Exempt,,11
+Key Chain,Any,,Exempt,,11
+Mouse/Pest Control,Any,,Exempt,,11
+Dish / Sink Brush,Any,,Exempt,,10
+Ironing Board,Any,,Exempt,,10
+Lint Roller,Any,,Exempt,,10
+Repair / Cleaning Kit,Any,,Exempt,,10
+Curtain,Any,,Exempt,,9
+Plunger,Any,,Exempt,,9
+Teapot / Kettle,Any,Manual,Exempt,,9
+Floor Drainer / Trap,Any,,Exempt,,8
+Ice Cream Scoop,Any,,Exempt,,8
+Knife,Non-metal,,Exempt,,8
+Medicine / First Aid Box,Any,,Exempt,,8
+Bathroom Accessory Set,Any,,Exempt,,7
+Rice / Food Server,Non-metal,,Exempt,,7
+Adhesive / Sealant,Any,,Exempt,,6
+Cake Stand,Non-metal,,Exempt,,6
+Coffee Maker,Any,,Exempt,,6
+Connection Pipe,Any,,Exempt,,6
+Lunch Set,Any,,Exempt,,6
+Napkin Holder / Ring,Any,,Exempt,,6
+Sprout Maker,Any,,Exempt,,6
+Tissue Box,Any,,Exempt,,6
+Water Saver / Aerator,Any,,Exempt,,6
+Drying Mat,Any,,Exempt,,5
+Pen Stand / Desk Organizer,Any,,Exempt,,5
+Bangle / Vanity Box,Any,,Exempt,,4
+Bath Mat,Any,,Exempt,,4
+Dehumidifier,Any,Manual,Exempt,,4
+Funnel,Any,,Exempt,,4
+Hand Blender / Mixer,Non-metal,Manual,Exempt,,4
+Baking Paper / Foil,Any,Manual,Exempt,,3
+Bath Salt,Any,,Exempt,,3
+Floor Tile / Mat,Any,,Exempt,,3
+Hair Wrap / Towel,Any,,Exempt,,3
+Milk Boiler,Any,,Exempt,,3
+Screen / Lens Cleaner,Any,,Exempt,,3
+Table Cover / Cloth,Any,,Exempt,,3
+Bread / Atta Maker,Any,,Exempt,,2
+Furniture Pads,Any,,Exempt,,2
+Measuring Tape,Any,,Exempt,,2
+Sewing Kit,Any,,Exempt,,2
+Appliance Cover,Any,,Exempt,,1
+Bottle / Wine Holder,Any,,Exempt,,1
+Butter / Serving Dish,Non-metal,,Exempt,,1
+Cushion / Cover,Any,,Exempt,,1
+Sealant / Gap Filler,Any,,Exempt,,1
