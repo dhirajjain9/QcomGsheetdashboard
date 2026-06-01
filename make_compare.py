@@ -324,7 +324,7 @@ def build_rows(aggs, use_disp, with_extras=False):
         if with_extras:
             allg = sorted(TYPE_BRAND[kk].values(), reverse=True)
             row["c5"] = round(sum(allg[:5])/(sum(allg) or 1)*100)   # top-5 brand concentration
-            lead = sorted(TYPE_BRAND[kk].items(), key=lambda x: -x[1])[:4]
+            lead = sorted(TYPE_BRAND[kk].items(), key=lambda x: -x[1])[:5]
             row["lead"] = [[BRAND_DISP.get(bk, bk), round(g)] for bk, g in lead]
             row["tiers"] = sp_tiers(kk)
             row["opp"] = {k: OPP[k].get(kk) for k in ("B", "I", "Z")}
@@ -452,13 +452,42 @@ input.search:focus{border-color:var(--acc);box-shadow:0 0 0 4px rgba(0,113,227,.
 .verdict{border-radius:14px;padding:14px 16px;margin-top:14px;font-size:13.5px;line-height:1.6}
 .verdict.uniform{background:rgba(52,199,89,.09);border:1px solid rgba(52,199,89,.25)}.verdict.uniform b{color:#1c7c3a}
 .verdict.vary{background:rgba(255,149,0,.10);border:1px solid rgba(255,149,0,.28)}.verdict.vary b{color:#9a5b00}
-.spread-bar{display:flex;height:38px;border-radius:11px;overflow:hidden;margin:6px 0 10px;box-shadow:inset 0 0 0 1px var(--hair)}
-.spread-seg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;min-width:2px}
 .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2)}
 .dotc{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}
-.leadrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.leadchip{font-size:13px;border:1px solid var(--hair);border-radius:980px;padding:6px 12px;background:#fbfbfd}.leadchip b{color:var(--ink)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* ② platform-wise spread — aligned rows */
+.spread{display:flex;flex-direction:column;gap:13px;margin-top:8px}
+.spread .row{display:grid;grid-template-columns:104px 1fr 132px;align-items:center;gap:14px}
+.spread .nm{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.spread .track{height:10px;background:var(--hair);border-radius:6px;overflow:hidden}
+.spread .track i{display:block;height:100%;border-radius:6px;min-width:3px;transition:width .3s ease}
+.spread .val{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.spread .val b{font-weight:700}
+.spread .val .pct{display:inline-block;min-width:38px;color:var(--ink3);font-weight:600}
+.spread .absent{font-size:12px;color:var(--ink3);margin-top:3px;padding-left:118px}
+/* ③ who leads — ranked list + platform leader tiles */
+.blbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:600;margin:0 0 11px}
+.blbl.mt{margin-top:18px}
+.brank{display:flex;flex-direction:column;gap:12px}
+.brank .r{display:grid;grid-template-columns:22px 1fr auto;align-items:center;gap:13px}
+.brank .rk{width:21px;height:21px;border-radius:50%;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;background:#eef0f3;color:var(--ink2)}
+.brank .r:first-child .rk{background:var(--ink);color:#fff}
+.brank .nb .bn{font-weight:600;font-size:13px;margin-bottom:5px}
+.brank .nb .mini{height:6px;background:var(--hair);border-radius:4px;overflow:hidden}
+.brank .nb .mini i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--acc),#5aa9ff)}
+.brank .bv{text-align:right;font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;line-height:1.25}
+.brank .bv .bvp{display:block;font-size:11px;font-weight:600;color:var(--ink3)}
+.leadfoot{margin-top:15px;padding-top:13px;border-top:1px solid var(--hair);font-size:12.5px;color:var(--ink2);line-height:1.5}
+.leadfoot b{color:var(--ink);font-weight:700}
+.c5cell{text-decoration:underline;text-decoration-style:dotted;text-decoration-color:var(--hair2);text-underline-offset:3px}
+tbody tr:hover .c5cell{text-decoration-color:var(--acc);color:var(--acc)}
+.plead{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.plead .pl{border:1px solid var(--hair);border-top:3px solid var(--pc,#ccc);border-radius:12px;padding:11px 13px;background:#fbfbfd}
+.plead .pl .h{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink3);font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.plead .pl .v{font-weight:600;font-size:13.5px;text-transform:capitalize;line-height:1.3}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+#leadCard{display:flex;flex-direction:column}
+#leadCard .brank{flex:1;justify-content:space-between;gap:16px}
+#leadCard .leadfoot{margin-top:16px}
 table{border-collapse:collapse;width:100%;font-size:13px;table-layout:fixed}
 thead th{position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);z-index:2;text-align:center;padding:11px 10px;border-bottom:1px solid var(--hair2);white-space:nowrap;cursor:pointer;font-weight:600;color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.04em}
 thead th:first-child,tbody td:first-child{text-align:left;width:23%;padding-left:16px}
@@ -496,9 +525,10 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <div id="prodDetail">
  <div class="qtot detail" id="qtot"></div>
  <div class="grid2">
-  <div class="card"><div class="step">② Platform-wise spread</div><h3>Where the demand sits</h3><div class="h3sub">Share of this product's total Q-Commerce gross by platform.</div><div class="spread-bar" id="spreadBar"></div><div class="legend" id="spreadLeg"></div></div>
-  <div class="card"><div class="step">③ Who leads</div><h3>Top brands</h3><div class="h3sub">Across Q-Commerce (combined) and each platform's #1.</div><div id="leadQcom" style="margin-bottom:10px"></div><div id="leadPlat" class="leadrow"></div></div>
+  <div class="card"><div class="step">② Platform-wise spread</div><h3>Where the demand sits</h3><div class="h3sub">Share of this product's total Q-Commerce gross by platform.</div><div class="spread" id="spreadBar"></div></div>
+  <div class="card" id="leadCard"><div class="step">③ Who leads</div><h3>Top 5 brands</h3><div class="h3sub">Biggest brands across Q-Commerce by gross, with each one's share of this category.</div><div class="brank" id="leadQcom"></div><div class="leadfoot" id="leadFoot"></div></div>
  </div>
+ <div class="card"><div class="blbl" style="margin-bottom:13px">Platform leaders · brand #1</div><div class="plead" id="leadPlat"></div></div>
  <div class="card"><div class="step">④ All attributes across platforms</div><h3>Platform scorecard</h3><div class="h3sub">Gross, net, discount, share, assortment, price & availability.</div><div class="spot" id="prodSpot"></div></div>
  <div class="card"><div class="step">⑤ SP distribution across value tiers</div><h3>Pricing — one strategy or platform-by-platform?</h3><div class="h3sub">Each platform's <b>own</b> price-tier mix on the <b>same shared ₹ tiers</b> — read independently (the gross on each card shows its true size, so a small platform never looks like it "leads"). Bar = % of that platform's gross.</div><div class="spot" id="tierCards"></div></div>
  <div class="card"><div class="step">⑥ Opportunity to launch</div><h3>Where the opening is — per platform</h3><div class="h3sub">Founder's Launchpad scoring computed within each platform: opportunity score (0–100), white-space signal, availability gap & the attack price band.</div><div class="spot" id="oppSpot"></div></div>
@@ -573,7 +603,7 @@ function pcard(k,r,opts){
 
 // ===== PRODUCT TABLE + DETAIL =====
 let typeSort={k:'g',d:-1},brandSort={k:'g',d:-1};
-const tval=(r,k)=>k==='disc'?(r.tot.g?1-r.tot.n/r.tot.g:0):k==='c5'?(r.c5||0):k==='gap'?(r._gap?r._gap.up:0):(r.tot[k]||0);
+const tval=(r,k)=>k==='disc'?(r.tot.g?1-r.tot.n/r.tot.g:0):k==='c5'?(r.c5||0):(r.tot[k]||0);
 function headRow(cols,sort){return '<thead><tr>'+cols.map(c=>c[1]?`<th data-k="${c[1]}">${c[0]}${sort.k===c[1]?(sort.d<0?' ↓':' ↑'):''}</th>`:`<th>${c[0]}</th>`).join('')+'</tr></thead>';}
 function fillTypeTbl(qstr){
  let rs=TYPES.filter(r=>r.p>=1);
@@ -581,9 +611,9 @@ function fillTypeTbl(qstr){
  rs=rs.sort((a,b)=>typeSort.d*(tval(a,typeSort.k)-tval(b,typeSort.k)));
  if(!qstr)rs=rs.slice(0,40);
  document.getElementById('typeNote').textContent=qstr?`${rs.length} match`:`top 40 of ${TYPES.length} product types`;
- const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Brands','b'],['Top-5','c5'],['Opportunity','gap']];
+ const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['OSA','o'],['Brands','b'],['Top-5','c5']];
  document.getElementById('typeTbl').innerHTML=headRow(cols,typeSort)+'<tbody>'+
-  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td><td>${r.c5}%</td><td>${r._gap?`<span class="dotc" style="background:${COL[r._gap.k]}" title="${NAME[r._gap.k]} under-indexed"></span>${money(r._gap.up)}`:'<span class="miss">–</span>'}</td></tr>`).join('')+'</tbody>';
+  rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td><td class="c5cell" title="see the top 5 brands">${r.c5}%</td></tr>`).join('')+'</tbody>';
  markSel('typeTbl',curType);
 }
 let curType,curBrand,tierChart;
@@ -593,10 +623,11 @@ function renderProduct(t){
  document.getElementById('qtot').innerHTML=hero(`① ${r.t} · total size on Q-Commerce`,money(tot.g),'gross MRP',
    [['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',tot.k.toLocaleString()],['Brands',tot.b],['Avg SP','₹'+tot.sp],['Avg OSA',tot.o+'%']]);
  const segs=pr.map(k=>({k,g:r[k].g})).sort((a,b)=>b.g-a.g);
- document.getElementById('spreadBar').innerHTML=segs.map(s=>{const pct=tot.g?s.g/tot.g*100:0;return `<div class="spread-seg" style="background:${COL[s.k]};flex:${s.g}" title="${NAME[s.k]} ${money(s.g)}">${pct>=8?Math.round(pct)+'%':''}</div>`;}).join('');
- document.getElementById('spreadLeg').innerHTML=segs.map(s=>`<span><span class="dotc" style="background:${COL[s.k]}"></span>${NAME[s.k]} ${money(s.g)} (${tot.g?Math.round(s.g/tot.g*100):0}%)</span>`).join('')+(absent(r).length?`<span style="color:#bbb">absent: ${absent(r).map(k=>NAME[k]).join(', ')}</span>`:'');
- document.getElementById('leadQcom').innerHTML='<span class="tag">Across Q-Commerce</span> '+(r.lead||[]).map((b,i)=>`<span class="leadchip">${i+1}. <b>${b[0]}</b> ${money(b[1])}</span>`).join(' ');
- document.getElementById('leadPlat').innerHTML='<span class="tag">Platform #1</span> '+pr.map(k=>`<span class="leadchip"><span class="dotc" style="background:${COL[k]}"></span>${NAME[k]}: <b>${r[k].top||'–'}</b></span>`).join(' ');
+ document.getElementById('spreadBar').innerHTML=segs.map(s=>{const pct=tot.g?s.g/tot.g*100:0;return `<div class="row"><div class="nm"><span class="dotc" style="background:${COL[s.k]}"></span>${NAME[s.k]}</div><div class="track"><i style="width:${pct}%;background:${COL[s.k]}"></i></div><div class="val"><b>${money(s.g)}</b> <span class="pct">${pct<1?pct.toFixed(1):Math.round(pct)}%</span></div></div>`;}).join('')+(absent(r).length?`<div class="absent">Absent on ${absent(r).map(k=>NAME[k]).join(', ')}</div>`:'');
+ const lead=r.lead||[],lmax=lead[0]?lead[0][1]:1;
+ document.getElementById('leadQcom').innerHTML=lead.map((b,i)=>{const pct=tot.g?b[1]/tot.g*100:0;return `<div class="r"><span class="rk">${i+1}</span><div class="nb"><div class="bn">${b[0]}</div><div class="mini"><i style="width:${Math.max(4,b[1]/lmax*100)}%"></i></div></div><div class="bv">${money(b[1])}<span class="bvp">${pct.toFixed(1)}%</span></div></div>`;}).join('');
+ document.getElementById('leadFoot').innerHTML=`Top 5 = <b>${r.c5}%</b> of this category's Q-Commerce gross — the same <b>Top-5</b> figure in the table above.`;
+ document.getElementById('leadPlat').innerHTML=PK.map(([k])=>`<div class="pl" style="--pc:${COL[k]}"><div class="h"><span class="dotc" style="background:${COL[k]}"></span>${NAME[k]}</div><div class="v">${r[k]?(r[k].top||'–'):'<span class="miss">absent</span>'}</div></div>`).join('');
  const strong=pr.reduce((a,k)=>r[k].g>r[a].g?k:a);
  document.getElementById('prodSpot').innerHTML=PK.map(([k])=>pcard(k,r[k],{bigKey:'g',bigLbl:'gross sales (MRP)',fmtBig:v=>money(v),badges:{[strong]:'<span class="badge bg-grn">biggest</span>'},
    rows:[['Net (SP)',x=>money(x.n)],['Discount',x=>disc(x.g,x.n)],['% of platform',x=>`${shareOf(k,x.g).toFixed(2)}%`],['SKUs',x=>x.k],['Brands',x=>x.b],['Avg SP',x=>'₹'+x.sp],['OSA',x=>`<b style="color:${x.o<40?'var(--red)':'var(--grn)'}">${x.o}%</b>`],['Top brand',x=>x.top||'–']]})).join('');
@@ -697,7 +728,7 @@ document.getElementById('brandSearch').addEventListener('input',e=>fillBrandTbl(
 document.getElementById('typeTbl').addEventListener('click',e=>{
  const th=e.target.closest('th[data-k]');
  if(th){const k=th.dataset.k;if(typeSort.k===k)typeSort.d*=-1;else{typeSort.k=k;typeSort.d=-1;}fillTypeTbl(document.getElementById('typeSearch').value.toLowerCase().trim());return;}
- const tr=e.target.closest('tr[data-t]');if(tr){renderProduct(tr.dataset.t);document.getElementById('prodDetail').scrollIntoView({behavior:'smooth',block:'start'});}});
+ const tr=e.target.closest('tr[data-t]');if(tr){const jumpLead=!!e.target.closest('.c5cell');renderProduct(tr.dataset.t);document.getElementById(jumpLead?'leadCard':'prodDetail').scrollIntoView({behavior:'smooth',block:jumpLead?'center':'start'});}});
 document.getElementById('brandTbl').addEventListener('click',e=>{
  const th=e.target.closest('th[data-k]');
  if(th){const k=th.dataset.k;if(brandSort.k===k)brandSort.d*=-1;else{brandSort.k=k;brandSort.d=-1;}fillBrandTbl(document.getElementById('brandSearch').value.toLowerCase().trim());return;}
