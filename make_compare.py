@@ -227,6 +227,7 @@ def sku_attrs(name, pt):
 type_aggs, brand_aggs, totals, OPP = {}, {}, {}, {}
 BRAND_DISP = {}
 TYPE_BRAND = defaultdict(lambda: defaultdict(float))
+TYPE_BRAND_PLAT = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))  # pt -> platform -> bk -> gross
 BRAND_TYPES = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))  # bk -> pt -> platform -> gross
 TYPE_SP = defaultdict(lambda: {"B": [], "I": [], "Z": []})
 BIS_COMBOS = defaultdict(int)   # (product type, material, operation, flag, standard) -> #SKUs
@@ -238,6 +239,7 @@ for name, f, key in PLATS:
         bk = s["b"].lower(); BRAND_DISP.setdefault(bk, s["b"])
         if s["pt"] != "Other":
             TYPE_BRAND[s["pt"]][bk] += s["_g"]
+            TYPE_BRAND_PLAT[s["pt"]][key][bk] += s["_g"]
             BRAND_TYPES[bk][s["pt"]][key] += s["_g"]
             if s.get("sp") and s["sp"] > 0:
                 TYPE_SP[s["pt"]][key].append((s["sp"], s["_g"]))
@@ -283,14 +285,16 @@ def sp_tiers(type_):
         return None
     nb = len(edges) - 1
     gross = {k: [0.0]*nb for k in ("B", "I", "Z")}
+    cnt = {k: [0]*nb for k in ("B", "I", "Z")}
     for k in ("B", "I", "Z"):
         for sp, g in TYPE_SP[type_][k]:
             idx = nb - 1
             for i in range(nb):
                 if sp <= edges[i+1]:
                     idx = i; break
-            gross[k][idx] += g
-    return {"edges": edges, "g": {k: [round(x) for x in gross[k]] for k in ("B", "I", "Z")}}
+            gross[k][idx] += g; cnt[k][idx] += 1
+    return {"edges": edges, "g": {k: [round(x) for x in gross[k]] for k in ("B", "I", "Z")},
+            "k": {k: cnt[k] for k in ("B", "I", "Z")}}
 
 
 # (BIS compliance classifier is defined above, before the platform loop.)
@@ -332,6 +336,11 @@ def build_rows(aggs, use_disp, with_extras=False):
             row["lead"] = [[BRAND_DISP.get(bk, bk), round(g)] for bk, g in lead]
             row["tiers"] = sp_tiers(kk)
             row["opp"] = {k: OPP[k].get(kk) for k in ("B", "I", "Z")}
+            pb = {}
+            for k in ("B", "I", "Z"):
+                bb = sorted(TYPE_BRAND_PLAT[kk][k].items(), key=lambda x: -x[1])[:5]
+                pb[k] = [[BRAND_DISP.get(b, b), round(g)] for b, g in bb if g > 0]
+            row["pb"] = pb   # per-platform top-5 brands (for the report PDF)
         rows.append(row)
     rows.sort(key=lambda r: -r["tot"]["g"])
     return rows
@@ -346,10 +355,14 @@ for row in brand_rows:
     combined = sorted(((pt, sum(pv.values())) for pt, pv in pts.items()), key=lambda x: -x[1])
     row["topTypes"] = [[pt, round(g)] for pt, g in combined[:5]]
     plat_top = {}
+    ptp = {}
     for k in ("B", "I", "Z"):
         best = max(((pt, pv.get(k, 0)) for pt, pv in pts.items()), key=lambda x: x[1], default=(None, 0))
         plat_top[k] = best[0] if best[1] > 0 else None
+        tt = sorted(((pt, pv.get(k, 0)) for pt, pv in pts.items()), key=lambda x: -x[1])[:5]
+        ptp[k] = [[pt, round(g)] for pt, g in tt if g > 0]
     row["platTop"] = plat_top
+    row["ptp"] = ptp   # per-platform top-5 product types (for the report PDF)
 allb = set()
 for k in ("B", "I", "Z"):
     allb |= set(brand_aggs[k])
@@ -524,6 +537,10 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 .trow.peak .tl,.trow.peak .tp{font-weight:700;color:var(--ink)}
 .cwrap{position:relative;height:300px}
 .miss{color:var(--ink3)}
+.dlbtns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.dlbtn{font-size:13px;font-weight:600;color:#fff;background:var(--ink);border:0;border-radius:980px;padding:11px 22px;cursor:pointer;transition:.15s;max-width:340px}
+.dlbtn:hover{background:#000;transform:translateY(-1px)}
+.dlbtn span{font-weight:700;opacity:.85}
 </style></head>
 <!--__STYLE_END__-->
 <body><div class="wrap">
@@ -585,6 +602,12 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
   <input class="search" id="bisSearch" placeholder="search product type / standard…"><span class="tag" id="bisNote"></span>
  </div>
  <div class="tableScroll" style="max-height:520px"><table id="bisTbl"></table></div>
+</div>
+
+<div class="card" style="text-align:center">
+ <div class="step">Export</div><h3>Download a 4-page report (PDF)</h3>
+ <div class="h3sub" style="margin-bottom:14px">Builds the report for the <b>product type</b> or <b>brand</b> currently selected in the ReportCards above, then opens your browser's print dialog — choose <b>Save as PDF</b>. A4, dashboard-styled.</div>
+ <div class="dlbtns"><button class="dlbtn" id="dlProduct">⬇ Product report — <span id="dlProdName">current product</span></button><button class="dlbtn" id="dlBrand">⬇ Brand report — <span id="dlBrandName">current brand</span></button></div>
 </div>
 
 <script>
@@ -804,9 +827,45 @@ document.getElementById('bisSummary').addEventListener('click',e=>{
  document.getElementById('bisTbl').scrollIntoView({behavior:'smooth',block:'nearest'});
 });
 
+// ===== DOWNLOADABLE 4-PAGE REPORT (client-side print -> Save as PDF) =====
+const RCOL={B:'#e8930c',I:'#fc6a1a',Z:'#7b3fe4'};
+const RPTCSS=`@page{size:A4;margin:11mm 12mm 9mm}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1d1d1f;font-size:10.5px;line-height:1.42;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{page-break-after:always}.page:last-child{page-break-after:auto}.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--pc);padding-bottom:7px;margin-bottom:11px}.top .badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--pc);padding:3px 10px;border-radius:980px}.top h1{font-size:20px;letter-spacing:-.5px;margin:6px 0 0;font-weight:700}.top .pg{font-size:9.5px;color:#86868b;text-transform:uppercase;letter-spacing:.05em;font-weight:600}.sub{color:#6e6e73;font-size:10.5px;margin-top:2px}.hero{background:#fff;border:1px solid #d2d2d7;border-radius:14px;padding:13px 16px;margin-bottom:11px}.hero .big{font-size:27px;font-weight:700;letter-spacing:-1px}.hero .biglbl{font-size:10px;color:#86868b;text-transform:uppercase;letter-spacing:.05em;font-weight:600}.mets{display:flex;flex-wrap:wrap;margin-top:10px;border-top:1px solid #e8e8ed;padding-top:9px}.mets .m{width:25%;padding:4px 8px}.mets .m .l{font-size:9px;color:#86868b;text-transform:uppercase;letter-spacing:.04em;font-weight:600}.mets .m .v{font-size:14px;font-weight:700;margin-top:1px}.card{background:#fff;border:1px solid #e8e8ed;border-radius:12px;padding:12px 14px;margin-bottom:11px}.step{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#0071e3;font-weight:700;margin-bottom:2px}.card h3{font-size:13px;margin:0 0 7px;font-weight:700}.grid2{display:flex;gap:11px}.grid2 .col{flex:1;min-width:0}.brank{display:flex;flex-direction:column;gap:8px}.brank .r{display:flex;align-items:center;gap:9px}.brank .rk{width:17px;height:17px;border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;background:#eef0f3;color:#6e6e73;flex:none}.brank .r:first-child .rk{background:#1d1d1f;color:#fff}.brank .nb{flex:1;min-width:0}.brank .nb .bn{font-weight:600;font-size:11px;margin-bottom:3px}.brank .nb .mini{height:5px;background:#e8e8ed;border-radius:4px;overflow:hidden}.brank .nb .mini i{display:block;height:100%;border-radius:4px}.brank .bv{text-align:right;font-size:11px;font-weight:700;white-space:nowrap}.brank .bv .bvp{display:block;font-size:9px;font-weight:600;color:#86868b}.spread{display:flex;flex-direction:column;gap:9px}.spread .row{display:flex;align-items:center;gap:9px}.spread .nm{width:74px;font-weight:600;font-size:11px;display:flex;align-items:center;gap:6px}.spread .dot{width:8px;height:8px;border-radius:50%;flex:none}.spread .track{flex:1;height:9px;background:#e8e8ed;border-radius:5px;overflow:hidden}.spread .track i{display:block;height:100%;border-radius:5px;min-width:3px}.spread .val{width:96px;text-align:right;font-size:11px;white-space:nowrap}.spread .val b{font-weight:700}.spread .val .pct{color:#86868b;font-weight:600;margin-left:5px}.plead{display:flex;gap:7px}.plead .pl{flex:1;min-width:0;border:1px solid #e8e8ed;border-top:3px solid var(--pcc);border-radius:10px;padding:8px 9px}.plead .pl .h{font-size:8.5px;text-transform:uppercase;letter-spacing:.03em;color:#86868b;font-weight:600;margin-bottom:3px}.plead .pl .v{font-weight:600;font-size:11px;text-transform:capitalize;line-height:1.2}.scards{display:flex;gap:9px}.scards .sc{flex:1;min-width:0;border:1px solid #e8e8ed;border-top:3px solid var(--pc);border-radius:11px;padding:10px 11px}.scards .sc .badge2{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--pc)}.scards .sc .gbig{font-size:16px;font-weight:700;margin:2px 0 6px;letter-spacing:-.5px}.scards .sc .mrow{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f0f0f2;font-size:9.5px}.scards .sc .mrow:last-child{border-bottom:0}.scards .sc .mrow .l{color:#86868b}.scards .sc .mrow .v{font-weight:700}.tiers{display:flex;flex-direction:column;gap:7px}.tier{display:flex;align-items:center;gap:9px}.tier .tl{width:84px;font-size:10px;font-weight:600}.tier .tbarwrap{flex:1}.tier .tbar{height:8px;background:#e8e8ed;border-radius:5px;overflow:hidden}.tier .tbar i{display:block;height:100%;border-radius:5px}.tier .tv{width:140px;text-align:right;font-size:10px;white-space:nowrap}.tier .tv .s{display:block;color:#86868b;font-size:9px}.tier.peak .tl{font-weight:700;color:#0071e3}.takeaway{margin-top:10px;padding-top:9px;border-top:1px solid #e8e8ed;font-size:10px;color:#6e6e73}.takeaway b{color:#1d1d1f}.foot{font-size:8.5px;color:#aeaeb2;margin-top:5px;text-align:center}.miss{color:#aeaeb2}`;
+const rMets=items=>items.map(it=>`<div class="m"><div class="l">${it[0]}</div><div class="v">${it[1]}</div></div>`).join('');
+function rRanked(list,denom,color){if(!list||!list.length)return '<span class="miss">–</span>';const mx=list[0][1]||1;return list.map((b,i)=>`<div class="r"><span class="rk">${i+1}</span><div class="nb"><div class="bn">${b[0]}</div><div class="mini"><i style="width:${Math.max(4,b[1]/mx*100)}%;background:${color}"></i></div></div><div class="bv">${money(b[1])}<span class="bvp">${denom?(b[1]/denom*100).toFixed(1):0}%</span></div></div>`).join('');}
+function rCross(kind,r){const isPt=kind==='pt',tot=r.tot;
+ const kpis=[['Net (SP)',money(tot.n)],['Discount',disc(tot.g,tot.n)],['SKUs',(tot.k||0).toLocaleString()],[isPt?'Brands':'Product types',tot.b],['Avg SP','₹'+tot.sp],['Wt. OSA%',tot.o+'%']];
+ const hero=`<div class="hero"><div class="biglbl">${r.t} · total size on Q-Commerce</div><div class="big">${money(tot.g)}</div><div class="mets">${rMets(kpis)}</div></div>`;
+ const segs=PK.filter(p=>r[p[0]]).map(p=>[p[0],p[1],r[p[0]].g]).sort((a,b)=>b[2]-a[2]);
+ let spread=segs.map(s=>{const pct=tot.g?s[2]/tot.g*100:0;return `<div class="row"><div class="nm"><span class="dot" style="background:${RCOL[s[0]]}"></span>${s[1]}</div><div class="track"><i style="width:${pct.toFixed(1)}%;background:${RCOL[s[0]]}"></i></div><div class="val"><b>${money(s[2])}</b><span class="pct">${Math.round(pct)}%</span></div></div>`;}).join('');
+ const absent=PK.filter(p=>!r[p[0]]).map(p=>p[1]);
+ if(absent.length)spread+=`<div style="margin-top:6px;font-size:10px;color:#86868b">Absent on ${absent.join(', ')}</div>`;
+ const tiles=PK.map(p=>{const k=p[0];const v=r[k]?(isPt?(r[k].top||'–'):((r.platTop&&r.platTop[k])||'–')):'absent';return `<div class="pl" style="--pcc:${RCOL[k]}"><div class="h">${p[1]} · ${isPt?'Brand #1':'Top type'}</div><div class="v">${v}</div></div>`;}).join('');
+ const left=`<div class="card"><div class="step">Platform-wise spread</div><h3>Where the demand sits</h3><div class="spread">${spread}</div><div style="margin-top:11px"><div class="step" style="margin-bottom:7px">Leaders · ${isPt?'brand #1':'top type'}</div><div class="plead">${tiles}</div></div></div>`;
+ const lead=isPt?r.lead:r.topTypes;
+ const right=`<div class="card"><div class="step">Who leads</div><h3>Top 5 ${isPt?'brands':'product types'}</h3><div class="brank">${rRanked(lead,tot.g,'#0071e3')}</div></div>`;
+ const cards=PK.map(p=>{const k=p[0];if(!r[k])return `<div class="sc" style="--pc:${RCOL[k]}"><div class="badge2">${p[1]}</div><div class="miss" style="margin-top:8px">Not present</div></div>`;const v=r[k],sh=DATA.totals[k].g?v.g/DATA.totals[k].g*100:0;const mr=[['Gross',money(v.g)],['Net',money(v.n)],['% of platform',sh.toFixed(2)+'%'],['Discount',disc(v.g,v.n)],['Units',unitsFmt(v.u)],['SKUs',(v.k||0).toLocaleString()],[isPt?'Brands':'Types',v.b],['Avg SP','₹'+v.sp],['Wt. OSA%',v.o+'%']].map(x=>`<div class="mrow"><span class="l">${x[0]}</span><span class="v">${x[1]}</span></div>`).join('');return `<div class="sc" style="--pc:${RCOL[k]}"><div class="badge2">${p[1]}</div><div class="gbig">${money(v.g)}</div>${mr}</div>`;}).join('');
+ const score=`<div class="card"><div class="step">All attributes across platforms</div><h3>Platform scorecard</h3><div class="scards">${cards}</div></div>`;
+ return `<section class="page"><div class="top" style="--pc:#0071e3"><div><span class="badge">Cross-Platform</span><h1>${r.t}</h1><div class="sub">${isPt?'Product type':'Brand'} · Overview + platform scorecard · Apr 2026</div></div><div class="pg">Page 1 of 4</div></div>${hero}<div class="grid2"><div class="col">${left}</div><div class="col">${right}</div></div>${score}<div class="foot">Product type & brand are the only axes comparable across platforms · sales = modeled MRP</div></section>`;}
+function rBand(r,k){const t=r.tiers;if(!t||!t.edges)return `<div class="card"><div class="step">Price bands · value tiers</div><h3>Price-band analysis</h3><div class="miss">Too few priced SKUs to band.</div></div>`;const e=t.edges,g=t.g[k]||[],c=(t.k&&t.k[k])||[],nb=e.length-1;const tg=g.reduce((a,b)=>a+b,0)||1,tk=c.reduce((a,b)=>a+b,0)||1,mg=Math.max.apply(null,g.concat([1]));let pk=0;for(let i=1;i<nb;i++)if((g[i]||0)>(g[pk]||0))pk=i;let rows='';for(let i=0;i<nb;i++){const dem=(g[i]||0)/tg*100,sup=(c[i]||0)/tk*100;rows+=`<div class="tier${i===pk?' peak':''}"><div class="tl">₹${e[i]}–${e[i+1]}</div><div class="tbarwrap"><div class="tbar"><i style="width:${Math.max(2,(g[i]||0)/mg*100)}%;background:${RCOL[k]}"></i></div></div><div class="tv"><b>${Math.round(dem)}%</b> demand<span class="s">${c[i]||0} SKUs · ${Math.round(sup)}% supply</span></div></div>`;}const take=`Demand peaks in the <b>₹${e[pk]}–${e[pk+1]}</b> band (${Math.round((g[pk]||0)/tg*100)}% of gross on ${c[pk]||0} SKUs). Bar = demand (gross); supply = share of SKUs.`;return `<div class="card"><div class="step">Price bands · value tiers — demand vs supply</div><h3>Price-band analysis</h3><div class="tiers">${rows}</div><div class="takeaway">${take}</div></div>`;}
+function rPlat(kind,r,k,n,pg){const isPt=kind==='pt';
+ if(!r[k])return `<section class="page"><div class="top" style="--pc:${RCOL[k]}"><div><span class="badge">${n}</span><h1>${r.t}</h1><div class="sub">${n} · Apr 2026</div></div><div class="pg">Page ${pg} of 4</div></div><div class="card"><b>Not present on ${n}.</b> No listed SKUs in the April snapshot — a potential white space.</div></section>`;
+ const v=r[k],sh=DATA.totals[k].g?v.g/DATA.totals[k].g*100:0;
+ const kpis=[['Net (SP)',money(v.n)],['Discount',disc(v.g,v.n)],['Units',unitsFmt(v.u)],['SKUs',(v.k||0).toLocaleString()],[isPt?'Brands':'Product types',v.b],['Avg SP','₹'+v.sp],['Wt. OSA%',v.o+'%'],['% of platform',sh.toFixed(2)+'%']];
+ const hero=`<div class="hero"><div class="biglbl">Gross MRP on ${n}</div><div class="big">${money(v.g)}</div><div class="mets">${rMets(kpis)}</div></div>`;
+ const contr=isPt?(r.pb&&r.pb[k]):(r.ptp&&r.ptp[k]);const ctot=contr?contr.reduce((a,x)=>a+x[1],0):0;
+ const lead=`<div class="card"><div class="step">Who leads</div><h3>Top ${isPt?'brands':'product types'} here</h3><div class="brank">${rRanked(contr,ctot,RCOL[k])}</div></div>`;
+ return `<section class="page"><div class="top" style="--pc:${RCOL[k]}"><div><span class="badge">${n}</span><h1>${r.t}</h1><div class="sub">${n} · Apr 2026</div></div><div class="pg">Page ${pg} of 4</div></div>${hero}${lead}${isPt?rBand(r,k):''}<div class="foot">Source: ${n} RCA export · Apr 2026 · sales = modeled MRP</div></section>`;}
+function reportDoc(kind){const r=kind==='pt'?TMAP[curType]:BMAP[curBrand];if(!r)return null;let pages=rCross(kind,r),pg=2;PK.forEach(p=>{pages+=rPlat(kind,r,p[0],p[1],pg);pg++;});return `<!doctype html><html><head><meta charset="utf-8"><title>${r.t} — ${kind==='pt'?'Product':'Brand'} report</title><style>${RPTCSS}</style></head><body>${pages}</body></html>`;}
+function openReport(kind){const cur=kind==='pt'?curType:curBrand;if(!cur){alert('Select a '+(kind==='pt'?'product type':'brand')+' in the ReportCard first.');return;}const w=window.open('','_blank');if(!w){alert('Please allow pop-ups for this site to download the report.');return;}w.document.open();w.document.write(reportDoc(kind));w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},400);}
+function updDl(){const p=document.getElementById('dlProdName'),b=document.getElementById('dlBrandName');if(p&&curType)p.textContent=curType;if(b&&curBrand)b.textContent=curBrand;}
+document.getElementById('dlProduct').addEventListener('click',function(){openReport('pt');});
+document.getElementById('dlBrand').addEventListener('click',function(){openReport('brand');});
+
 fillTypeTbl(''); fillBrandTbl('');
 renderProduct(TYPES[0].t); renderBrand(BRANDS[0].t);
-renderBisSummary(); fillBisTbl('');
+renderBisSummary(); fillBisTbl(''); updDl();
+document.getElementById('typeTbl').addEventListener('click',updDl);
+document.getElementById('brandTbl').addEventListener('click',updDl);
 </script>
 </div></body></html>
 """
