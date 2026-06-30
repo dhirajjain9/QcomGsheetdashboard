@@ -3,6 +3,76 @@ import re
 # Ordered (specific -> general). First matching rule wins.
 # Each rule: (Product Type label, [substring keywords searched in lowercased name])
 RULES = [
+    # === NEW DOMAINS (Apr+May expanded catalogue) — appliances / personal-care /
+    #     electronics / sports / bags / lighting / stationery. Placed FIRST so these
+    #     names win over home keywords (e.g. "Mixer Grinder 3 Jars" must not become
+    #     "Jar/Canister", "Vacuum Cleaner" not "Flask", "Glass Weighing Machine" not
+    #     "Glassware", "Luggage Scale" not "Bag"). ===
+    ("Weighing Scale", ["weighing scale", "weighing machine", "weight scale", "body scale", "luggage scale", "weighing balance", "bathroom scale"]),
+    ("Medical Device", ["thermometer", "oximeter", "bp monitor", "blood pressure monitor", "nebulizer", "glucometer"]),
+    # Kitchen appliances (before cookware / jar / glass)
+    ("Mixer Grinder", ["mixer grinder", "mixie", "juicer mixer grinder", "mixer-grinder", "wet grinder"]),
+    ("Hand Blender / Mixer", ["hand blender", "immersion blender", "electric beater", "hand mixer", "egg beater", "milk frother", "electric whisk"]),
+    ("Food Processor", ["food processor"]),
+    ("Juicer", ["juicer", "cold press", "slow juicer"]),
+    ("Electric Kettle", ["electric kettle"]),
+    ("Rice / Electric Cooker", ["rice cooker", "electric cooker", "multi cooker", "egg boiler", "egg cooker"]),
+    ("Coffee Maker", ["coffee maker", "coffee machine", "espresso machine", "espresso maker"]),
+    ("Air Fryer", ["air fryer", "airfryer"]),
+    ("OTG / Microwave Oven", ["microwave oven", "oven toaster", " otg", "otg oven", "microwave"]),
+    ("Sandwich / Waffle Maker", ["sandwich maker", "sandwich griller", "sandwich toaster", "waffle maker", "grill maker", "panini maker"]),
+    ("Toaster", ["pop up toaster", "pop-up toaster", "bread toaster", "electric toaster", "slice toaster"]),
+    ("Induction Cooktop", ["induction cooktop", "induction cook top", "induction stove"]),
+    ("Electric Tandoor / Roti Maker", ["electric tandoor", "roti maker", "dosa maker", "khakhra maker"]),
+    ("Kitchen Chimney", ["kitchen chimney", "chimney"]),
+    # Home appliances (vacuum BEFORE flask 'vacuum')
+    ("Vacuum Cleaner", ["vacuum cleaner", "handheld vacuum", "wet and dry vacuum", "wet & dry vacuum", "robotic vacuum", "robo vacuum", "air blower", "vacuum blower"]),
+    ("Water Heater / Geyser", ["geyser", "water heater", "immersion rod", "instant water heater", "storage water heater"]),
+    ("Room Heater", ["room heater", "fan heater", "halogen heater", "oil filled radiator", "heat convector", "blower heater"]),
+    ("Electric Iron", ["steam iron", "dry iron", "garment iron", "electric iron"]),
+    ("Electric Fan", ["ceiling fan", "table fan", "pedestal fan", "exhaust fan", "wall fan", "tower fan", "rechargeable fan", "usb fan", "personal fan", "cooling fan"]),
+    ("Air Purifier", ["air purifier"]),
+    ("Air Cooler", ["air cooler", "personal cooler", "desert cooler", "tower cooler"]),
+    ("Washing Machine", ["washing machine", "washer dryer"]),
+    ("Dishwasher", ["dishwasher"]),
+    ("Sewing Machine", ["sewing machine"]),
+    ("Inverter / UPS", ["inverter", "online ups", "inverter battery"]),
+    # Electronics / accessories / lighting
+    ("Power Bank / Charger / Cable", ["power bank", "powerbank", "fast charger", "wall charger", "mobile charger", "car charger", "charging cable", "data cable", "type-c cable", "usb cable", "charging adapter", "charging adaptor"]),
+    ("Audio Device", ["earbud", "earphone", "headphone", "headset", "bluetooth speaker", "soundbar", "neckband"]),
+    ("Smartwatch / Band", ["smartwatch", "smart watch", "fitness band", "smart band", "fitness tracker"]),
+    ("Camera / Security", ["cctv", "security camera", "dashcam", "wifi camera", "smart camera", "doorbell camera"]),
+    ("Tyre Inflator / Air Pump", ["tyre inflator", "tire inflator", "air pump", "tyre pump"]),
+    ("Projector / Streaming", ["projector", "fire tv", "tv stick", "streaming stick", "chromecast"]),
+    ("Extension / Spike Guard", ["extension board", "extension cord", "spike guard", "surge protector", "power strip", "multi plug", "multiplug"]),
+    ("Switch / Socket", ["modular switch", "wall socket", "power socket", "switch board", "switchboard"]),
+    ("Light / Bulb", ["led bulb", "light bulb", "tube light", "led strip", "led batten", "panel light", "downlight", "night lamp", "fairy light", "string light", "rice light", "decorative light", "led light", "smart bulb", "wall light", "led panel"]),
+    # Sports & fitness (tummy trimmer BEFORE personal-care trimmer)
+    ("Yoga / Exercise Mat", ["yoga mat", "exercise mat"]),
+    ("Weights / Dumbbells", ["dumbbell", "weight plate", "kettlebell", "gym weight"]),
+    ("Fitness Accessory", ["skipping rope", "jump rope", "resistance band", "gym ball", "ab roller", "tummy trimmer", "hand gripper", "ankle weight", "gym gloves", "exercise band"]),
+    ("Sports Equipment", ["cricket bat", "football", "basketball", "volleyball", "badminton racket", "badminton racquet", "tennis racket", "shuttlecock", "table tennis", "carrom", "dart board"]),
+    # Personal care
+    ("Hair Dryer", ["hair dryer", "hair dryar", "blow dryer"]),
+    ("Hair Styler / Straightener", ["hair straightener", "straightener", "hair curler", "curling iron", "crimper", "hair styler", "airstyler", "air styler"]),
+    ("Trimmer / Shaver / Groomer", ["trimmer", "shaver", "groomer", "hair clipper", "epilator", "grooming kit", "callus remover"]),
+    ("Electric Toothbrush", ["electric toothbrush"]),
+    ("Massager", ["massager", "massage gun"]),
+    # Bags & travel
+    ("Backpack / Bag", ["backpack", "laptop bag", "sling bag", "hand bag", "handbag", "tote bag", "messenger bag", "school bag", "duffel bag", "duffle bag", "gym bag"]),
+    ("Luggage / Trolley Bag", ["trolley bag", "suitcase", "cabin bag", "travel bag", "luggage trolley"]),
+    ("Wallet / Purse", ["wallet", "ladies purse", "card holder"]),
+    # Stationery
+    ("Pen / Pencil", ["ball pen", "gel pen", "ballpoint", "fountain pen", "sketch pen", "marker pen", "colour pencil", "color pencil"]),
+    ("Notebook / Diary", ["notebook", "spiral notebook", "diary", "notepad", "sticky note"]),
+    ("Stationery Misc", ["stapler", "glue stick", "highlighter", "geometry box", "art set", "craft kit", "crayon", "calculator", "file folder", "whiteboard"]),
+    # Soft furnishings (bedding / mats)
+    ("Bedsheet", ["bedsheet", "bed sheet", "fitted sheet", "flat sheet", "bed cover", "bedding set", "diwan set", "duvet cover"]),
+    ("Pillow", ["pillow", "bolster", "neck rest"]),
+    ("Blanket / Quilt / Dohar", ["blanket", "quilt", "comforter", "razai", "dohar", "ac quilt"]),
+    ("Mattress / Topper", ["mattress", "mattress topper", "mattress protector", "gadda"]),
+    ("Door / Floor Mat", ["door mat", "doormat", "floor mat", "entrance mat"]),
+    ("Carpet / Rug", ["carpet", "rug", "dhurrie", "runner mat"]),
     # --- Non-home items Instamart sweeps into these categories (classified so
     #     they leave the "Other" bucket; clearly named so they can be ignored) ---
     ("USB / Pen Drive", ["pen drive", "pendrive", "flash drive", "external ssd", " ssd", "memory card", "micro sd", "microsd", "sandisk", "usb 2.0", "usb 3"]),
