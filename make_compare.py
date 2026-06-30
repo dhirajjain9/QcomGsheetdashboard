@@ -219,16 +219,21 @@ TYPE_BRAND_PLAT = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))  
 BRAND_TYPES = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))  # bk -> pt -> platform -> gross
 TYPE_SP = defaultdict(lambda: {"B": [], "I": [], "Z": []})
 BIS_COMBOS = defaultdict(int)   # (product type, material, operation, flag, standard) -> #SKUs
+SUPER_AGG = defaultdict(lambda: defaultdict(lambda: {"g": 0.0, "n": 0.0}))  # super-cat -> platform -> {g,n}
+TYPE_SUPER = defaultdict(lambda: defaultdict(float))   # product type -> super-cat -> gross (for filter)
 
 for name, f, key in PLATS:
     d = json.load(open(f))
     sku = sales_per_sku(d)
     for s in sku:
         bk = s["b"].lower(); BRAND_DISP.setdefault(bk, s["b"])
+        sc = s.get("s") or "Others"
+        SUPER_AGG[sc][key]["g"] += s["_g"]; SUPER_AGG[sc][key]["n"] += s["_n"]
         if s["pt"] != "Other":
             TYPE_BRAND[s["pt"]][bk] += s["_g"]
             TYPE_BRAND_PLAT[s["pt"]][key][bk] += s["_g"]
             BRAND_TYPES[bk][s["pt"]][key] += s["_g"]
+            TYPE_SUPER[s["pt"]][sc] += s["_g"]
             if s.get("sp") and s["sp"] > 0:
                 TYPE_SP[s["pt"]][key].append((s["sp"], s["_g"]))
             at = sku_attrs(s["n"], s["pt"])
@@ -329,6 +334,8 @@ def build_rows(aggs, use_disp, with_extras=False):
                 bb = sorted(TYPE_BRAND_PLAT[kk][k].items(), key=lambda x: -x[1])[:5]
                 pb[k] = [[BRAND_DISP.get(b, b), round(g)] for b, g in bb if g > 0]
             row["pb"] = pb   # per-platform top-5 brands (for the report PDF)
+            sm = TYPE_SUPER.get(kk, {})
+            row["sc"] = max(sm.items(), key=lambda x: x[1])[0] if sm else "Others"   # dominant Super Category
         rows.append(row)
     rows.sort(key=lambda r: -r["tot"]["g"])
     return rows
@@ -383,8 +390,17 @@ bis_rows.sort(key=lambda r: (_ford[r["flag"]], -r["n"], r["pt"]))
 bis_summary = {"Mandatory": [0, 0], "Conditional": [0, 0], "Exempt": [0, 0]}  # [#rows, #SKUs]
 for r in bis_rows:
     bis_summary[r["flag"]][0] += 1; bis_summary[r["flag"]][1] += r["n"]
+# Super-Category summary (gross + net per super-cat, with per-platform gross)
+super_rows = []
+for sc in SUPER_AGG:
+    pg = {k: round(SUPER_AGG[sc][k]["g"]) for k in ("B", "I", "Z")}
+    super_rows.append({"sc": sc, "B": pg["B"], "I": pg["I"], "Z": pg["Z"],
+                       "g": sum(pg.values()),
+                       "n": round(sum(SUPER_AGG[sc][k]["n"] for k in ("B", "I", "Z")))})
+super_rows.sort(key=lambda r: -r["g"])
+
 DATA = {"totals": totals, "qcom": qcom, "typeRows": type_rows, "brandRows": brand_rows,
-        "bisRows": bis_rows, "bisSummary": bis_summary}
+        "bisRows": bis_rows, "bisSummary": bis_summary, "superRows": super_rows}
 
 HTML = r"""<!doctype html>
 <html lang="en"><head>
@@ -542,10 +558,17 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <div class="qtot" id="qcomBanner"></div>
 <div class="platrow" id="platBanners"></div>
 
+<!-- ===== SUPER-CATEGORY SUMMARY ===== -->
+<div class="sec">Super-Category revenue</div>
+<div class="card">
+ <div class="h3sub">Gross (MRP) &amp; Net (SP) revenue by Super Category across Q-Commerce, with per-platform gross.</div>
+ <div class="tableScroll"><table id="superTbl"></table></div>
+</div>
+
 <!-- ===== PRODUCT ===== -->
 <div class="sec">Product ReportCard</div>
 <div class="card">
- <div class="controls"><input class="search" id="typeSearch" placeholder="search any product type…"><span class="tag" id="typeNote"></span></div>
+ <div class="controls"><select class="search" id="superFilter" style="max-width:280px"></select><input class="search" id="typeSearch" placeholder="search any product type…"><span class="tag" id="typeNote"></span></div>
  <div class="tableScroll"><table id="typeTbl"></table></div>
 </div>
 <div id="prodDetail">
@@ -641,11 +664,14 @@ let typeSort={k:'g',d:-1},brandSort={k:'g',d:-1};
 const tval=(r,k)=>k==='disc'?(r.tot.g?1-r.tot.n/r.tot.g:0):k==='c5'?(r.c5||0):(r.tot[k]||0);
 function headRow(cols,sort){return '<thead><tr>'+cols.map(c=>c[1]?`<th data-k="${c[1]}">${c[0]}${sort.k===c[1]?(sort.d<0?' ↓':' ↑'):''}</th>`:`<th>${c[0]}</th>`).join('')+'</tr></thead>';}
 function fillTypeTbl(qstr){
+ const scf=(document.getElementById('superFilter')||{}).value||'ALL';
  let rs=TYPES.filter(r=>r.p>=1);
+ if(scf!=='ALL')rs=rs.filter(r=>r.sc===scf);
  if(qstr)rs=rs.filter(r=>r.t.toLowerCase().includes(qstr));
  rs=rs.sort((a,b)=>typeSort.d*(tval(a,typeSort.k)-tval(b,typeSort.k)));
- if(!qstr)rs=rs.slice(0,40);
- document.getElementById('typeNote').textContent=qstr?`${rs.length} match`:`top 40 of ${TYPES.length} product types`;
+ const limited=!qstr&&scf==='ALL';
+ if(limited)rs=rs.slice(0,40);
+ document.getElementById('typeNote').textContent=limited?`top 40 of ${TYPES.length} product types`:`${rs.length} match${scf!=='ALL'?' in '+scf:''}`;
  const cols=[['Product Type',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['Wt. OSA%','o'],['Brands','b'],['Top-5','c5']];
  document.getElementById('typeTbl').innerHTML=headRow(cols,typeSort)+'<tbody>'+
   rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td><td class="c5cell" title="see the top 5 brands">${r.c5}%</td></tr>`).join('')+'</tbody>';
@@ -761,6 +787,21 @@ function renderDiag(r,bench){
 }
 
 function markSel(id,t){document.querySelectorAll('#'+id+' tbody tr').forEach(tr=>tr.classList.toggle('sel',tr.dataset.t===t));}
+// ===== Super-Category summary table + Product filter =====
+function renderSuperTbl(){
+ const rows=DATA.superRows||[];
+ const tg=rows.reduce((a,r)=>a+r.g,0),tn=rows.reduce((a,r)=>a+r.n,0);
+ const head='<thead><tr><th>Super Category</th><th>Blinkit</th><th>Instamart</th><th>Zepto</th><th>Gross (MRP)</th><th>Net (SP)</th></tr></thead>';
+ const body=rows.map(r=>`<tr><td><b>${r.sc}</b></td><td>${money(r.B)}</td><td>${money(r.I)}</td><td>${money(r.Z)}</td><td><b>${money(r.g)}</b></td><td>${money(r.n)}</td></tr>`).join('')
+   +`<tr style="border-top:2px solid var(--hair2);font-weight:700"><td>Q-Commerce total</td><td>${money(rows.reduce((a,r)=>a+r.B,0))}</td><td>${money(rows.reduce((a,r)=>a+r.I,0))}</td><td>${money(rows.reduce((a,r)=>a+r.Z,0))}</td><td>${money(tg)}</td><td>${money(tn)}</td></tr>`;
+ document.getElementById('superTbl').innerHTML=head+'<tbody>'+body+'</tbody>';
+}
+(function initSuperFilter(){
+ const sel=document.getElementById('superFilter');if(!sel)return;
+ sel.innerHTML='<option value="ALL">All Super Categories</option>'+(DATA.superRows||[]).map(r=>`<option value="${r.sc}">${r.sc}</option>`).join('');
+ sel.addEventListener('change',()=>fillTypeTbl(document.getElementById('typeSearch').value.toLowerCase().trim()));
+})();
+renderSuperTbl();
 document.getElementById('typeSearch').addEventListener('input',e=>fillTypeTbl(e.target.value.toLowerCase().trim()));
 document.getElementById('brandSearch').addEventListener('input',e=>fillBrandTbl(e.target.value.toLowerCase().trim()));
 document.getElementById('typeTbl').addEventListener('click',e=>{
