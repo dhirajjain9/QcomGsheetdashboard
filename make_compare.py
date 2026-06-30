@@ -221,6 +221,7 @@ TYPE_SP = defaultdict(lambda: {"B": [], "I": [], "Z": []})
 BIS_COMBOS = defaultdict(int)   # (product type, material, operation, flag, standard) -> #SKUs
 SUPER_AGG = defaultdict(lambda: defaultdict(lambda: {"g": 0.0, "n": 0.0}))  # super-cat -> platform -> {g,n}
 TYPE_SUPER = defaultdict(lambda: defaultdict(float))   # product type -> super-cat -> gross (for filter)
+BRAND_SUPER = defaultdict(lambda: defaultdict(float))  # brand key -> super-cat -> gross (for filter)
 
 for name, f, key in PLATS:
     d = json.load(open(f))
@@ -229,6 +230,7 @@ for name, f, key in PLATS:
         bk = s["b"].lower(); BRAND_DISP.setdefault(bk, s["b"])
         sc = s.get("s") or "Others"
         SUPER_AGG[sc][key]["g"] += s["_g"]; SUPER_AGG[sc][key]["n"] += s["_n"]
+        BRAND_SUPER[bk][sc] += s["_g"]
         if s["pt"] != "Other":
             TYPE_BRAND[s["pt"]][bk] += s["_g"]
             TYPE_BRAND_PLAT[s["pt"]][key][bk] += s["_g"]
@@ -358,6 +360,8 @@ for row in brand_rows:
         ptp[k] = [[pt, round(g)] for pt, g in tt if g > 0]
     row["platTop"] = plat_top
     row["ptp"] = ptp   # per-platform top-5 product types (for the report PDF)
+    bsm = BRAND_SUPER.get(bk, {})
+    row["sc"] = max(bsm.items(), key=lambda x: x[1])[0] if bsm else "Others"   # dominant Super Category
 allb = set()
 for k in ("B", "I", "Z"):
     allb |= set(brand_aggs[k])
@@ -591,7 +595,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <!-- ===== BRAND ===== -->
 <div class="sec">Brand ReportCard</div>
 <div class="card">
- <div class="controls"><input class="search" id="brandSearch" placeholder="search any brand…"><span class="tag" id="brandNote2"></span></div>
+ <div class="controls"><select class="search" id="brandSuperFilter" style="max-width:280px"></select><input class="search" id="brandSearch" placeholder="search any brand…"><span class="tag" id="brandNote2"></span></div>
  <div class="tableScroll"><table id="brandTbl"></table></div>
 </div>
 <div id="brandDetail">
@@ -740,11 +744,14 @@ function renderTiers(r){
 
 // ===== BRAND TABLE + DETAIL =====
 function fillBrandTbl(qstr){
+ const scf=(document.getElementById('brandSuperFilter')||{}).value||'ALL';
  let rs=BRANDS.filter(r=>r.p>=1);
+ if(scf!=='ALL')rs=rs.filter(r=>r.sc===scf);
  if(qstr)rs=rs.filter(r=>r.t.toLowerCase().includes(qstr));
  rs=rs.sort((a,b)=>brandSort.d*(tval(a,brandSort.k)-tval(b,brandSort.k)));
- rs=rs.slice(0,qstr?80:40);
- document.getElementById('brandNote2').textContent=qstr?`${rs.length} match`:`top 40 of ${BRANDS.length} brands`;
+ const limited=!qstr&&scf==='ALL';
+ rs=rs.slice(0,limited?40:80);
+ document.getElementById('brandNote2').textContent=limited?`top 40 of ${BRANDS.length} brands`:`${rs.length} match${scf!=='ALL'?' in '+scf:''}`;
  const cols=[['Brand',''],['Gross','g'],['Net','n'],['Discount','disc'],['Units','u'],['Avg SP','sp'],['Wt. OSA%','o'],['Product types','b']];
  document.getElementById('brandTbl').innerHTML=headRow(cols,brandSort)+'<tbody>'+
   rs.map(r=>`<tr data-t="${r.t}"><td>${r.t}</td><td><b>${money(r.tot.g)}</b></td><td>${money(r.tot.n)}</td><td>${disc(r.tot.g,r.tot.n)}</td><td>${unitsFmt(r.tot.u)}</td><td>₹${r.tot.sp}</td><td>${r.tot.o}%</td><td>${r.tot.b}</td></tr>`).join('')+'</tbody>';
@@ -803,6 +810,11 @@ function renderSuperTbl(){
 })();
 renderSuperTbl();
 document.getElementById('typeSearch').addEventListener('input',e=>fillTypeTbl(e.target.value.toLowerCase().trim()));
+(function initBrandSuperFilter(){
+ const sel=document.getElementById('brandSuperFilter');if(!sel)return;
+ sel.innerHTML='<option value="ALL">All Super Categories</option>'+(DATA.superRows||[]).map(r=>`<option value="${r.sc}">${r.sc}</option>`).join('');
+ sel.addEventListener('change',()=>fillBrandTbl(document.getElementById('brandSearch').value.toLowerCase().trim()));
+})();
 document.getElementById('brandSearch').addEventListener('input',e=>fillBrandTbl(e.target.value.toLowerCase().trim()));
 document.getElementById('typeTbl').addEventListener('click',e=>{
  const th=e.target.closest('th[data-k]');
