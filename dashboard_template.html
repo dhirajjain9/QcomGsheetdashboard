@@ -126,9 +126,9 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <div class="kpis" id="kpis"></div>
 
 <!-- SALES INPUT -->
-<h2 id="sec-sales">Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per sub-category</span></h2>
+<h2 id="sec-sales">Convert share → ₹ sales <span class="tag" style="margin-left:6px;font-weight:400">enter total MRP sales per Super Category</span></h2>
 <div class="card" id="salesPanel">
-  <div class="h3sub">Enter each sub-category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. <b>Pre-filled with the agreed split and saved on this device</b> — enter once and reloads keep it (edit anytime, or Clear all to reset to the share-% view).</div>
+  <div class="h3sub">Enter each Super Category's total <b>MRP sales</b>. Each SKU is then costed using <b>Est. Category Share SP, SP and MRP</b> → giving <b>units</b>, <b>net sales (SP)</b> and <b>gross sales (MRP)</b> that reconcile to your totals. <b>Pre-filled with the agreed split and saved on this device</b> — enter once and reloads keep it (edit anytime, or Clear all to reset to the share-% view).</div>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px">
     <span class="tag">Enter in:</span>
     <select id="unitSel">
@@ -153,24 +153,24 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </div>
 
 <!-- OVERALL VIEW -->
-<h2 id="sec-overall">Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all 5 sub-categories</span></h2>
+<h2 id="sec-overall">Overall view <span class="tag" style="margin-left:6px;font-weight:400">across all Super Categories</span></h2>
 <div class="kpis" id="overallKpis"></div>
 <div class="grid g2" style="margin-top:16px">
-  <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per sub-category — enter totals to see ₹</div><div class="cwrap xtall"><canvas id="cOvSub"></canvas></div></div>
+  <div class="card"><h3>Where the sales sit</h3><div class="h3sub" id="ovSubSub">SKUs per Super Category — enter totals to see ₹</div><div class="cwrap xtall"><canvas id="cOvSub"></canvas></div></div>
   <div class="card"><h3>Top brands overall</h3><div class="h3sub">Every brand's total, ₹-weighted across all categories (full brand universe)</div><div class="cwrap xtall"><canvas id="cOvBrand"></canvas></div></div>
 </div>
 
 <!-- OVERVIEW -->
-<h2 id="sec-market">Market structure by sub-category</h2>
+<h2 id="sec-market">Market structure by Super Category</h2>
 <div class="grid g2">
-  <div class="card"><h3>SKUs tracked per sub-category</h3><div class="h3sub">Breadth of assortment monitored</div><div class="cwrap"><canvas id="cSkus"></canvas></div></div>
+  <div class="card"><h3>SKUs tracked per Super Category</h3><div class="h3sub">Breadth of assortment monitored</div><div class="cwrap"><canvas id="cSkus"></canvas></div></div>
   <div class="card"><h3>Brand concentration vs availability</h3><div class="h3sub">Top-5 brand share (bars) &amp; avg on-shelf availability (line)</div><div class="cwrap"><canvas id="cConc"></canvas></div></div>
 </div>
 
 <!-- TOP SKUS -->
 <h2 id="sec-skus">Top SKUs — product-wise leaders <span class="tag" style="font-weight:400;margin-left:6px">Scope (drives SKUs · Brands · Product types):</span> <select id="globalCat" style="font-weight:400"></select></h2>
 <div class="grid g2">
-  <div class="card"><h3>Top 12 products by category share</h3><div class="h3sub">Latest month, selected sub-category</div><div class="cwrap tall"><canvas id="cTopSku"></canvas></div></div>
+  <div class="card"><h3>Top 12 products by category share</h3><div class="h3sub">Latest month, selected Super Category</div><div class="cwrap tall"><canvas id="cTopSku"></canvas></div></div>
   <div class="card"><h3>Detail</h3><div class="h3sub">Share · price · availability · discount</div>
     <div style="max-height:340px;overflow:auto"><table id="tSku"><thead><tr><th>Product</th><th>Brand</th><th class="num">Share%</th><th class="num skuSalesCol" style="display:none">Sales</th><th class="num">SP</th><th class="num">Wt. OSA%</th><th class="num">Disc</th></tr></thead><tbody></tbody></table></div>
   </div>
@@ -179,11 +179,11 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- TOP BRANDS -->
 <h2 id="sec-brands">Top brands &amp; market share <span class="tag" id="brandScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
 <div class="grid g2">
-  <div class="card"><h3>Top 15 brands by share of tracked market</h3><div class="h3sub">% of all category-share points across the 5 sub-categories</div><div class="cwrap xtall"><canvas id="cBrand"></canvas></div></div>
+  <div class="card"><h3>Top 15 brands by share of tracked market</h3><div class="h3sub">% of all category-share points across the Super Categories</div><div class="cwrap xtall"><canvas id="cBrand"></canvas></div></div>
   <div class="card"><h3>Visibility vs conversion</h3><div class="h3sub">Share of Voice (x) vs market share (y). Below the diagonal = seen but under-converting</div><div class="cwrap xtall"><canvas id="cSov"></canvas></div></div>
 </div>
 <div class="card" style="margin-top:16px"><h3>Brand leaderboard</h3><div class="h3sub">Share, voice, footprint &amp; month-over-month momentum</div>
-  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num" title="Brand's Est. Category Share. Single category = true share (brands sum to 100%). All categories = category-size-weighted average over only the categories the brand sells in — bigger categories weigh more, absent ones don't dilute. For a ₹-weighted whole-universe share, use '% of Total'.">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">Wt. OSA%</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Sub-cats</th></tr></thead><tbody></tbody></table></div>
+  <div style="max-height:360px;overflow:auto"><table id="tBrand"><thead><tr><th>#</th><th>Brand</th><th class="num" title="Brand's Est. Category Share. Single category = true share (brands sum to 100%). All categories = category-size-weighted average over only the categories the brand sells in — bigger categories weigh more, absent ones don't dilute. For a ₹-weighted whole-universe share, use '% of Total'.">Mkt Share%</th><th class="num brandSalesCol" style="display:none">Sales</th><th class="num brandTotalCol" style="display:none">% of Total</th><th class="num">SOV%</th><th class="num">MoM Δ</th><th class="num">Wt. OSA%</th><th class="num">Disc</th><th class="num">SKUs</th><th class="num">Categories</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <!-- PRODUCT TYPES -->
@@ -282,7 +282,7 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- MONTH-OVER-MONTH (SKU MOVEMENT) -->
 <h2 id="sec-mom">Month-over-month — SKU movement <span class="tag" id="momScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
 <div class="note">
-  Mar → Apr change in each SKU's <b>value-share</b> (Est. Category Share SP, in share-points of its sub-category). <b>New entrants</b> = SKUs that appeared in April; <b>exits</b> = SKUs that dropped out. Scope follows the Top-SKUs selector above.
+  Apr → May change in each SKU's <b>value-share</b> (Est. Category Share SP, in share-points of its category). <b>New entrants</b> = SKUs that appeared in April; <b>exits</b> = SKUs that dropped out. Scope follows the Top-SKUs selector above.
 </div>
 <div class="kpis" id="momKpis"></div>
 <div class="grid g2" style="margin-top:16px">
@@ -293,9 +293,9 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 </div>
 <div class="grid g2" style="margin-top:16px">
   <div class="card"><h3 style="color:var(--grn)">＋ New entrants</h3><div class="h3sub">New in April — by April value-share</div>
-    <div style="max-height:340px;overflow:auto"><table id="tMomNew"><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Apr share</th><th class="num">Wt. OSA%</th><th class="num">SP</th></tr></thead><tbody></tbody></table></div></div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomNew"><thead><tr><th>Product</th><th>Brand</th><th>Category</th><th class="num">Apr share</th><th class="num">Wt. OSA%</th><th class="num">SP</th></tr></thead><tbody></tbody></table></div></div>
   <div class="card"><h3 style="color:var(--red)">－ Exited SKUs</h3><div class="h3sub">In March, gone in April — by March value-share</div>
-    <div style="max-height:340px;overflow:auto"><table id="tMomExit"><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">Mar share</th><th class="num">Last OSA</th></tr></thead><tbody></tbody></table></div></div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomExit"><thead><tr><th>Product</th><th>Brand</th><th>Category</th><th class="num">May-prev share</th><th class="num">Last OSA</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="h3sub" style="margin:18px 0 0">Brand-level entry/exit <span class="tag">— a brand counts as "new" only if it had <b>no</b> SKUs in the scope last month (and vice-versa)</span></div>
 <div class="grid g2" style="margin-top:10px">
@@ -359,22 +359,21 @@ const fmt=(n,d=1)=>n==null?'–':Number(n).toLocaleString(undefined,{maximumFrac
 // ---- Sales model: entered MRP sales -> units / net(SP) / gross(MRP) per SKU ----
 // Per sub-category: SP-revenue_i = shareSP_i x T_sp ; units_i = SP-rev_i / SP_i ;
 // MRP-rev_i = units_i x MRP_i ; constraint Σ MRP-rev = entered total  =>  T_sp = T / Σ[shareSP_i x (MRP_i/SP_i)]
-const totals={};            // sub-category -> entered MRP sales (₹, absolute)
-const subAgg={};            // sub-category -> {shareSum, Tsp}
+const totals={};            // super-category -> entered MRP sales (₹, absolute)
+const subAgg={};            // (legacy) retained for compatibility
+const BASE={};              // super-category -> baseline modeled gross (₹, absolute)
 let unit=10000000;          // unit multiplier (default ₹ Crore)
 let metric='gross';         // 'net' (SP ₹) | 'gross' (MRP ₹) | 'units'
 const salesActive=()=>Object.values(totals).some(v=>v>0);
 
+// Per-SKU ₹ is pre-baked in the data at the ORIGINAL-category level (_g/_n/_u). Here we
+// just scale a Super Category's SKUs by (entered total / baked baseline), so editing a
+// Super Category total flexes its whole bucket while keeping the internal split exact.
 function computeSales(){
-  DATA.sku_level.forEach(s=>{s._net=0;s._gross=0;s._units=0;});
-  DATA.subcats.forEach(sub=>{
-    subAgg[sub]=null;
-    const T=totals[sub]||0; if(T<=0)return;
-    const rows=DATA.sku_level.filter(s=>s.s===sub&&s.csp>0&&s.sp>0&&s.mrp>0);
-    const shareSum=rows.reduce((a,s)=>a+s.csp,0); if(!shareSum)return;
-    const denom=rows.reduce((a,s)=>a+(s.csp/shareSum)*(s.mrp/s.sp),0); if(!denom)return;
-    const Tsp=T/denom; subAgg[sub]={shareSum,Tsp};
-    rows.forEach(s=>{const f=s.csp/shareSum; s._net=f*Tsp; s._units=s._net/s.sp; s._gross=s._units*s.mrp;});
+  DATA.subcats.forEach(sub=>{BASE[sub]=(DEFAULT_SALES[sub]||0)*1e7;});
+  DATA.sku_level.forEach(s=>{
+    const b=BASE[s.s]||0, f=b>0?((totals[s.s]||0)/b):0;
+    s._gross=(s._g||0)*f; s._net=(s._n||0)*f; s._units=(s._u||0)*f;
   });
 }
 const skuVal=s=>metric==='gross'?(s._gross||0):metric==='units'?(s._units||0):(s._net||0);
@@ -406,7 +405,7 @@ function brandAgg(){        // brand -> {metric value, display name} across ALL 
 }
 
 const PLAT_LABEL=(DATA.meta&&DATA.meta.platform_label)||'Blinkit';
-document.getElementById('subt').textContent=`${DATA.kpis.subcats} sub-categories · ${DATA.kpis.skus.toLocaleString()} SKUs · ${DATA.kpis.brands} brands · ${DATA.meta.prev.slice(0,7)} → ${DATA.meta.latest.slice(0,7)}`;
+document.getElementById('subt').textContent=`${DATA.kpis.subcats} super-categories · ${DATA.kpis.skus.toLocaleString()} SKUs · ${DATA.kpis.brands} brands · ${DATA.meta.prev.slice(0,7)} → ${DATA.meta.latest.slice(0,7)}`;
 document.getElementById('ft').textContent=`Generated ${DATA.meta.generated} · Source: ${PLAT_LABEL} RCA exports · Sales proxy = Est. Category Share`;
 // platform-aware page title + header
 document.title=`${PLAT_LABEL} · QcomDashboard-EverydayEssentials`;
@@ -434,7 +433,7 @@ document.title=`${PLAT_LABEL} · QcomDashboard-EverydayEssentials`;
 
 // KPIs
 const k=DATA.kpis;
-const kdefs=[['SKUs tracked',k.skus.toLocaleString(),C.acc],['Brands',k.brands,C.acc2],['Sub-categories',k.subcats,C.pur],
+const kdefs=[['SKUs tracked',k.skus.toLocaleString(),C.acc],['Brands',k.brands,C.acc2],['Super-categories',k.subcats,C.pur],
 ['Wt. OSA%',k.avg_osa+'%',C.grn],['Avg discount',k.avg_disc+'%',C.org],['Avg selling price','₹'+fmt(k.avg_sp,0)],['Period',k.months,C.acc2]];
 $('#kpis').innerHTML=kdefs.map(d=>`<div class="kpi"><div class="v" style="color:${d[2]||C.txt}">${d[1]}</div><div class="l">${d[0]}</div></div>`).join('');
 
@@ -600,7 +599,7 @@ function renderWhiteSpace(){
     <td class="tag">${x.leaderName}</td><td class="num" style="color:var(--acc)">${sales?money(x.val):fmt(x.csp,1)}</td></tr>`).join('');
 }
 
-// ---- Overall view (across all 5 sub-categories) ----
+// ---- Overall view (across all Super Categories) ----
 let ovSubChart, ovBrandChart;
 function renderOverall(){
   const sales=salesActive();
@@ -620,7 +619,7 @@ function renderOverall(){
   ovSubChart=new Chart($('#cOvSub'),{type:'bar',data:{labels:ovOrder,datasets:[{data:bySub,backgroundColor:PAL,borderRadius:6}]},
     options:{maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>sales?valFmt(c.raw):c.raw+' SKUs'}}},
     scales:{x:{grid:{color:C.line},title:{display:true,text:sales?metricLabel():'SKUs'},ticks:{callback:v=>sales?axisFmt(v):v}},y:{grid:{display:false}}}}});
-  $('#ovSubSub').textContent=sales?metricLabel()+' per sub-category':'SKUs per sub-category — enter totals to see ₹';
+  $('#ovSubSub').textContent=sales?metricLabel()+' per Super Category':'SKUs per Super Category — enter totals to see ₹';
   // top brands overall across ALL brands
   const {m,disp}=brandAgg();
   const top=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,15);
@@ -890,11 +889,11 @@ function showBrand(key){
   const rows=DATA.sku_level.filter(s=>s.b.toLowerCase()===key);
   if(!rows.length)return;
   const sales=salesActive(), subs=[...new Set(rows.map(s=>s.s))];
-  const stats=[['SKUs',rows.length],['Sub-categories',subs.length],['Avg SP','₹'+fmt(avgOf(rows,s=>s.sp),0)],
+  const stats=[['SKUs',rows.length],['Categories',subs.length],['Avg SP','₹'+fmt(avgOf(rows,s=>s.sp),0)],
     ['Wt. OSA%',fmt(wOsa(rows),0)+'%'],['Avg discount',fmt(avgOf(rows,s=>s.disc),0)+'%']];
   if(sales)stats.push([metricShort(),valFmt(rows.reduce((a,s)=>a+skuVal(s),0))]);
   const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp));
-  const body=statBox(stats)+`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th>Sub-cat</th><th class="num">Share%</th><th class="num">SP</th><th class="num">Wt. OSA%</th><th class="num">Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td class="tag">${s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num">${fmt(s.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+  const body=statBox(stats)+`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th>Category</th><th class="num">Share%</th><th class="num">SP</th><th class="num">Wt. OSA%</th><th class="num">Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td class="tag">${s.cat||s.s}</td><td class="num">${fmt(s.csp,2)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td><td class="num">${fmt(s.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   openModal(rows[0].b,subs.join(' · '),body);
 }
 // churn drill-down: only the brand's SKUs within a product type (or scope), for the relevant month
@@ -954,7 +953,7 @@ function showType(pt,mode){
     tableHtml=`<div class="hint">${barr.length} brands in this product type · % of type = brand's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Brand</th><th class="num">SKUs</th><th class="num">Demand(SOV)</th><th class="num">% of type</th><th class="num">Rev/SKU</th><th class="num">Avg SP</th><th class="num">Wt. OSA%</th><th class="num">Avg Disc</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${barr.map(b=>`<tr><td>${b.brand}</td><td class="num">${b.skus}</td><td class="num">${fmt(b.sov,1)}</td><td class="num">${pctOf(sales?b.v:b.csp)}</td>${revSkuCell((sales?b.v:b.csp)/Math.max(1,b.skus),brAvgPerSku)}<td class="num">₹${fmt(b.sp,0)}</td><td class="num" style="color:${b.osa<40?C.red:C.grn}">${fmt(b.osa,0)}</td><td class="num">${fmt(b.disc,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(b.v)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   } else {
     const sorted=[...rows].sort((a,b)=>sales?(skuVal(b)-skuVal(a)):(b.csp-a.csp)).slice(0,40);
-    tableHtml=`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs · % of type = SKU's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Sub-cat</th><th class="num">% of type</th><th class="num">SP</th><th class="num">Wt. OSA%</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.s}</td><td class="num">${pctOf(sales?skuVal(s):s.csp)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+    tableHtml=`<div class="hint">Showing top ${Math.min(40,rows.length)} of ${rows.length} SKUs · % of type = SKU's share of this product type's total</div><div style="max-height:46vh;overflow:auto"><table><thead><tr><th>Product</th><th>Brand</th><th>Category</th><th class="num">% of type</th><th class="num">SP</th><th class="num">Wt. OSA%</th>${sales?`<th class="num">${metricShort()}</th>`:''}</tr></thead><tbody>${sorted.map(s=>`<tr><td title="${s.n}">${s.n}</td><td>${s.b}</td><td class="tag">${s.cat||s.s}</td><td class="num">${pctOf(sales?skuVal(s):s.csp)}</td><td class="num">₹${fmt(s.sp,0)}</td><td class="num" style="color:${s.osa<40?C.red:C.grn}">${fmt(s.osa,0)}</td>${sales?`<td class="num" style="color:var(--acc)">${valFmt(skuVal(s))}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
   }
   openModal(pt,brands.size+' brands · '+rows.length+' SKUs',statBox(stats)+toggle+tableHtml);
 }
@@ -967,7 +966,7 @@ function showSku(name,sub){
   if(sales)stats.push(['Net ₹',money(s._net||0)],['Gross ₹',money(s._gross||0)],['Units',fmt(s._units||0,0)]);
   let body=statBox(stats);
   if(s.osa<40)body+=`<div class="hint" style="color:var(--red)">Low on-shelf availability (${fmt(s.osa,0)}%) — likely losing sales to stockouts.</div>`;
-  openModal(s.n,`${s.b} · ${s.s}`,body);
+  openModal(s.n,`${s.b} · ${s.cat||s.s}`,body);
 }
 
 // generic canvas click/hover (works across chart re-renders via Chart.getChart)

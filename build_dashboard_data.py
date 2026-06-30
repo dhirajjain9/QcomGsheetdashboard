@@ -1,5 +1,7 @@
 import os, pandas as pd, json, numpy as np
+from collections import defaultdict
 from product_types import classify
+from super_cats import super_of, SUPER_ORDER
 
 # Platform-aware: PLATFORM=instamart/zepto reads <platform>_rca_combined.xlsx and
 # writes <platform>_dashboard_data.json. Default 'blinkit' keeps the original
@@ -49,40 +51,55 @@ df['Brand'] = df['Brand'].astype(str).str.strip()
 df['BrandKey'] = df['Brand'].str.lower()
 brand_disp = df.groupby('BrandKey')['Brand'].agg(lambda s: s.mode().iloc[0])
 
+# Original platform category preserved in 'Category'; grouping dimension = Super Category.
+df['Category'] = df['Category'].astype(str).str.strip()
+df['Sub Category'] = df['Category'].map(super_of)   # <-- all grouping/scope now = Super Category
+
 DATES = sorted(df['Date'].unique())
 LATEST, PREV = DATES[-1], DATES[0]
-SUBCATS = sorted(df['Sub Category'].unique())
+SUBCATS = [s for s in SUPER_ORDER if s in set(df['Sub Category'])]
 cur = df[df['Date'] == LATEST].copy()
 prv = df[df['Date'] == PREV].copy()
+
+# Super-category MRP totals (₹ Cr) = sum of member original-category totals (for the panel).
+SUPER_SALES = defaultdict(float)
+for _cat, _t in DEFAULT_SALES.items():
+    SUPER_SALES[super_of(_cat)] += (_t or 0)
+SUPER_SALES = {s: round(v, 3) for s, v in SUPER_SALES.items()}
 
 def r(x, n=2):
     return None if pd.isna(x) else round(float(x), n)
 
-# Per-row demand weight = modeled gross MRP (replicates the dashboard's sales model
-# with the default per-sub-cat MRP totals). Lets OSA be a demand-weighted ("Wt.")
-# average instead of a flat mean, matching the Cross-Platform view.
-def _add_weight(frame):
+# Per-SKU sales model runs at the ORIGINAL-category level (Est. Category Share SP sums to
+# 100 within each original category, so distributing a merged super-category total by raw
+# share would wrongly weight every category equally). We bake exact per-SKU net/gross/units
+# here; the dashboards group by Super Category but read these baked ₹ values. _w = gross is
+# the demand weight for Wt. OSA% averages.
+def _bake(frame):
     frame = frame.copy()
-    frame['_w'] = 0.0
-    for s in SUBCATS:
-        m = (frame['Sub Category'] == s)
-        sub = frame[m & (frame['Est. Category Share SP'] > 0)
-                      & (frame['SP'] > 0) & (frame['MRP'] > 0)]
-        shareSum = sub['Est. Category Share SP'].sum()
-        T = DEFAULT_SALES.get(s, 0)
-        if T > 0 and shareSum > 0:
-            denom = ((sub['Est. Category Share SP'] / shareSum) * (sub['MRP'] / sub['SP'])).sum()
-            if denom > 0:
-                Tsp = T / denom
-                gross = (sub['Est. Category Share SP'] / shareSum) * Tsp / sub['SP'] * sub['MRP']
-                frame.loc[sub.index, '_w'] = gross
-                continue
-        # fallback (no default sales for this sub-cat): weight by value share
-        frame.loc[sub.index, '_w'] = sub['Est. Category Share SP'].fillna(0)
+    for col in ('_net', '_gross', '_units', '_w'):
+        frame[col] = 0.0
+    for catname, T in DEFAULT_SALES.items():
+        if not T or T <= 0:
+            continue
+        sub = frame[(frame['Category'] == catname) & (frame['Est. Category Share SP'] > 0)
+                    & (frame['SP'] > 0) & (frame['MRP'] > 0)]
+        ss = sub['Est. Category Share SP'].sum()
+        if ss <= 0:
+            continue
+        denom = ((sub['Est. Category Share SP'] / ss) * (sub['MRP'] / sub['SP'])).sum()
+        if denom <= 0:
+            continue
+        Tsp = (T * 1e7) / denom
+        net = (sub['Est. Category Share SP'] / ss) * Tsp
+        frame.loc[sub.index, '_net'] = net
+        frame.loc[sub.index, '_units'] = net / sub['SP']
+        frame.loc[sub.index, '_gross'] = net / sub['SP'] * sub['MRP']
+    frame['_w'] = frame['_gross']
     return frame
 
-cur = _add_weight(cur)
-prv = _add_weight(prv)
+cur = _bake(cur)
+prv = _bake(prv)
 
 def wmean(frame, col, wcol='_w'):
     v = frame[col]; w = frame[wcol]
@@ -208,7 +225,8 @@ white_space_skus = [{
     'name': row['Product Name'][:50], 'brand': row['Brand'], 'subcat': row['Sub Category'],
     'sov': r(row['Overall SOV'],2), 'osa': r(row['Wt. OSA %'],0),
     'share': r(row['Est. Category Share'],2), 'disc': r(row['Wt. Discount %'],0),
-    'csp': r(row['Est. Category Share SP'],4), 'sp': r(row['SP'],0), 'mrp': r(row['MRP'],0)
+    'csp': r(row['Est. Category Share SP'],4), 'sp': r(row['SP'],0), 'mrp': r(row['MRP'],0),
+    'g': round(float(row['_gross']))
 } for _, row in white_skus.iterrows()]
 
 # 2) Quadrant scatter: x = SOV, y = OSA for all SKUs with both (sample/aggregate by product)
@@ -239,10 +257,14 @@ for sc in subcat:
 # ---------- SKU-level dataset for live ₹-sales recalculation ----------
 g = (cur.groupby(['Product Name', 'Sub Category'])
        .agg(brand=('Brand', 'first'),
+            cat=('Category', 'first'),
             cs=('Est. Category Share', 'sum'),
             csp=('Est. Category Share SP', 'sum'),
             sp=('SP', 'mean'),
             mrp=('MRP', 'mean'),
+            net=('_net', 'sum'),
+            gross=('_gross', 'sum'),
+            units=('_units', 'sum'),
             osa=('Wt. OSA %', 'mean'),
             disc=('Wt. Discount %', 'mean'),
             sov=('Overall SOV', 'mean'),
@@ -274,12 +296,13 @@ def ppu_of(sp, gram, name):
         return None
     return round(sp / pack_count(gram, name))
 sku_level = [{
-    'n': row['Product Name'][:60], 'b': row['brand'], 's': row['Sub Category'],
+    'n': row['Product Name'][:60], 'b': row['brand'], 's': row['Sub Category'], 'cat': row['cat'],
     'pt': classify(row['Product Name']),
     'cs': r(row['cs'], 4), 'csp': r(row['csp'], 4),
     'sp': r(row['sp'], 0), 'mrp': r(row['mrp'], 0), 'osa': r(row['osa'], 0),
     'disc': r(row['disc'], 0), 'sov': r(row['sov'], 3),
     'osov': r(row['osov'], 3), 'asov': r(row['asov'], 3),
+    '_n': round(float(row['net'])), '_g': round(float(row['gross'])), '_u': r(row['units'], 1),
     'ppu': ppu_of(row['sp'], row['gram'], row['Product Name']),
     'pack': float(pack_count(row['gram'], row['Product Name'])),
     'gram': (str(row['gram']).strip()[:14] if pd.notna(row['gram']) else '')
@@ -311,7 +334,7 @@ for pid in (set(ma.index) | set(mp.index)):
 out = {
     'meta': {'latest': LATEST, 'prev': PREV, 'generated': str(pd.Timestamp.now())[:16],
              'platform': PLATFORM, 'platform_label': PLATFORM_LABEL,
-             'sales_key': SALES_KEY, 'default_sales': DEFAULT_SALES},
+             'sales_key': SALES_KEY, 'default_sales': SUPER_SALES, 'cat_sales': DEFAULT_SALES},
     'sku_level': sku_level, 'sku_mom': sku_mom,
     'kpis': kpis, 'subcat': subcat, 'top_skus': top_skus, 'top_brands': top_brands,
     'sov_scatter': sov_scatter, 'gainers': gainers, 'losers': losers,

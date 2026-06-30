@@ -21,23 +21,11 @@ PLATS = [("Blinkit", "dashboard_data.json", "B"),
 
 
 def sales_per_sku(d):
-    sku = d["sku_level"]; DS = d["meta"]["default_sales"]
+    # Per-SKU ₹ is now baked into sku_level at the original-category level (_g/_n).
+    sku = d["sku_level"]
     for s in sku:
-        s["_g"] = 0.0; s["_n"] = 0.0
-    for sub in d["subcats"]:
-        T = DS.get(sub, 0) * 1e7
-        rows = [s for s in sku if s["s"] == sub and (s.get("csp") or 0) > 0
-                and (s.get("sp") or 0) > 0 and (s.get("mrp") or 0) > 0]
-        ss = sum(s["csp"] for s in rows)
-        if T <= 0 or not ss:
-            continue
-        den = sum((s["csp"]/ss)*(s["mrp"]/s["sp"]) for s in rows)
-        if not den:
-            continue
-        Tsp = T/den
-        for s in rows:
-            net = (s["csp"]/ss)*Tsp
-            s["_n"] = net; s["_g"] = (net/s["sp"])*s["mrp"]
+        s["_g"] = float(s.get("_g") or 0.0)
+        s["_n"] = float(s.get("_n") or 0.0)
     return sku
 
 
