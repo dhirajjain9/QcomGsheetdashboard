@@ -73,6 +73,14 @@ RULES = [
     ("Mattress / Topper", ["mattress", "mattress topper", "mattress protector", "gadda"]),
     ("Door / Floor Mat", ["door mat", "doormat", "floor mat", "entrance mat"]),
     ("Carpet / Rug", ["carpet", "rug", "dhurrie", "runner mat"]),
+    # Festive / party / pooja (Home Improvement / Decor super)
+    ("Balloon", ["balloon", "foil balloon"]),
+    ("Party Decoration", ["party popper", "confetti", "birthday banner", "happy birthday", "party cap", "birthday cap", "sash", "bunting", "streamer", "cake topper", "party decoration", "photo booth", "party hat", "birthday candle", "candle number", "party props", "party kit", "party combo", "decoration kit"]),
+    ("Greeting / Gift Wrap", ["greeting card", "gift wrap", "wrapping paper", "gift wrapping"]),
+    ("Rakhi", ["rakhi"]),
+    ("Incense / Agarbatti", ["agarbatti", "agarbathi", "incense", "dhoop", "loban", "sambrani"]),
+    ("Pooja Essentials", ["gangajal", "matchbox", "deepam oil", "pooja oil", "puja oil", "camphor", "kapur", "moli", "kalava", "roli", "kumkum", "cow dung", "havan", "samagri", "janeu", "aasan", "pooja thali", "puja thali", "attar", "mango wood", "aam ki lakdi", "chandan", "akshat", "pooja kit", "puja kit", "gomti chakra"]),
+    ("Idol / Murti", ["idol", "murti"]),
     # --- Non-home items Instamart sweeps into these categories (classified so
     #     they leave the "Other" bucket; clearly named so they can be ignored) ---
     ("USB / Pen Drive", ["pen drive", "pendrive", "flash drive", "external ssd", " ssd", "memory card", "micro sd", "microsd", "sandisk", "usb 2.0", "usb 3"]),
