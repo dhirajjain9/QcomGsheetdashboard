@@ -163,6 +163,7 @@ RULES = [
     ("Artificial Plant / Flower", ["artificial", "bonsai", "potted plant"]),
     ("Curtain", ["curtain", "drape"]),
     ("Fridge Magnet", ["fridge magnet", "refrigerator magnet"]),
+    ("Storage Container", ["cushion container", "cushion box", "cushion jar"]),  # plastic storage named 'cushion' (e.g. Nayasa)
     ("Cushion / Cover", ["cushion"]),
     ("Wall Clock", ["wall clock", " clock", "table clock", "alarm clock"]),
     ("Wall Art / Print", ["art print", "wall art", "wall decor", "wall hanging", "wallpaper", "painting", "poster"]),
