@@ -11,32 +11,11 @@ PLATFORM_LABEL = {'blinkit': 'Blinkit', 'instamart': 'Instamart', 'zepto': 'Zept
 # Per-platform pre-filled MRP sales (₹ Cr). Blinkit = the agreed split; others
 # start empty (dashboard shows value-share % until the user enters totals).
 DEFAULT_SALES = {
-    'blinkit': {'Appliances': 142.2, 'Kitchen & Dining Needs': 79.6, 'Home Furnishing': 55.5,
-                'Tissues & Disposables': 46.4, 'Sports & Fitness': 44.4, 'Decorative Lights': 31.3,
-                'Bags': 23.4, 'Flowers, Plants & Gardening': 20.3, 'Pooja Needs': 20.2,
-                'Bathroom Essentials': 20.2, 'Cleaning Tools': 19.8, 'Clothing, Footwear & Accessories': 18.7,
-                'Home Decor': 13.0, 'Stationery Needs': 11.4, 'Festive & Occasion Needs': 10.5,
-                'Garbage Bags': 9.6, 'Party Essentials': 7.6, 'Home Improvement': 7.1, 'Festive Gifting': 3.0},
-    'instamart': {'Powerbanks Chargers Cables': 25.2, 'Sports & Gym': 20.4, 'Kitchen Appliances': 19.1,
-                  'Home Furnishing': 18.5, 'Bottles Flasks Tiffins': 13.6, 'Home Decor': 12.8,
-                  'Cleaning Tools': 11.8, 'Cookware': 11.4, 'Tissues & Disposables': 11.1,
-                  'Home Appliances': 9.6, 'Bathware & Laundry': 8.9, 'Storage & Organizers': 7.9,
-                  'Personal Care Appliances': 7.6, 'Utility & Tools': 7.3, 'Jars Containers Holders': 7.1,
-                  'Pooja Needs': 6.6, 'Glasses Cups Mugs': 5.7, 'Plates Bowls Crockery': 5.6,
-                  'Kitchen Tools': 5.2, 'Travel And Luggage': 5.1, 'Kitchen Cleaning': 3.4,
-                  'Lights & Bulbs': 2.9, 'Bakeware & Bbq': 1.4, 'Gardening': 1.3, 'Barware': 1.2,
-                  'Serveware': 1.2, 'Linen And Furnishing': 1.1, 'Cutlery & Ladles': 0.0035},
-    'zepto': {'Home Furnishing': 23.9, 'Kitchen Appliances': 22.8, 'Cleaning Aids': 19.8,
-              'Bulbs & Lights': 19.2, 'Pooja & Worship Needs': 18.0, 'Home Appliances': 17.2,
-              'Tissues & Disposables': 13.6, 'Household Utility': 12.8, 'Home Decor': 8.8,
-              'Kitchen Tools': 8.0, 'Kitchen Storage': 7.1, 'Cookware': 6.9,
-              'Extensions & Switches': 5.6, 'Drinkware & Bar': 3.7, 'Bath & Laundry': 3.6,
-              'Lunch Boxes': 3.4, 'Kitchen Aids': 3.4, 'Gardening': 3.1,
-              'Gas Stove & Accessories': 2.3, 'Pressure Cooker': 2.2, 'Steel Utensils': 2.0,
-              'Stationery & Crafts': 1.7, 'Hardware & Fittings': 1.5, 'Tableware': 1.2,
-              'Kitchen Cleaning': 0.006},
+    'blinkit': {'Appliances': 170.5, 'Kitchen & Dining Needs': 86.7, 'Home Furnishing': 80.3, 'Tissues & Disposables': 56.8, 'Decorative Lights': 54.8, 'Bags': 43.7, 'Sports & Fitness': 37.6, 'Pooja Needs': 34.3, 'Bathroom Essentials': 25.0, 'Clothing, Footwear & Accessories': 24.6, 'Flowers, Plants & Gardening': 24.1, 'Cleaning Tools': 22.6, 'Stationery Needs': 18.0, 'Festive & Occasion Needs': 15.4, 'Home Decor': 15.0, 'Party Essentials': 9.7, 'Garbage Bags': 9.7, 'Home Improvement': 9.5, 'Festive Gifting': 5.8},
+    'instamart': {'Powerbanks Chargers Cables': 24.0, 'Home Decor': 20.4, 'Home Furnishing': 19.8, 'Sports & Gym': 18.0, 'Kitchen Appliances': 16.7, 'Cleaning Tools': 14.4, 'Bottles Flasks Tiffins': 13.3, 'Tissues & Disposables': 12.5, 'Bathware & Laundry': 12.4, 'Storage & Organizers': 10.5, 'Pooja Needs': 10.0, 'Personal Care Appliances': 9.4, 'Cookware': 9.3, 'Utility & Tools': 9.0, 'Jars Containers Holders': 8.9, 'Home Appliances': 8.0, 'Glasses Cups Mugs': 6.8, 'Kitchen Tools': 6.4, 'Plates Bowls Crockery': 6.1, 'Travel And Luggage': 4.0, 'Kitchen Cleaning': 3.8, 'Lights & Bulbs': 2.7, 'Bakeware & Bbq': 1.8, 'Linen And Furnishing': 1.5, 'Barware': 1.2, 'Gardening': 1.2, 'Serveware': 1.1, 'Cutlery & Ladles': 0.312},
+    'zepto': {'Home Furnishing': 35.2, 'Pooja & Worship Needs': 29.3, 'Kitchen Appliances': 26.4, 'Household Utility': 26.0, 'Bulbs & Lights': 23.8, 'Cleaning Aids': 23.3, 'Home Appliances': 19.0, 'Tissues & Disposables': 17.1, 'Home Decor': 10.5, 'Kitchen Tools': 8.6, 'Kitchen Storage': 8.3, 'Cookware': 7.7, 'Extensions & Switches': 5.4, 'Drinkware & Bar': 4.3, 'Lunch Boxes': 4.2, 'Bath & Laundry': 3.9, 'Kitchen Aids': 3.9, 'Gas Stove & Accessories': 3.0, 'Gardening': 2.7, 'Stationery & Crafts': 2.6, 'Pressure Cooker': 2.6, 'Steel Utensils': 2.3, 'Hardware & Fittings': 1.8, 'Tableware': 1.5, 'Kitchen Cleaning': 0.764},
 }.get(PLATFORM, {})
-SALES_KEY = f'{PLATFORM}_mrp_sales_v2'   # bumped v1->v2: categories expanded (Apr+May data), reset saved inputs
+SALES_KEY = f'{PLATFORM}_mrp_sales_v3'   # bumped v2->v3: Jul-Aug data / Aug MRP totals, reset saved inputs
 IN_XLSX = f'{PLATFORM}_rca_combined.xlsx'
 OUT_JSON = 'dashboard_data.json' if PLATFORM == 'blinkit' else f'{PLATFORM}_dashboard_data.json'
 
