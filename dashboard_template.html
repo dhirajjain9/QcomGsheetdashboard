@@ -282,43 +282,43 @@ th .ind{opacity:.45;font-size:9px;margin-left:2px}
 <!-- MONTH-OVER-MONTH (SKU MOVEMENT) -->
 <h2 id="sec-mom">Month-over-month — SKU movement <span class="tag" id="momScopeLbl" style="font-weight:400;margin-left:6px"></span></h2>
 <div class="note">
-  Apr → May change in each SKU's <b>value-share</b> (Est. Category Share SP, in share-points of its category). <b>New entrants</b> = SKUs that appeared in April; <b>exits</b> = SKUs that dropped out. Scope follows the Top-SKUs selector above.
+  {{PREV}} → {{CUR}} change in each SKU's <b>value-share</b> (Est. Category Share SP, in share-points of its category). <b>New entrants</b> = SKUs that appeared in {{CURL}}; <b>exits</b> = SKUs that dropped out. Scope follows the Top-SKUs selector above.
 </div>
 <div class="kpis" id="momKpis"></div>
 <div class="grid g2" style="margin-top:16px">
-  <div class="card"><h3 class="up">▲ Top share risers</h3><div class="h3sub">Biggest value-share gains, Mar → Apr (share-points)</div>
-    <div style="max-height:340px;overflow:auto"><table id="tMomUp"><thead><tr><th>Product</th><th>Brand</th><th class="num">Mar</th><th class="num">Apr</th><th class="num">Δ</th><th class="num">OSA Δ</th></tr></thead><tbody></tbody></table></div></div>
-  <div class="card"><h3 class="down">▼ Top share fallers</h3><div class="h3sub">Biggest value-share losses, Mar → Apr</div>
-    <div style="max-height:340px;overflow:auto"><table id="tMomDn"><thead><tr><th>Product</th><th>Brand</th><th class="num">Mar</th><th class="num">Apr</th><th class="num">Δ</th><th class="num">OSA Δ</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 class="up">▲ Top share risers</h3><div class="h3sub">Biggest value-share gains, {{PREV}} → {{CUR}} (share-points)</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomUp"><thead><tr><th>Product</th><th>Brand</th><th class="num">{{PREV}}</th><th class="num">{{CUR}}</th><th class="num">Δ</th><th class="num">OSA Δ</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 class="down">▼ Top share fallers</h3><div class="h3sub">Biggest value-share losses, {{PREV}} → {{CUR}}</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomDn"><thead><tr><th>Product</th><th>Brand</th><th class="num">{{PREV}}</th><th class="num">{{CUR}}</th><th class="num">Δ</th><th class="num">OSA Δ</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="grid g2" style="margin-top:16px">
-  <div class="card"><h3 style="color:var(--grn)">＋ New entrants</h3><div class="h3sub">New in April — by April value-share</div>
-    <div style="max-height:340px;overflow:auto"><table id="tMomNew"><thead><tr><th>Product</th><th>Brand</th><th>Category</th><th class="num">Apr share</th><th class="num">Wt. OSA%</th><th class="num">SP</th></tr></thead><tbody></tbody></table></div></div>
-  <div class="card"><h3 style="color:var(--red)">－ Exited SKUs</h3><div class="h3sub">In March, gone in April — by March value-share</div>
-    <div style="max-height:340px;overflow:auto"><table id="tMomExit"><thead><tr><th>Product</th><th>Brand</th><th>Category</th><th class="num">May-prev share</th><th class="num">Last OSA</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--grn)">＋ New entrants</h3><div class="h3sub">New in {{CURL}} — by {{CUR}} value-share</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomNew"><thead><tr><th>Product</th><th>Brand</th><th>Category</th><th class="num">{{CUR}} share</th><th class="num">Wt. OSA%</th><th class="num">SP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--red)">－ Exited SKUs</h3><div class="h3sub">In {{PREVL}}, gone in {{CURL}} — by {{PREV}} value-share</div>
+    <div style="max-height:340px;overflow:auto"><table id="tMomExit"><thead><tr><th>Product</th><th>Brand</th><th>Category</th><th class="num">{{PREV}} share</th><th class="num">Last OSA</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="h3sub" style="margin:18px 0 0">Brand-level entry/exit <span class="tag">— a brand counts as "new" only if it had <b>no</b> SKUs in the scope last month (and vice-versa)</span></div>
 <div class="grid g2" style="margin-top:10px">
-  <div class="card"><h3 style="color:var(--grn)">＋ New brands</h3><div class="h3sub">Brands present in April but absent in March (within scope) — by April value-share</div>
-    <div style="max-height:320px;overflow:auto"><table id="tMomBrandNew"><thead><tr><th>Brand</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
-  <div class="card"><h3 style="color:var(--red)">－ Brands that exited</h3><div class="h3sub">Present in March, gone in April (within scope) — by March value-share</div>
-    <div style="max-height:320px;overflow:auto"><table id="tMomBrandExit"><thead><tr><th>Brand</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--grn)">＋ New brands</h3><div class="h3sub">Brands present in {{CURL}} but absent in {{PREVL}} (within scope) — by {{CUR}} value-share</div>
+    <div style="max-height:320px;overflow:auto"><table id="tMomBrandNew"><thead><tr><th>Brand</th><th class="num">{{CUR}} SKUs</th><th class="num">{{CUR}} share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--red)">－ Brands that exited</h3><div class="h3sub">Present in {{PREVL}}, gone in {{CURL}} (within scope) — by {{PREV}} value-share</div>
+    <div style="max-height:320px;overflow:auto"><table id="tMomBrandExit"><thead><tr><th>Brand</th><th class="num">{{PREV}} SKUs</th><th class="num">{{PREV}} share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="h3sub" style="margin:18px 0 0">Product-type entry/exit <span class="tag">— a product type counts as "new" only if it had <b>no</b> SKUs in the scope last month (and vice-versa)</span></div>
 <div class="grid g2" style="margin-top:10px">
-  <div class="card"><h3 style="color:var(--grn)">＋ New product types</h3><div class="h3sub">Types that appeared in April (within scope) — by April value-share</div>
-    <div style="max-height:300px;overflow:auto"><table id="tMomTypeNew"><thead><tr><th>Product type</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
-  <div class="card"><h3 style="color:var(--red)">－ Product types that exited</h3><div class="h3sub">Types present in March, gone in April (within scope) — by March value-share</div>
-    <div style="max-height:300px;overflow:auto"><table id="tMomTypeExit"><thead><tr><th>Product type</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--grn)">＋ New product types</h3><div class="h3sub">Types that appeared in {{CURL}} (within scope) — by {{CUR}} value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomTypeNew"><thead><tr><th>Product type</th><th class="num">{{CUR}} SKUs</th><th class="num">{{CUR}} share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--red)">－ Product types that exited</h3><div class="h3sub">Types present in {{PREVL}}, gone in {{CURL}} (within scope) — by {{PREV}} value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomTypeExit"><thead><tr><th>Product type</th><th class="num">{{PREV}} SKUs</th><th class="num">{{PREV}} share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="h3sub" style="margin:18px 0 0">Brand churn within a product type <span class="tag">— only types with brand entry/exit (within scope), ranked by gross sales. Click a bar to see the brands.</span></div>
 <div class="card" style="margin-top:10px"><h3>Product types with brand churn</h3><div class="h3sub">Brands that <b style="color:var(--grn)">entered</b> (right) vs <b style="color:var(--red)">exited</b> (left) · ordered by gross sales · click to drill in</div>
   <div style="height:360px;overflow-y:auto"><div id="momChurnWrap" style="position:relative;height:360px"><canvas id="cMomChurn"></canvas></div></div></div>
 <div class="grid g2" style="margin-top:10px">
-  <div class="card"><h3 style="color:var(--grn)">＋ Brands new to <span id="momTypeLbl" style="color:var(--txt)"></span></h3><div class="h3sub">No SKU of this type in March, present in April — by April value-share</div>
-    <div style="max-height:300px;overflow:auto"><table id="tMomBTypeNew"><thead><tr><th>Brand</th><th class="num">Apr SKUs</th><th class="num">Apr share</th></tr></thead><tbody></tbody></table></div></div>
-  <div class="card"><h3 style="color:var(--red)">－ Brands that left <span id="momTypeLbl2" style="color:var(--txt)"></span></h3><div class="h3sub">In this type in March, gone in April — by March value-share</div>
-    <div style="max-height:300px;overflow:auto"><table id="tMomBTypeExit"><thead><tr><th>Brand</th><th class="num">Mar SKUs</th><th class="num">Mar share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--grn)">＋ Brands new to <span id="momTypeLbl" style="color:var(--txt)"></span></h3><div class="h3sub">No SKU of this type in {{PREVL}}, present in {{CURL}} — by {{CUR}} value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomBTypeNew"><thead><tr><th>Brand</th><th class="num">{{CUR}} SKUs</th><th class="num">{{CUR}} share</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="card"><h3 style="color:var(--red)">－ Brands that left <span id="momTypeLbl2" style="color:var(--txt)"></span></h3><div class="h3sub">In this type in {{PREVL}}, gone in {{CURL}} — by {{PREV}} value-share</div>
+    <div style="max-height:300px;overflow:auto"><table id="tMomBTypeExit"><thead><tr><th>Brand</th><th class="num">{{PREV}} SKUs</th><th class="num">{{PREV}} share</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
 <!-- PRICE BAND ANALYSIS (VALUE PER UNIT) -->
@@ -904,10 +904,10 @@ function showChurnSkus(brand, pt, dir){
   rows=rows.filter(x=> isExit ? (x.pc!=null) : (x.ac!=null));   // March SKUs for exits, April SKUs for new
   if(!rows.length)return;
   rows.sort((a,b)=> isExit ? ((b.pc||0)-(a.pc||0)) : ((b.ac||0)-(a.ac||0)));
-  const m = isExit ? 'March' : 'April';
-  const stats=[['Brand',rows[0].b],['Scope',pt||scopeLabel()],[isExit?'SKUs in March':'SKUs in April',rows.length]];
+  const m = isExit ? '{{PREVL}}' : '{{CURL}}';
+  const stats=[['Brand',rows[0].b],['Scope',pt||scopeLabel()],[isExit?'SKUs in {{PREVL}}':'SKUs in {{CURL}}',rows.length]];
   const body=statBox(stats)
-    +`<div class="hint">${isExit?`Was in ${pt||scopeLabel()} in March, gone in April`:`New to ${pt||scopeLabel()} in April`} — only this brand's SKUs.</div>`
+    +`<div class="hint">${isExit?`Was in ${pt||scopeLabel()} in {{PREVL}}, gone in {{CURL}}`:`New to ${pt||scopeLabel()} in {{CURL}}`} — only this brand's SKUs.</div>`
     +`<div style="max-height:48vh;overflow:auto"><table><thead><tr><th>Product</th><th class="num">${m} share</th><th class="num">${m} OSA</th><th class="num">${m} SP</th></tr></thead><tbody>`
     +rows.map(s=>{const sh=isExit?s.pc:s.ac, osa=isExit?s.po:s.ao, sp=isExit?s.psp:s.asp;
       return `<tr><td title="${s.n}">${s.n}</td><td class="num">${fmt(sh,2)}</td><td class="num" style="color:${osa<40?C.red:C.grn}">${osa==null?'–':fmt(osa,0)}</td><td class="num">₹${fmt(sp,0)}</td></tr>`}).join('')

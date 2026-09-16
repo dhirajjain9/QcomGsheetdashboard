@@ -554,7 +554,7 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <body><div class="wrap">
 <header>
  <div><h1>Cross Platform <span>Analysis</span></h1>
-  <div class="sub">Whole-of-Q-Commerce context, then drill into any <b>product type</b> or <b>brand</b> (the only axes comparable across platforms) · Apr 2026</div></div>
+  <div class="sub">Whole-of-Q-Commerce context, then drill into any <b>product type</b> or <b>brand</b> (the only axes comparable across platforms) · {{CURY}}</div></div>
  <a class="back" href="platforms.html">← All platforms</a>
 </header>
 
@@ -886,16 +886,16 @@ function rCross(kind,r){const isPt=kind==='pt',tot=r.tot;
  const right=`<div class="card"><div class="step">Who leads</div><h3>Top 5 ${isPt?'brands':'product types'}</h3><div class="brank">${rRanked(lead,tot.g,'#0071e3')}</div></div>`;
  const cards=PK.map(p=>{const k=p[0];if(!r[k])return `<div class="sc" style="--pc:${RCOL[k]}"><div class="badge2">${p[1]}</div><div class="miss" style="margin-top:8px">Not present</div></div>`;const v=r[k],sh=DATA.totals[k].g?v.g/DATA.totals[k].g*100:0;const mr=[['Gross',money(v.g)],['Net',money(v.n)],['% of platform',sh.toFixed(2)+'%'],['Discount',disc(v.g,v.n)],['Units',unitsFmt(v.u)],['SKUs',(v.k||0).toLocaleString()],[isPt?'Brands':'Types',v.b],['Avg SP','₹'+v.sp],['Wt. OSA%',v.o+'%']].map(x=>`<div class="mrow"><span class="l">${x[0]}</span><span class="v">${x[1]}</span></div>`).join('');return `<div class="sc" style="--pc:${RCOL[k]}"><div class="badge2">${p[1]}</div><div class="gbig">${money(v.g)}</div>${mr}</div>`;}).join('');
  const score=`<div class="card"><div class="step">All attributes across platforms</div><h3>Platform scorecard</h3><div class="scards">${cards}</div></div>`;
- return `<section class="page"><div class="top" style="--pc:#0071e3"><div><span class="badge">Cross-Platform</span><h1>${r.t}</h1><div class="sub">${isPt?'Product type':'Brand'} · Overview + platform scorecard · Apr 2026</div></div><div class="pg">Page 1 of 4</div></div>${hero}<div class="grid2"><div class="col">${left}</div><div class="col">${right}</div></div>${score}<div class="foot">Product type & brand are the only axes comparable across platforms · sales = modeled MRP</div></section>`;}
+ return `<section class="page"><div class="top" style="--pc:#0071e3"><div><span class="badge">Cross-Platform</span><h1>${r.t}</h1><div class="sub">${isPt?'Product type':'Brand'} · Overview + platform scorecard · {{CURY}}</div></div><div class="pg">Page 1 of 4</div></div>${hero}<div class="grid2"><div class="col">${left}</div><div class="col">${right}</div></div>${score}<div class="foot">Product type & brand are the only axes comparable across platforms · sales = modeled MRP</div></section>`;}
 function rBand(r,k){const t=r.tiers;if(!t||!t.edges)return `<div class="card"><div class="step">Price bands · value tiers</div><h3>Price-band analysis</h3><div class="miss">Too few priced SKUs to band.</div></div>`;const e=t.edges,g=t.g[k]||[],c=(t.k&&t.k[k])||[],nb=e.length-1;const tg=g.reduce((a,b)=>a+b,0)||1,tk=c.reduce((a,b)=>a+b,0)||1,mg=Math.max.apply(null,g.concat([1]));let pk=0;for(let i=1;i<nb;i++)if((g[i]||0)>(g[pk]||0))pk=i;let rows='';for(let i=0;i<nb;i++){const dem=(g[i]||0)/tg*100,sup=(c[i]||0)/tk*100;rows+=`<div class="tier${i===pk?' peak':''}"><div class="tl">₹${e[i]}–${e[i+1]}</div><div class="tbarwrap"><div class="tbar"><i style="width:${Math.max(2,(g[i]||0)/mg*100)}%;background:${RCOL[k]}"></i></div></div><div class="tv"><b>${Math.round(dem)}%</b> demand<span class="s">${c[i]||0} SKUs · ${Math.round(sup)}% supply</span></div></div>`;}const take=`Demand peaks in the <b>₹${e[pk]}–${e[pk+1]}</b> band (${Math.round((g[pk]||0)/tg*100)}% of gross on ${c[pk]||0} SKUs). Bar = demand (gross); supply = share of SKUs.`;return `<div class="card"><div class="step">Price bands · value tiers — demand vs supply</div><h3>Price-band analysis</h3><div class="tiers">${rows}</div><div class="takeaway">${take}</div></div>`;}
 function rPlat(kind,r,k,n,pg){const isPt=kind==='pt';
- if(!r[k])return `<section class="page"><div class="top" style="--pc:${RCOL[k]}"><div><span class="badge">${n}</span><h1>${r.t}</h1><div class="sub">${n} · Apr 2026</div></div><div class="pg">Page ${pg} of 4</div></div><div class="card"><b>Not present on ${n}.</b> No listed SKUs in the April snapshot — a potential white space.</div></section>`;
+ if(!r[k])return `<section class="page"><div class="top" style="--pc:${RCOL[k]}"><div><span class="badge">${n}</span><h1>${r.t}</h1><div class="sub">${n} · {{CURY}}</div></div><div class="pg">Page ${pg} of 4</div></div><div class="card"><b>Not present on ${n}.</b> No listed SKUs in the {{CURL}} snapshot — a potential white space.</div></section>`;
  const v=r[k],sh=DATA.totals[k].g?v.g/DATA.totals[k].g*100:0;
  const kpis=[['Net (SP)',money(v.n)],['Discount',disc(v.g,v.n)],['Units',unitsFmt(v.u)],['SKUs',(v.k||0).toLocaleString()],[isPt?'Brands':'Product types',v.b],['Avg SP','₹'+v.sp],['Wt. OSA%',v.o+'%'],['% of platform',sh.toFixed(2)+'%']];
  const hero=`<div class="hero"><div class="biglbl">Gross MRP on ${n}</div><div class="big">${money(v.g)}</div><div class="mets">${rMets(kpis)}</div></div>`;
  const contr=isPt?(r.pb&&r.pb[k]):(r.ptp&&r.ptp[k]);const ctot=contr?contr.reduce((a,x)=>a+x[1],0):0;
  const lead=`<div class="card"><div class="step">Who leads</div><h3>Top ${isPt?'brands':'product types'} here</h3><div class="brank">${rRanked(contr,ctot,RCOL[k])}</div></div>`;
- return `<section class="page"><div class="top" style="--pc:${RCOL[k]}"><div><span class="badge">${n}</span><h1>${r.t}</h1><div class="sub">${n} · Apr 2026</div></div><div class="pg">Page ${pg} of 4</div></div>${hero}${lead}${isPt?rBand(r,k):''}<div class="foot">Source: ${n} RCA export · Apr 2026 · sales = modeled MRP</div></section>`;}
+ return `<section class="page"><div class="top" style="--pc:${RCOL[k]}"><div><span class="badge">${n}</span><h1>${r.t}</h1><div class="sub">${n} · {{CURY}}</div></div><div class="pg">Page ${pg} of 4</div></div>${hero}${lead}${isPt?rBand(r,k):''}<div class="foot">Source: ${n} RCA export · {{CURY}} · sales = modeled MRP</div></section>`;}
 function reportDoc(kind){const r=kind==='pt'?TMAP[curType]:BMAP[curBrand];if(!r)return null;let pages=rCross(kind,r),pg=2;PK.forEach(p=>{pages+=rPlat(kind,r,p[0],p[1],pg);pg++;});return `<!doctype html><html><head><meta charset="utf-8"><title>${r.t} — ${kind==='pt'?'Product':'Brand'} report</title><style>${RPTCSS}</style></head><body>${pages}</body></html>`;}
 function openReport(kind){const cur=kind==='pt'?curType:curBrand;if(!cur){alert('Select a '+(kind==='pt'?'product type':'brand')+' in the ReportCard first.');return;}const w=window.open('','_blank');if(!w){alert('Please allow pop-ups for this site to download the report.');return;}w.document.open();w.document.write(reportDoc(kind));w.document.close();setTimeout(function(){try{w.focus();w.print();}catch(e){}},400);}
 function updDl(){const p=document.getElementById('dlProdName'),b=document.getElementById('dlBrandName');if(p&&curType)p.textContent=curType;if(b&&curBrand)b.textContent=curBrand;}
@@ -910,6 +910,17 @@ document.getElementById('brandTbl').addEventListener('click',updDl);
 </script>
 </div></body></html>
 """
+
+# --- month-label tokens (from the data, so they never go stale) ---
+_MS = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+_ML = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July',
+       'August', 'September', 'October', 'November', 'December']
+_meta = d["meta"]                      # months are identical across platforms
+_cur = int(_meta["latest"][5:7]); _cur_y = _meta["latest"][:4]
+_TOK = {'{{CURY}}': f'{_MS[_cur]} {_cur_y}', '{{CURL}}': _ML[_cur]}
+for _k, _v in _TOK.items():
+    HTML = HTML.replace(_k, _v)
+assert '{{' not in HTML, f'unfilled month token remains: {HTML[HTML.find("{{"):HTML.find("{{")+12]}'
 
 out = HTML.replace("__DATA__", json.dumps(DATA, separators=(",", ":")))
 open("compare.html", "w").write(out)
