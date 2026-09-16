@@ -10,6 +10,31 @@ RULES = [
     #     "Glassware", "Luggage Scale" not "Bag"). ===
     ("Weighing Scale", ["weighing scale", "weighing machine", "weight scale", "body scale", "luggage scale", "weighing balance", "bathroom scale"]),
     ("Medical Device", ["thermometer", "oximeter", "bp monitor", "blood pressure monitor", "nebulizer", "glucometer"]),
+    # === FOOTWEAR / APPAREL (Clothing, Footwear & Accessories -> Others) ===
+    #     "shoes"/"sneaker" placed high but plural-only so they never grab "shoe rack".
+    ("Sports Shoes / Sneakers", ["sports shoes", "sneaker", "running shoes", "casual shoes", "canvas shoes", "walking shoes", "training shoes", "sports shoe"]),
+    ("Flip-Flops / Slippers", ["flip-flop", "flip flop", "flipflop", "slipper", "sliders", "chappal", "clog"]),
+    ("Sandals / Floaters", ["sandals", "floaters", "floater shoes"]),
+    ("Footwear (Other)", ["shoes", "loafer", "ballerina", "jutti", "mojari", "espadrille", "boots"]),
+    ("Socks", ["socks", "ankle sock", "no show sock", "no-show sock"]),
+    # === LIVE PLANTS & FRESH FLOWERS (Flowers, Plants & Gardening / Gardening -> Decor) ===
+    #     Artificial rule first so "artificial money plant" never reads as a live plant.
+    ("Artificial Plant / Flower", ["artificial", "fake plant", "fake flower"]),
+    ("Live Plant / Sapling", ["live plant", "plant with pot", "plant with self", "plant with ibiza", "jade plant", "money plant", "peace lily", "areca palm", "snake plant", "lucky bamboo", "tulsi plant", "indoor plant", "flowering plant", "succulent", "bonsai plant", "sapling", "garden plant", "air purifying plant", "plant with ceramic", "plant in pot"]),
+    ("Seeds / Garden Mix", ["flower seed", "vegetable seed", "seed combo", "microgreen", "potting mix", "potting soil", "cocopeat", "vermicompost", "fertilizer", "fertiliser", "plant food", "garden manure", "garden soil"]),
+    ("Fresh Flowers / Bouquet", ["bouquet", "rose bouquet", "flower bouquet", "fresh rose", "fresh flower", "roses in", "single flower", "flower stem", "orchid bunch"]),
+    # === LIGHTING: LAMPS & NIGHT LIGHTS (Decorative Lights / Bulbs & Lights -> Decor) ===
+    ("Lamp / Night Light", ["table lamp", "study lamp", "desk lamp", "reading lamp", "bedside lamp", "led lamp", "night light", "night lamp", "salt lamp", "himalayan lamp", "lava lamp", "study light", "crystal ball night", "led study", "study 3 w", "table lamps"]),
+    # === FITNESS SUPPORT & GEAR (Sports & Fitness / Gym -> Others) ===
+    ("Fitness Support / Brace", ["knee support", "knee cap", "knee brace", "wrist support", "wrist strap", "wrist band", "ankle support", "elbow support", "calf support", "arm sleeve", "shin guard", "posture corrector", "waist trimmer", "sweat belt", "slimming belt"]),
+    ("Gym Accessory", ["pull up bar", "pull-up bar", "push up bar", "push-up bar", "hand gripper", "grip strengthener", "gym head band", "sweat band", "head band", "lifting strap", "gym belt", "foam roller", "yoga block", "yoga strap", "gym rope", "swimming goggles", "swim goggles", "swimming cap", "swimming ring"]),
+    # === ELECTRONICS ACCESSORIES (Powerbanks / Electronics -> Others) ===
+    ("Router / Networking", ["router", "range extender", "wifi repeater", "wi-fi repeater", "wifi extender", "wi-fi extender", "range repeater", "network switch", "ethernet", "lan cable"]),
+    ("Microphone", ["microphone", "wireless mic", "collar mic", "lapel mic", "lavalier"]),
+    ("Tripod / Ring Light", ["tripod", "selfie stick", "ring light", "gimbal", "monopod"]),
+    ("Instant Camera / Film", ["instant camera", "instax", "camera film", "polaroid", "instant film"]),
+    ("Gaming Accessory", ["game controller", "gaming controller", "gamepad", "joystick", "dualsense", "dualshock", "gaming console", "gaming mouse", "gaming keyboard"]),
+    ("Hot Water Bag / Heating Pad", ["hot water bag", "hot water bottle", "heating pad", "heating bag", "electric hot water"]),
     # Kitchen appliances (before cookware / jar / glass)
     ("Mixer Grinder", ["mixer grinder", "mixie", "juicer mixer grinder", "mixer-grinder", "wet grinder"]),
     ("Hand Blender / Mixer", ["hand blender", "immersion blender", "electric beater", "hand mixer", "egg beater", "milk frother", "electric whisk"]),
@@ -38,7 +63,6 @@ RULES = [
     ("Sewing Machine", ["sewing machine"]),
     ("Inverter / UPS", ["inverter", "online ups", "inverter battery"]),
     # Electronics / accessories / lighting
-    ("Power Bank / Charger / Cable", ["power bank", "powerbank", "fast charger", "wall charger", "mobile charger", "car charger", "charging cable", "data cable", "type-c cable", "usb cable", "charging adapter", "charging adaptor"]),
     ("Audio Device", ["earbud", "earphone", "headphone", "headset", "bluetooth speaker", "soundbar", "neckband"]),
     ("Smartwatch / Band", ["smartwatch", "smart watch", "fitness band", "smart band", "fitness tracker"]),
     ("Camera / Security", ["cctv", "security camera", "dashcam", "wifi camera", "smart camera", "doorbell camera"]),
@@ -58,8 +82,11 @@ RULES = [
     ("Trimmer / Shaver / Groomer", ["trimmer", "shaver", "groomer", "hair clipper", "epilator", "grooming kit", "callus remover"]),
     ("Electric Toothbrush", ["electric toothbrush"]),
     ("Massager", ["massager", "massage gun"]),
+    # Chargers/cables/power banks — placed AFTER personal-care so a "Type C Beard
+    # Trimmer" is claimed by Trimmer first, letting these keywords stay broad.
+    ("Power Bank / Charger / Cable", ["power bank", "powerbank", "charger", "charging cable", "charging adapter", "charging adaptor", "charging dock", "fast charging", "type-c cable", "type c cable", "type-c to", "type c to", "usb cable", "usb to", "data cable", "aux cable", "hdmi cable", "otg cable", "otg adapter", "usb connector", "power adapter", "travel adapter", "wall adapter", "port adapter", "gan charger"]),
     # Bags & travel
-    ("Backpack / Bag", ["backpack", "laptop bag", "sling bag", "hand bag", "handbag", "tote bag", "messenger bag", "school bag", "duffel bag", "duffle bag", "gym bag"]),
+    ("Backpack / Bag", ["backpack", "laptop bag", "sling bag", "hand bag", "handbag", "tote bag", "messenger bag", "school bag", "duffel bag", "duffle bag", "gym bag", "rucksack", "haversack"]),
     ("Luggage / Trolley Bag", ["trolley bag", "suitcase", "cabin bag", "travel bag", "luggage trolley"]),
     ("Wallet / Purse", ["wallet", "ladies purse", "card holder"]),
     # Stationery
@@ -310,7 +337,7 @@ def _kw(k):
 if __name__ == "__main__":
     import pandas as pd
     df = pd.read_excel("blinkit_rca_combined.xlsx")
-    df = df[df["Date"].astype(str) == "2026-04-01"]
+    df = df[df["Date"].astype(str) == "2026-08-01"]
     names = df["Product Name"].dropna().unique()
     from collections import Counter
     c = Counter(classify(n) for n in names)
