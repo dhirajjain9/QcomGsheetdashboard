@@ -15,7 +15,10 @@ DEFAULT_SALES = {
     'instamart': {'Powerbanks Chargers Cables': 24.0, 'Home Decor': 20.4, 'Home Furnishing': 19.8, 'Sports & Gym': 18.0, 'Kitchen Appliances': 16.7, 'Cleaning Tools': 14.4, 'Bottles Flasks Tiffins': 13.3, 'Tissues & Disposables': 12.5, 'Bathware & Laundry': 12.4, 'Storage & Organizers': 10.5, 'Pooja Needs': 10.0, 'Personal Care Appliances': 9.4, 'Cookware': 9.3, 'Utility & Tools': 9.0, 'Jars Containers Holders': 8.9, 'Home Appliances': 8.0, 'Glasses Cups Mugs': 6.8, 'Kitchen Tools': 6.4, 'Plates Bowls Crockery': 6.1, 'Travel And Luggage': 4.0, 'Kitchen Cleaning': 3.8, 'Lights & Bulbs': 2.7, 'Bakeware & Bbq': 1.8, 'Linen And Furnishing': 1.5, 'Barware': 1.2, 'Gardening': 1.2, 'Serveware': 1.1, 'Cutlery & Ladles': 0.312},
     'zepto': {'Home Furnishing': 35.2, 'Pooja & Worship Needs': 29.3, 'Kitchen Appliances': 26.4, 'Household Utility': 26.0, 'Bulbs & Lights': 23.8, 'Cleaning Aids': 23.3, 'Home Appliances': 19.0, 'Tissues & Disposables': 17.1, 'Home Decor': 10.5, 'Kitchen Tools': 8.6, 'Kitchen Storage': 8.3, 'Cookware': 7.7, 'Extensions & Switches': 5.4, 'Drinkware & Bar': 4.3, 'Lunch Boxes': 4.2, 'Bath & Laundry': 3.9, 'Kitchen Aids': 3.9, 'Gas Stove & Accessories': 3.0, 'Gardening': 2.7, 'Stationery & Crafts': 2.6, 'Pressure Cooker': 2.6, 'Steel Utensils': 2.3, 'Hardware & Fittings': 1.8, 'Tableware': 1.5, 'Kitchen Cleaning': 0.764},
 }.get(PLATFORM, {})
-SALES_KEY = f'{PLATFORM}_mrp_sales_v3'   # bumped v2->v3: Jul-Aug data / Aug MRP totals, reset saved inputs
+# 'Others' Super Category removed from the dashboards by decision — drop its member
+# categories from the sales model so entered/pre-filled totals reconcile to home only.
+DEFAULT_SALES = {k: v for k, v in DEFAULT_SALES.items() if super_of(k) != 'Others'}
+SALES_KEY = f'{PLATFORM}_mrp_sales_v4'   # v3->v4: 'Others' Super Category removed, reset saved inputs
 IN_XLSX = f'{PLATFORM}_rca_combined.xlsx'
 OUT_JSON = 'dashboard_data.json' if PLATFORM == 'blinkit' else f'{PLATFORM}_dashboard_data.json'
 
@@ -33,6 +36,7 @@ brand_disp = df.groupby('BrandKey')['Brand'].agg(lambda s: s.mode().iloc[0])
 # Original platform category preserved in 'Category'; grouping dimension = Super Category.
 df['Category'] = df['Category'].astype(str).str.strip()
 df['Sub Category'] = df['Category'].map(super_of)   # <-- all grouping/scope now = Super Category
+df = df[df['Sub Category'] != 'Others'].copy()      # exclude the 'Others' Super Category entirely
 
 DATES = sorted(df['Date'].unique())
 LATEST, PREV = DATES[-1], DATES[0]

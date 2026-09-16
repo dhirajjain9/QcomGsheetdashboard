@@ -33,7 +33,11 @@ SUPER_CAT = {
     'Sports & Fitness': 'Others', 'Sports & Gym': 'Others', 'Clothing, Footwear & Accessories': 'Others',
     'Bags': 'Others', 'Travel And Luggage': 'Others', 'Stationery Needs': 'Others', 'Stationery & Crafts': 'Others',
 }
-SUPER_ORDER = ['Kitchen', 'Appliances', 'Soft Furnishings', 'General Home Improvement / Decor', 'Others']
+# 'Others' (non-home lifestyle/electronics) is EXCLUDED from the dashboards by decision.
+# super_of still returns 'Others' for its member/unmapped categories so the build can
+# filter them out in one place; it is intentionally absent from SUPER_ORDER so it never
+# renders as a Super Category anywhere.
+SUPER_ORDER = ['Kitchen', 'Appliances', 'Soft Furnishings', 'General Home Improvement / Decor']
 
 
 def super_of(category):
