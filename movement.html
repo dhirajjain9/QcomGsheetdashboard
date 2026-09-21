@@ -55,9 +55,26 @@ h2{font-size:20px;margin:38px 0 4px;letter-spacing:-.01em}
 .chip b{color:var(--ink)} .chip .s{color:var(--mut)}
 .note{font-size:12.5px;color:var(--mut);margin-top:10px}
 .foot{color:var(--mut);font-size:12px;margin-top:40px;border-top:1px solid var(--bd);padding-top:16px}
+.topnav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 22px}
+.topnav .lbl{color:var(--mut);font-size:11px;margin-right:2px}
+.topnav a{font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:8px;border:1px solid var(--bd);
+  text-decoration:none;color:var(--mut);background:var(--card)}
+.topnav a:hover{color:var(--ink);border-color:var(--acc)}
+.topnav a.cmp{color:var(--acc);border-color:var(--acc)}
+.topnav .active{font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:8px;border:1px solid var(--acc);
+  background:var(--acc);color:#fff}
+.topnav .sep{color:var(--bd);margin:0 2px}
 @media(max-width:720px){.grid2,.eqrow{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
 </style></head>
 <body><div class="wrap">
+  <div class="topnav">
+    <span class="lbl">Platform:</span>
+    <a href="index.html">Blinkit</a><a href="instamart.html">Instamart</a><a href="zepto.html">Zepto</a>
+    <span class="sep">|</span>
+    <a class="cmp" href="compare.html" title="Cross-platform comparison">⇄ Cross Platform</a>
+    <span class="active">📈 Movement</span>
+    <a href="platforms.html" title="All platforms">All ↗</a>
+  </div>
   <p class="eyebrow">Quick-Commerce · Home · May → Aug 2026</p>
   <h1>Where the world is <span class="em">moving</span></h1>
   <p class="sub" id="sub"></p>

@@ -555,7 +555,10 @@ tbody tr{cursor:pointer}tbody tr:hover{background:#f5f5f7}tbody tr.sel{backgroun
 <header>
  <div><h1>Cross Platform <span>Analysis</span></h1>
   <div class="sub">Whole-of-Q-Commerce context, then drill into any <b>product type</b> or <b>brand</b> (the only axes comparable across platforms) · {{CURY}}</div></div>
- <a class="back" href="platforms.html">← All platforms</a>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <a class="back" href="movement.html" title="May → Aug: where the world is moving">📈 Movement</a>
+  <a class="back" href="platforms.html">← All platforms</a>
+ </div>
 </header>
 
 <!-- ===== CONTEXT ===== -->
