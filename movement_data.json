@@ -1,0 +1,548 @@
+{
+ "months": [
+  "May 2026",
+  "Aug 2026"
+ ],
+ "totals": {
+  "may": 872,
+  "aug": 1092
+ },
+ "supers": [
+  {
+   "name": "Kitchen",
+   "may": 183.5,
+   "aug": 203.4
+  },
+  {
+   "name": "Appliances",
+   "may": 218.5,
+   "aug": 250.0
+  },
+  {
+   "name": "Soft Furnishings",
+   "may": 99.0,
+   "aug": 136.8
+  },
+  {
+   "name": "General Home Improvement / Decor",
+   "may": 370.6,
+   "aug": 501.9
+  }
+ ],
+ "categories": {
+  "risers": [
+   {
+    "name": "Household Utility",
+    "may": 12.8,
+    "aug": 26.0,
+    "delta": 13.2,
+    "pct": 103
+   },
+   {
+    "name": "Festive Gifting",
+    "may": 3.0,
+    "aug": 5.8,
+    "delta": 2.8,
+    "pct": 93
+   },
+   {
+    "name": "Decorative Lights",
+    "may": 31.3,
+    "aug": 54.8,
+    "delta": 23.5,
+    "pct": 75
+   },
+   {
+    "name": "Pooja Needs",
+    "may": 26.8,
+    "aug": 44.3,
+    "delta": 17.5,
+    "pct": 65
+   },
+   {
+    "name": "Pooja & Worship Needs",
+    "may": 18.0,
+    "aug": 29.3,
+    "delta": 11.3,
+    "pct": 63
+   },
+   {
+    "name": "Festive & Occasion Needs",
+    "may": 10.5,
+    "aug": 15.4,
+    "delta": 4.9,
+    "pct": 47
+   },
+   {
+    "name": "Bathware & Laundry",
+    "may": 8.9,
+    "aug": 12.4,
+    "delta": 3.5,
+    "pct": 39
+   },
+   {
+    "name": "Home Furnishing",
+    "may": 97.9,
+    "aug": 135.3,
+    "delta": 37.4,
+    "pct": 38
+   },
+   {
+    "name": "Home Improvement",
+    "may": 7.1,
+    "aug": 9.5,
+    "delta": 2.4,
+    "pct": 34
+   },
+   {
+    "name": "Kitchen Cleaning",
+    "may": 3.4,
+    "aug": 4.6,
+    "delta": 1.2,
+    "pct": 34
+   }
+  ],
+  "fallers": [
+   {
+    "name": "Gardening",
+    "may": 4.4,
+    "aug": 3.9,
+    "delta": -0.5,
+    "pct": -11
+   },
+   {
+    "name": "Cookware",
+    "may": 18.3,
+    "aug": 17.0,
+    "delta": -1.3,
+    "pct": -7
+   },
+   {
+    "name": "Bottles Flasks Tiffins",
+    "may": 13.6,
+    "aug": 13.3,
+    "delta": -0.3,
+    "pct": -2
+   },
+   {
+    "name": "Garbage Bags",
+    "may": 9.6,
+    "aug": 9.7,
+    "delta": 0.1,
+    "pct": 1
+   },
+   {
+    "name": "Home Appliances",
+    "may": 26.8,
+    "aug": 27.0,
+    "delta": 0.2,
+    "pct": 1
+   },
+   {
+    "name": "Kitchen Appliances",
+    "may": 41.9,
+    "aug": 43.1,
+    "delta": 1.2,
+    "pct": 3
+   },
+   {
+    "name": "Bath & Laundry",
+    "may": 3.6,
+    "aug": 3.9,
+    "delta": 0.3,
+    "pct": 8
+   },
+   {
+    "name": "Kitchen & Dining Needs",
+    "may": 79.6,
+    "aug": 86.7,
+    "delta": 7.1,
+    "pct": 9
+   },
+   {
+    "name": "Plates Bowls Crockery",
+    "may": 5.6,
+    "aug": 6.1,
+    "delta": 0.5,
+    "pct": 9
+   },
+   {
+    "name": "Kitchen Tools",
+    "may": 13.2,
+    "aug": 15.0,
+    "delta": 1.8,
+    "pct": 14
+   }
+  ]
+ },
+ "brands": {
+  "risers": [
+   {
+    "name": "Desidiya",
+    "may": 30.8,
+    "aug": 50.9,
+    "delta": 20.2,
+    "pct": 66
+   },
+   {
+    "name": "Party Propz",
+    "may": 14.4,
+    "aug": 21.0,
+    "delta": 6.6,
+    "pct": 46
+   },
+   {
+    "name": "Origami",
+    "may": 18.4,
+    "aug": 24.7,
+    "delta": 6.3,
+    "pct": 34
+   },
+   {
+    "name": "Lifelong",
+    "may": 30.9,
+    "aug": 36.9,
+    "delta": 6.0,
+    "pct": 19
+   },
+   {
+    "name": "Citizen",
+    "may": 2.3,
+    "aug": 7.9,
+    "delta": 5.6,
+    "pct": 242
+   },
+   {
+    "name": "Philips",
+    "may": 24.2,
+    "aug": 29.6,
+    "delta": 5.4,
+    "pct": 23
+   },
+   {
+    "name": "Dream Living",
+    "may": 7.3,
+    "aug": 12.6,
+    "delta": 5.3,
+    "pct": 73
+   },
+   {
+    "name": "Joyo",
+    "may": 8.3,
+    "aug": 13.3,
+    "delta": 5.0,
+    "pct": 60
+   },
+   {
+    "name": "Dr Physio",
+    "may": 4.3,
+    "aug": 9.2,
+    "delta": 4.8,
+    "pct": 111
+   },
+   {
+    "name": "Bombay Shaving Company",
+    "may": 8.2,
+    "aug": 13.0,
+    "delta": 4.8,
+    "pct": 59
+   },
+   {
+    "name": "Ant Esports",
+    "may": 3.3,
+    "aug": 6.9,
+    "delta": 3.6,
+    "pct": 107
+   },
+   {
+    "name": "myTrident",
+    "may": 4.7,
+    "aug": 8.4,
+    "delta": 3.6,
+    "pct": 77
+   }
+  ],
+  "fallers": [
+   {
+    "name": "Bajaj",
+    "may": 10.6,
+    "aug": 5.1,
+    "delta": -5.5,
+    "pct": -52
+   },
+   {
+    "name": "Kuber",
+    "may": 6.4,
+    "aug": 1.6,
+    "delta": -4.8,
+    "pct": -75
+   },
+   {
+    "name": "Portronics",
+    "may": 7.5,
+    "aug": 4.2,
+    "delta": -3.3,
+    "pct": -44
+   },
+   {
+    "name": "Orient Electric",
+    "may": 5.1,
+    "aug": 2.7,
+    "delta": -2.5,
+    "pct": -48
+   },
+   {
+    "name": "Maharaja Whiteline",
+    "may": 2.9,
+    "aug": 0.5,
+    "delta": -2.4,
+    "pct": -81
+   },
+   {
+    "name": "Atomberg",
+    "may": 2.9,
+    "aug": 1.2,
+    "delta": -1.7,
+    "pct": -58
+   },
+   {
+    "name": "Solara",
+    "may": 3.5,
+    "aug": 2.4,
+    "delta": -1.0,
+    "pct": -29
+   },
+   {
+    "name": "WaterScience",
+    "may": 2.4,
+    "aug": 1.4,
+    "delta": -1.0,
+    "pct": -42
+   },
+   {
+    "name": "Satyam Kraft",
+    "may": 3.5,
+    "aug": 2.7,
+    "delta": -0.9,
+    "pct": -25
+   },
+   {
+    "name": "Urgo",
+    "may": 4.7,
+    "aug": 3.8,
+    "delta": -0.8,
+    "pct": -18
+   },
+   {
+    "name": "Havells",
+    "may": 6.9,
+    "aug": 6.2,
+    "delta": -0.7,
+    "pct": -10
+   },
+   {
+    "name": "TrustBasket",
+    "may": 5.8,
+    "aug": 5.2,
+    "delta": -0.6,
+    "pct": -10
+   }
+  ]
+ },
+ "types": {
+  "risers": [
+   {
+    "name": "Room Heater",
+    "may": 0.5,
+    "aug": 3.4,
+    "delta": 2.9,
+    "pct": 539
+   },
+   {
+    "name": "Tissue Box",
+    "may": 1.2,
+    "aug": 7.3,
+    "delta": 6.1,
+    "pct": 501
+   },
+   {
+    "name": "Water Heater / Geyser",
+    "may": 1.5,
+    "aug": 4.6,
+    "delta": 3.1,
+    "pct": 213
+   },
+   {
+    "name": "Umbrella",
+    "may": 5.3,
+    "aug": 16.2,
+    "delta": 10.9,
+    "pct": 206
+   },
+   {
+    "name": "Puja Item / Lota",
+    "may": 4.3,
+    "aug": 8.1,
+    "delta": 3.8,
+    "pct": 89
+   },
+   {
+    "name": "Hair Dryer",
+    "may": 5.6,
+    "aug": 10.5,
+    "delta": 4.9,
+    "pct": 88
+   },
+   {
+    "name": "Party Decoration",
+    "may": 7.8,
+    "aug": 14.3,
+    "delta": 6.5,
+    "pct": 83
+   },
+   {
+    "name": "Blanket / Quilt / Dohar",
+    "may": 8.8,
+    "aug": 15.5,
+    "delta": 6.7,
+    "pct": 77
+   },
+   {
+    "name": "Cloth Drying Stand",
+    "may": 2.7,
+    "aug": 4.7,
+    "delta": 2.0,
+    "pct": 74
+   },
+   {
+    "name": "Hot Water Bag / Heating Pad",
+    "may": 2.3,
+    "aug": 3.8,
+    "delta": 1.6,
+    "pct": 69
+   },
+   {
+    "name": "Router / Networking",
+    "may": 2.5,
+    "aug": 4.2,
+    "delta": 1.7,
+    "pct": 66
+   },
+   {
+    "name": "Gas Lighter",
+    "may": 2.0,
+    "aug": 3.2,
+    "delta": 1.2,
+    "pct": 62
+   }
+  ],
+  "fallers": [
+   {
+    "name": "Air Cooler",
+    "may": 6.2,
+    "aug": 0.0,
+    "delta": -6.2,
+    "pct": -100
+   },
+   {
+    "name": "Ice Tray / Pop Mould",
+    "may": 3.1,
+    "aug": 1.3,
+    "delta": -1.8,
+    "pct": -58
+   },
+   {
+    "name": "Electric Fan",
+    "may": 18.1,
+    "aug": 8.1,
+    "delta": -10.0,
+    "pct": -55
+   },
+   {
+    "name": "Thermal/Insulated Flask",
+    "may": 7.0,
+    "aug": 6.1,
+    "delta": -0.9,
+    "pct": -13
+   },
+   {
+    "name": "OTG / Microwave Oven",
+    "may": 3.5,
+    "aug": 3.1,
+    "delta": -0.3,
+    "pct": -10
+   },
+   {
+    "name": "Storage Box / Organizer",
+    "may": 6.3,
+    "aug": 5.7,
+    "delta": -0.6,
+    "pct": -10
+   },
+   {
+    "name": "Pressure Cooker",
+    "may": 7.1,
+    "aug": 6.4,
+    "delta": -0.7,
+    "pct": -10
+   },
+   {
+    "name": "Induction Cooktop",
+    "may": 13.4,
+    "aug": 12.5,
+    "delta": -0.9,
+    "pct": -7
+   },
+   {
+    "name": "Cookware / Pan",
+    "may": 16.3,
+    "aug": 15.2,
+    "delta": -1.1,
+    "pct": -7
+   },
+   {
+    "name": "Shaker / Sipper",
+    "may": 3.1,
+    "aug": 2.9,
+    "delta": -0.2,
+    "pct": -7
+   },
+   {
+    "name": "Spin Mop",
+    "may": 9.4,
+    "aug": 8.7,
+    "delta": -0.7,
+    "pct": -7
+   },
+   {
+    "name": "Artificial Plant / Flower",
+    "may": 4.5,
+    "aug": 4.3,
+    "delta": -0.2,
+    "pct": -5
+   }
+  ]
+ },
+ "newBrands": [
+  {
+   "name": "Giva",
+   "aug": 0.1
+  }
+ ],
+ "exitBrands": [
+  {
+   "name": "Kleeno by Cello",
+   "may": 0.5
+  },
+  {
+   "name": "Ratan Brooms",
+   "may": 0.5
+  },
+  {
+   "name": "The Smart Shoppee",
+   "may": 0.0
+  }
+ ],
+ "newCount": 38,
+ "exitCount": 93
+}

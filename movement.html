@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where The World Is Moving</title>
+<meta name="description" content="May to August 2026 movement across Quick-Commerce home categories: seasonal rotation, category, brand and product-type risers and fallers.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect x='350' y='18' width='112' height='476' rx='56' fill='%23f9ab00'/%3E%3Crect x='201' y='200' width='112' height='294' rx='56' fill='%23e37400'/%3E%3Ccircle cx='95' cy='438' r='56' fill='%23e37400'/%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#faf6ef; --card:#ffffff; --bd:#ece4d6; --ink:#2a2724; --mut:#8a7f70;
+  --acc:#e37400; --blue:#0071e3; --grn:#1a7f37; --red:#c0392b; --gold:#f9ab00;
+  --grnbg:#e6f2e9; --redbg:#f7e6e3;
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1a1714; --card:#241f1a; --bd:#3a3229; --ink:#f2ece2; --mut:#a79b89;
+  --grnbg:#1e3323; --redbg:#3a221f;
+}}
+:root[data-theme="dark"]{
+  --bg:#1a1714; --card:#241f1a; --bd:#3a3229; --ink:#f2ece2; --mut:#a79b89;
+  --grnbg:#1e3323; --redbg:#3a221f;
+}
+*{box-sizing:border-box} html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 16px 80px}
+h1{font-size:clamp(26px,5vw,40px);line-height:1.1;margin:0 0 6px;letter-spacing:-.02em}
+h1 .em{color:var(--acc)}
+.sub{color:var(--mut);font-size:15px;margin:0 0 24px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin:0 0 10px}
+h2{font-size:20px;margin:38px 0 4px;letter-spacing:-.01em}
+.h2sub{color:var(--mut);font-size:13.5px;margin:0 0 16px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 8px}
+.kpi{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 18px}
+.kpi .lab{font-size:12px;color:var(--mut);font-weight:600;letter-spacing:.02em}
+.kpi .val{font-size:clamp(22px,4vw,30px);font-weight:750;letter-spacing:-.02em;margin-top:4px}
+.kpi .val small{font-size:14px;font-weight:600;color:var(--mut)}
+.up{color:var(--grn)} .dn{color:var(--red)}
+.banner{background:linear-gradient(135deg,#fff7ec,#fdeede);border:1px solid #f2d9b8;border-radius:16px;
+  padding:18px 20px;margin:20px 0 4px;color:#5a3b12}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .banner{background:linear-gradient(135deg,#2c2114,#332415);border-color:#5a4326;color:#f0d9b6}}
+:root[data-theme="dark"] .banner{background:linear-gradient(135deg,#2c2114,#332415);border-color:#5a4326;color:#f0d9b6}
+.banner b{color:inherit}
+.banner .t{font-weight:750;font-size:15px;margin-bottom:6px;letter-spacing:-.01em}
+.banner ul{margin:6px 0 0;padding-left:18px} .banner li{margin:3px 0;font-size:14px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cwrap{position:relative;width:100%}
+.legend{display:flex;gap:16px;align-items:center;font-size:12.5px;color:var(--mut);margin:2px 0 12px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.eqrow{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{background:var(--bg);border:1px solid var(--bd);border-radius:999px;padding:5px 12px;font-size:13px}
+.chip b{color:var(--ink)} .chip .s{color:var(--mut)}
+.note{font-size:12.5px;color:var(--mut);margin-top:10px}
+.foot{color:var(--mut);font-size:12px;margin-top:40px;border-top:1px solid var(--bd);padding-top:16px}
+@media(max-width:720px){.grid2,.eqrow{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+</style></head>
+<body><div class="wrap">
+  <p class="eyebrow">Quick-Commerce · Home · May → Aug 2026</p>
+  <h1>Where the world is <span class="em">moving</span></h1>
+  <p class="sub" id="sub"></p>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="banner">
+    <div class="t">The shift in one line: summer cooling is out, monsoon &amp; festive are in.</div>
+    <ul>
+      <li><b>Cooling collapses</b> — Air Cooler −100%, Electric Fan −55%, Ice Trays −58% as summer ends.</li>
+      <li><b>Monsoon &amp; comfort rise</b> — Umbrella +206%, Room Heater +539%, Water Heater +213%, Blankets &amp; Towels up sharply.</li>
+      <li><b>Festive ramp</b> — Decorative Lights +75%, Pooja +65%, Festive & Party categories +47–93%; Desidiya alone adds ₹20 Cr.</li>
+    </ul>
+  </div>
+
+  <h2>The four home Super Categories</h2>
+  <p class="h2sub">Modelled gross (MRP) ₹ Cr — every home super grew, but the mix rotated.</p>
+  <div class="card"><div class="cwrap" style="height:230px"><canvas id="cSuper"></canvas></div></div>
+
+  <h2>Product types on the move</h2>
+  <p class="h2sub">Growth vs May (%). The dashed line is the <b>+25% Q-Commerce average</b> — bars past it gained share, bars short of it lost ground. Min size ₹3 Cr.</p>
+  <div class="legend"><span><span class="dot" style="background:var(--grn)"></span>Grew faster / up</span><span><span class="dot" style="background:var(--red)"></span>Declined</span></div>
+  <div class="card"><div class="cwrap" id="wTypes"><canvas id="cTypes"></canvas></div></div>
+
+  <div class="eqrow" style="margin-top:16px">
+    <div>
+      <h2 style="margin-top:8px">Categories on the move</h2>
+      <p class="h2sub">Growth vs May (%). Min size ₹3 Cr.</p>
+      <div class="card"><div class="cwrap" id="wCats"><canvas id="cCats"></canvas></div></div>
+    </div>
+    <div>
+      <h2 style="margin-top:8px">Brands moving the most money</h2>
+      <p class="h2sub">Change in gross ₹ Cr, May → Aug. Min size ₹2 Cr.</p>
+      <div class="card"><div class="cwrap" id="wBrands"><canvas id="cBrands"></canvas></div></div>
+    </div>
+  </div>
+
+  <h2>New vs gone</h2>
+  <p class="h2sub">Brand-level entry &amp; exit across the two snapshots.</p>
+  <div class="card">
+    <div class="eqrow">
+      <div>
+        <div style="font-weight:700;color:var(--grn);margin-bottom:2px">＋ New brands in Aug <span style="color:var(--mut);font-weight:500" id="newCount"></span></div>
+        <div class="chips" id="newChips"></div>
+      </div>
+      <div>
+        <div style="font-weight:700;color:var(--red);margin-bottom:2px">－ Gone since May <span style="color:var(--mut);font-weight:500" id="exitCount"></span></div>
+        <div class="chips" id="exitChips"></div>
+      </div>
+    </div>
+    <div class="note">Entry/exit is almost entirely <b>long-tail</b>: no brand above ₹0.5 Cr appeared or disappeared. The real movement is in magnitude (above), not in who is present — the assortment is stable, demand rotated. Scope excludes the non-home "Others" super category.</div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const D={"months":["May 2026","Aug 2026"],"totals":{"may":872,"aug":1092},"supers":[{"name":"Kitchen","may":183.5,"aug":203.4},{"name":"Appliances","may":218.5,"aug":250.0},{"name":"Soft Furnishings","may":99.0,"aug":136.8},{"name":"General Home Improvement / Decor","may":370.6,"aug":501.9}],"categories":{"risers":[{"name":"Household Utility","may":12.8,"aug":26.0,"delta":13.2,"pct":103},{"name":"Festive Gifting","may":3.0,"aug":5.8,"delta":2.8,"pct":93},{"name":"Decorative Lights","may":31.3,"aug":54.8,"delta":23.5,"pct":75},{"name":"Pooja Needs","may":26.8,"aug":44.3,"delta":17.5,"pct":65},{"name":"Pooja & Worship Needs","may":18.0,"aug":29.3,"delta":11.3,"pct":63},{"name":"Festive & Occasion Needs","may":10.5,"aug":15.4,"delta":4.9,"pct":47},{"name":"Bathware & Laundry","may":8.9,"aug":12.4,"delta":3.5,"pct":39},{"name":"Home Furnishing","may":97.9,"aug":135.3,"delta":37.4,"pct":38},{"name":"Home Improvement","may":7.1,"aug":9.5,"delta":2.4,"pct":34},{"name":"Kitchen Cleaning","may":3.4,"aug":4.6,"delta":1.2,"pct":34}],"fallers":[{"name":"Gardening","may":4.4,"aug":3.9,"delta":-0.5,"pct":-11},{"name":"Cookware","may":18.3,"aug":17.0,"delta":-1.3,"pct":-7},{"name":"Bottles Flasks Tiffins","may":13.6,"aug":13.3,"delta":-0.3,"pct":-2},{"name":"Garbage Bags","may":9.6,"aug":9.7,"delta":0.1,"pct":1},{"name":"Home Appliances","may":26.8,"aug":27.0,"delta":0.2,"pct":1},{"name":"Kitchen Appliances","may":41.9,"aug":43.1,"delta":1.2,"pct":3},{"name":"Bath & Laundry","may":3.6,"aug":3.9,"delta":0.3,"pct":8},{"name":"Kitchen & Dining Needs","may":79.6,"aug":86.7,"delta":7.1,"pct":9},{"name":"Plates Bowls Crockery","may":5.6,"aug":6.1,"delta":0.5,"pct":9},{"name":"Kitchen Tools","may":13.2,"aug":15.0,"delta":1.8,"pct":14}]},"brands":{"risers":[{"name":"Desidiya","may":30.8,"aug":50.9,"delta":20.2,"pct":66},{"name":"Party Propz","may":14.4,"aug":21.0,"delta":6.6,"pct":46},{"name":"Origami","may":18.4,"aug":24.7,"delta":6.3,"pct":34},{"name":"Lifelong","may":30.9,"aug":36.9,"delta":6.0,"pct":19},{"name":"Citizen","may":2.3,"aug":7.9,"delta":5.6,"pct":242},{"name":"Philips","may":24.2,"aug":29.6,"delta":5.4,"pct":23},{"name":"Dream Living","may":7.3,"aug":12.6,"delta":5.3,"pct":73},{"name":"Joyo","may":8.3,"aug":13.3,"delta":5.0,"pct":60},{"name":"Dr Physio","may":4.3,"aug":9.2,"delta":4.8,"pct":111},{"name":"Bombay Shaving Company","may":8.2,"aug":13.0,"delta":4.8,"pct":59},{"name":"Ant Esports","may":3.3,"aug":6.9,"delta":3.6,"pct":107},{"name":"myTrident","may":4.7,"aug":8.4,"delta":3.6,"pct":77}],"fallers":[{"name":"Bajaj","may":10.6,"aug":5.1,"delta":-5.5,"pct":-52},{"name":"Kuber","may":6.4,"aug":1.6,"delta":-4.8,"pct":-75},{"name":"Portronics","may":7.5,"aug":4.2,"delta":-3.3,"pct":-44},{"name":"Orient Electric","may":5.1,"aug":2.7,"delta":-2.5,"pct":-48},{"name":"Maharaja Whiteline","may":2.9,"aug":0.5,"delta":-2.4,"pct":-81},{"name":"Atomberg","may":2.9,"aug":1.2,"delta":-1.7,"pct":-58},{"name":"Solara","may":3.5,"aug":2.4,"delta":-1.0,"pct":-29},{"name":"WaterScience","may":2.4,"aug":1.4,"delta":-1.0,"pct":-42},{"name":"Satyam Kraft","may":3.5,"aug":2.7,"delta":-0.9,"pct":-25},{"name":"Urgo","may":4.7,"aug":3.8,"delta":-0.8,"pct":-18},{"name":"Havells","may":6.9,"aug":6.2,"delta":-0.7,"pct":-10},{"name":"TrustBasket","may":5.8,"aug":5.2,"delta":-0.6,"pct":-10}]},"types":{"risers":[{"name":"Room Heater","may":0.5,"aug":3.4,"delta":2.9,"pct":539},{"name":"Tissue Box","may":1.2,"aug":7.3,"delta":6.1,"pct":501},{"name":"Water Heater / Geyser","may":1.5,"aug":4.6,"delta":3.1,"pct":213},{"name":"Umbrella","may":5.3,"aug":16.2,"delta":10.9,"pct":206},{"name":"Puja Item / Lota","may":4.3,"aug":8.1,"delta":3.8,"pct":89},{"name":"Hair Dryer","may":5.6,"aug":10.5,"delta":4.9,"pct":88},{"name":"Party Decoration","may":7.8,"aug":14.3,"delta":6.5,"pct":83},{"name":"Blanket / Quilt / Dohar","may":8.8,"aug":15.5,"delta":6.7,"pct":77},{"name":"Cloth Drying Stand","may":2.7,"aug":4.7,"delta":2.0,"pct":74},{"name":"Hot Water Bag / Heating Pad","may":2.3,"aug":3.8,"delta":1.6,"pct":69},{"name":"Router / Networking","may":2.5,"aug":4.2,"delta":1.7,"pct":66},{"name":"Gas Lighter","may":2.0,"aug":3.2,"delta":1.2,"pct":62}],"fallers":[{"name":"Air Cooler","may":6.2,"aug":0.0,"delta":-6.2,"pct":-100},{"name":"Ice Tray / Pop Mould","may":3.1,"aug":1.3,"delta":-1.8,"pct":-58},{"name":"Electric Fan","may":18.1,"aug":8.1,"delta":-10.0,"pct":-55},{"name":"Thermal/Insulated Flask","may":7.0,"aug":6.1,"delta":-0.9,"pct":-13},{"name":"OTG / Microwave Oven","may":3.5,"aug":3.1,"delta":-0.3,"pct":-10},{"name":"Storage Box / Organizer","may":6.3,"aug":5.7,"delta":-0.6,"pct":-10},{"name":"Pressure Cooker","may":7.1,"aug":6.4,"delta":-0.7,"pct":-10},{"name":"Induction Cooktop","may":13.4,"aug":12.5,"delta":-0.9,"pct":-7},{"name":"Cookware / Pan","may":16.3,"aug":15.2,"delta":-1.1,"pct":-7},{"name":"Shaker / Sipper","may":3.1,"aug":2.9,"delta":-0.2,"pct":-7},{"name":"Spin Mop","may":9.4,"aug":8.7,"delta":-0.7,"pct":-7},{"name":"Artificial Plant / Flower","may":4.5,"aug":4.3,"delta":-0.2,"pct":-5}]},"newBrands":[{"name":"Giva","aug":0.1}],"exitBrands":[{"name":"Kleeno by Cello","may":0.5},{"name":"Ratan Brooms","may":0.5},{"name":"The Smart Shoppee","may":0.0}],"newCount":38,"exitCount":93};
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const C={ink:css('--ink'),mut:css('--mut'),grn:css('--grn'),red:css('--red'),bd:css('--bd'),acc:css('--acc'),blue:css('--blue')};
+Chart.defaults.font.family=getComputedStyle(document.body).fontFamily;
+Chart.defaults.color=C.mut;
+const fmt=(x,n=0)=>Number(x).toLocaleString('en-IN',{minimumFractionDigits:n,maximumFractionDigits:n});
+
+// ---- subtitle + KPIs ----
+const t=D.totals, g=t.aug-t.may, gp=Math.round((t.aug/t.may-1)*100);
+document.getElementById('sub').textContent=`Modelled gross (MRP) across Blinkit · Instamart · Zepto — the four home Super Categories, ${D.months[0]} vs ${D.months[1]}.`;
+document.getElementById('kpis').innerHTML=[
+  ['May 2026','₹'+fmt(t.may)+' <small>Cr</small>'],
+  ['Aug 2026','₹'+fmt(t.aug)+' <small>Cr</small>'],
+  ['Growth','<span class="up">+'+gp+'%</span> <small>(+₹'+fmt(g)+' Cr)</small>']
+].map(k=>`<div class="kpi"><div class="lab">${k[0]}</div><div class="val">${k[1]}</div></div>`).join('');
+document.getElementById('newCount').textContent='· '+D.newCount+' total';
+document.getElementById('exitCount').textContent='· '+D.exitCount+' total';
+
+// ---- helpers ----
+function mergeMovers(dim,key,topN){
+  const seen={},all=[];
+  (dim.risers||[]).concat(dim.fallers||[]).forEach(r=>{if(!seen[r.name]){seen[r.name]=1;all.push(r);}});
+  all.sort((a,b)=>b[key]-a[key]);
+  if(all.length>topN*2){return all.slice(0,topN).concat(all.slice(-topN));}
+  return all;
+}
+// dashed +25% market-average reference (only for growth-% charts, passed inline per chart)
+const marketLine={id:'mkt',afterDatasetsDraw(ch){const sx=ch.scales.x;if(!sx)return;const x=sx.getPixelForValue(25);
+  const ctx=ch.ctx,top=ch.chartArea.top,bot=ch.chartArea.bottom;
+  ctx.save();ctx.strokeStyle=C.acc;ctx.setLineDash([5,4]);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,bot);ctx.stroke();
+  ctx.setLineDash([]);ctx.fillStyle=C.acc;ctx.font='600 10px '+Chart.defaults.font.family;
+  ctx.fillText('+25% mkt',x+4,top+11);ctx.restore();}};
+function divergingChart(canvasId,wrapId,items,key,fmtVal,plugins){
+  const h=Math.max(150,items.length*26+40);
+  document.getElementById(wrapId).style.height=h+'px';
+  const labels=items.map(r=>r.name.length>26?r.name.slice(0,25)+'…':r.name);
+  const vals=items.map(r=>r[key]);
+  const colors=vals.map(v=>v>=0?C.grn:C.red);
+  return new Chart(document.getElementById(canvasId),{
+    type:'bar',
+    data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:4,barPercentage:.82,categoryPercentage:.82}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      layout:{padding:{right:14,left:6}},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>{const r=items[c.dataIndex];
+          return `May ₹${fmt(r.may,1)} Cr → Aug ₹${fmt(r.aug,1)} Cr  (${r.pct>=0?'+':''}${r.pct}% · ${r.delta>=0?'+':''}₹${fmt(r.delta,1)} Cr)`;}}}},
+      scales:{
+        x:{grid:{color:C.bd},ticks:{callback:v=>fmtVal(v)},title:{display:true,text:fmtVal.title,color:C.mut}},
+        y:{grid:{display:false},ticks:{color:C.ink,font:{size:12}}}}},
+    plugins:plugins||[]
+  });
+}
+const pctFmt=v=>v+'%'; pctFmt.title='Growth vs May (%)';
+const crFmt=v=>(v>0?'+':'')+v+' Cr'; crFmt.title='Δ gross ₹ Cr';
+
+// ---- Super categories grouped bars ----
+new Chart(document.getElementById('cSuper'),{
+  type:'bar',
+  data:{labels:D.supers.map(s=>s.name.replace('General Home Improvement / Decor','Home Improve / Decor')),
+    datasets:[
+      {label:'May',data:D.supers.map(s=>s.may),backgroundColor:C.blue+'99',borderRadius:5,barPercentage:.9,categoryPercentage:.72},
+      {label:'Aug',data:D.supers.map(s=>s.aug),backgroundColor:C.acc,borderRadius:5,barPercentage:.9,categoryPercentage:.72}]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:12,boxHeight:12,usePointStyle:true,pointStyle:'rectRounded'}},
+      tooltip:{callbacks:{label:c=>`${c.dataset.label}: ₹${fmt(c.parsed.y,1)} Cr`}}},
+    scales:{x:{grid:{display:false},ticks:{color:C.ink,font:{size:11.5}}},
+      y:{grid:{color:C.bd},ticks:{callback:v=>'₹'+v}}}}
+});
+
+// ---- movers ----
+divergingChart('cTypes','wTypes',mergeMovers(D.types,'pct',8),'pct',pctFmt,[marketLine]);
+divergingChart('cCats','wCats',mergeMovers(D.categories,'pct',7),'pct',pctFmt,[marketLine]);
+divergingChart('cBrands','wBrands',mergeMovers(D.brands,'delta',8),'delta',crFmt);
+
+// ---- new / gone chips ----
+const chip=(name,val,unit)=>`<span class="chip"><b>${name}</b> <span class="s">${unit}${fmt(val,1)} Cr</span></span>`;
+document.getElementById('newChips').innerHTML=(D.newBrands.length?D.newBrands:[{name:'—',aug:0}]).map(r=>chip(r.name,r.aug,'₹')).join('')||'—';
+document.getElementById('exitChips').innerHTML=(D.exitBrands.length?D.exitBrands:[{name:'—',may:0}]).map(r=>chip(r.name,r.may,'was ₹')).join('')||'—';
+
+document.getElementById('foot').innerHTML='Modelled ₹ = category MRP totals distributed by Est. Category Share SP, SP & MRP (net → units → gross). May uses May-period totals, Aug uses Aug-period totals, so movement reflects both category resizing and within-category share shifts. Growth % is each item vs its own May figure; the +25% line is the blended Q-Commerce home average. Non-home "Others" excluded.';
+</script>
+</body></html>
